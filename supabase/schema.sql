@@ -34,8 +34,20 @@ create table if not exists profiles (
   id uuid references auth.users on delete cascade primary key,
   username text unique not null,
   display_name text,
+  bio text,
+  favorite_sport text,
+  usual_activity text,
+  focus_sport text,
+  avatar_url text,
   created_at timestamptz default now()
 );
+
+-- Identity fields added after the initial release; idempotent for existing DBs.
+alter table profiles add column if not exists bio text;
+alter table profiles add column if not exists favorite_sport text;
+alter table profiles add column if not exists usual_activity text;
+alter table profiles add column if not exists focus_sport text;
+alter table profiles add column if not exists avatar_url text;
 
 create table if not exists groups (
   id uuid default gen_random_uuid() primary key,
@@ -231,4 +243,35 @@ create policy "group members read checkin photos" on storage.objects
   using (
     bucket_id = 'checkins'
     and public.is_group_member(((storage.foldername(name))[1])::uuid)
+  );
+
+-- ----------------------------------------------------------------------------
+-- STORAGE: public `avatars` bucket for profile pictures.
+-- Path convention: <user_id>/<filename>. Profile pictures aren't sensitive
+-- proof photos, so this bucket is public-read (no signing needed in the feed),
+-- but a user may only write under their own folder.
+-- ----------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "avatar public read" on storage.objects;
+drop policy if exists "avatar uploads by owner" on storage.objects;
+drop policy if exists "avatar updates by owner" on storage.objects;
+
+create policy "avatar public read" on storage.objects
+  for select using (bucket_id = 'avatars');
+
+create policy "avatar uploads by owner" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "avatar updates by owner" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
   );

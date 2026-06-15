@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { Heatmap } from "@/components/Heatmap";
+import { Button } from "@/components/Button";
 import { SignOutButton } from "@/components/SignOutButton";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/lib/language-context";
@@ -11,6 +13,8 @@ import {
   computePersonalStreak,
   toDaySet,
 } from "@/lib/streaks";
+import type { Profile } from "@/lib/types";
+import type { TranslationKey } from "@/lib/i18n";
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
@@ -21,19 +25,27 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
+function AboutRow({ labelKey, value }: { labelKey: TranslationKey; value: string }) {
+  const { t } = useLanguage();
+  return (
+    <div className="flex flex-col gap-0.5 border-t border-border py-3 first:border-t-0 first:pt-0">
+      <span className="text-caption uppercase tracking-wide text-text-dim">
+        {t(labelKey)}
+      </span>
+      <span className="text-body text-text">{value}</span>
+    </div>
+  );
+}
+
 export function ProfileView({
-  username,
-  displayName,
+  profile,
   checkinDates,
 }: {
-  username: string;
-  displayName: string | null;
+  profile: Profile;
   checkinDates: string[];
 }) {
   const { t } = useLanguage();
 
-  // Computed client-side with the device's local "today" — consistent with the
-  // home screen's streak math.
   const { current, longest, total, daySet } = useMemo(() => {
     const now = new Date();
     return {
@@ -44,7 +56,15 @@ export function ProfileView({
     };
   }, [checkinDates]);
 
-  const name = displayName?.trim() || `@${username}`;
+  const name = profile.display_name?.trim() || `@${profile.username}`;
+
+  const aboutRows: { key: TranslationKey; value: string | null }[] = [
+    { key: "profile_favorite_sport_label", value: profile.favorite_sport },
+    { key: "profile_usual_activity_label", value: profile.usual_activity },
+    { key: "profile_focus_sport_label", value: profile.focus_sport },
+  ];
+  const hasAbout =
+    profile.bio || aboutRows.some((r) => r.value && r.value.trim());
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
@@ -55,12 +75,19 @@ export function ProfileView({
 
       {/* Identity */}
       <div className="mt-8 flex items-center gap-4">
-        <Avatar name={name} size="lg" />
-        <div className="min-w-0">
+        <Avatar name={name} src={profile.avatar_url} size="lg" />
+        <div className="min-w-0 flex-1">
           <p className="truncate text-h2">{name}</p>
-          <p className="truncate text-label text-text-muted">@{username}</p>
+          <p className="truncate text-label text-text-muted">@{profile.username}</p>
         </div>
+        <Link href="/profile/edit">
+          <Button variant="secondary">{t("profile_edit")}</Button>
+        </Link>
       </div>
+
+      {profile.bio && (
+        <p className="mt-4 text-body text-text-muted">{profile.bio}</p>
+      )}
 
       {/* Stats */}
       <div className="mt-8 grid grid-cols-3 gap-3">
@@ -69,8 +96,22 @@ export function ProfileView({
         <Stat value={total} label={t("profile_total_checkins")} />
       </div>
 
+      {/* About */}
+      {hasAbout && (
+        <section className="mt-8">
+          <h2 className="text-label text-text-muted">{t("profile_about")}</h2>
+          <div className="mt-3 rounded-card border border-border bg-surface px-4 py-1">
+            {aboutRows
+              .filter((r) => r.value && r.value.trim())
+              .map((r) => (
+                <AboutRow key={r.key} labelKey={r.key} value={r.value!.trim()} />
+              ))}
+          </div>
+        </section>
+      )}
+
       {/* Heatmap */}
-      <section className="mt-10">
+      <section className="mt-8">
         <h2 className="text-label text-text-muted">{t("profile_heatmap_title")}</h2>
         <div className="mt-3 rounded-card border border-border bg-surface p-4">
           <Heatmap daySet={daySet} />

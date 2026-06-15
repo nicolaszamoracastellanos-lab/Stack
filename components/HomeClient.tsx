@@ -58,6 +58,10 @@ export function HomeClient({
     () => Object.fromEntries(members.map((m) => [m.user_id, m.name])),
     [members],
   );
+  const avatarByUser = useMemo(
+    () => Object.fromEntries(members.map((m) => [m.user_id, m.avatarUrl])),
+    [members],
+  );
 
   // Keep refs fresh for use inside realtime callbacks (stable subscription).
   const feedRef = useRef(feed);
@@ -110,19 +114,22 @@ export function HomeClient({
             .createSignedUrl(c.photo_url, 60 * 60);
 
           let name = nameByUser[c.user_id];
+          let avatarUrl = avatarByUser[c.user_id] ?? null;
           if (!name) {
             const { data: p } = await supabase
               .from("profiles")
-              .select("username, display_name")
+              .select("username, display_name, avatar_url")
               .eq("id", c.user_id)
               .maybeSingle();
             name = p?.display_name?.trim() || (p ? `@${p.username}` : "Member");
+            avatarUrl = p?.avatar_url ?? null;
           }
 
           const item: ClientCheckin = {
             id: c.id,
             user_id: c.user_id,
             name,
+            avatarUrl,
             photoUrl: signed?.signedUrl ?? "",
             note: c.note ?? null,
             created_at: c.created_at,
@@ -147,7 +154,7 @@ export function HomeClient({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, groupId, userId, nameByUser, refetchReactions]);
+  }, [supabase, groupId, userId, nameByUser, avatarByUser, refetchReactions]);
 
   // Per-checkin reaction counts + whether the viewer has reacted.
   const reactionInfo = useMemo(() => {
@@ -248,6 +255,7 @@ export function HomeClient({
               const data: FeedItemData = {
                 id: c.id,
                 name: c.name,
+                avatarUrl: c.avatarUrl,
                 photoUrl: c.photoUrl,
                 note: c.note,
                 createdAt: c.created_at,

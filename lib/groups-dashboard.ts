@@ -9,6 +9,7 @@ import type { Group } from "@/lib/types";
 export type LeaderEntry = {
   userId: string;
   name: string;
+  avatarUrl: string | null;
   streak: number;
   isYou: boolean;
 };
@@ -18,7 +19,11 @@ export type DashboardGroup = {
   members: LeaderEntry[];
 };
 
-type ProfileLite = { username: string; display_name: string | null } | null;
+type ProfileLite = {
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+} | null;
 
 /**
  * Dashboard data for all of a user's groups: each group with its members ranked
@@ -38,7 +43,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
       const [memberRes, checkinRes] = await Promise.all([
         supabase
           .from("group_members")
-          .select("user_id, profile:profiles(username, display_name)")
+          .select("user_id, profile:profiles(username, display_name, avatar_url)")
           .eq("group_id", g.id),
         supabase
           .from("checkins")
@@ -57,6 +62,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
         return {
           userId: uid,
           name: nameOf(profile),
+          avatarUrl: profile?.avatar_url ?? null,
           streak: computePersonalStreak(dates, now).count,
           isYou: uid === userId,
         };

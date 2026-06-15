@@ -18,11 +18,5 @@ export default async function ProfilePage() {
 
   const checkinDates = (data ?? []).map((r) => r.created_at as string);
 
-  return (
-    <ProfileView
-      username={profile.username}
-      displayName={profile.display_name}
-      checkinDates={checkinDates}
-    />
-  );
+  return <ProfileView profile={profile} checkinDates={checkinDates} />;
 }

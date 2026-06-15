@@ -5,12 +5,17 @@ export type FeedCheckin = {
   id: string;
   user_id: string;
   name: string;
+  avatarUrl: string | null;
   photoUrl: string;
   note: string | null;
   created_at: string;
 };
 
-export type FeedMember = { user_id: string; name: string };
+export type FeedMember = {
+  user_id: string;
+  name: string;
+  avatarUrl: string | null;
+};
 export type FeedReaction = { checkin_id: string; user_id: string };
 
 export type HomeData = {
@@ -21,7 +26,11 @@ export type HomeData = {
   personalDates: string[];
 };
 
-type ProfileLite = { username: string; display_name: string | null } | null;
+type ProfileLite = {
+  username: string;
+  display_name: string | null;
+  avatar_url?: string | null;
+} | null;
 
 /** Friendly display name: the chosen display name, else @username. */
 export function nameOf(profile: ProfileLite): string {
@@ -43,7 +52,7 @@ export async function getHomeData(
   const [memberRes, checkinRes, mineRes] = await Promise.all([
     supabase
       .from("group_members")
-      .select("user_id, profile:profiles(username, display_name)")
+      .select("user_id, profile:profiles(username, display_name, avatar_url)")
       .eq("group_id", groupId),
     supabase
       .from("checkins")
@@ -60,9 +69,16 @@ export async function getHomeData(
 
   const members: FeedMember[] = (memberRes.data ?? []).map((row) => {
     const profile = (row as unknown as { profile: ProfileLite }).profile;
-    return { user_id: (row as { user_id: string }).user_id, name: nameOf(profile) };
+    return {
+      user_id: (row as { user_id: string }).user_id,
+      name: nameOf(profile),
+      avatarUrl: profile?.avatar_url ?? null,
+    };
   });
   const nameByUser = Object.fromEntries(members.map((m) => [m.user_id, m.name]));
+  const avatarByUser = Object.fromEntries(
+    members.map((m) => [m.user_id, m.avatarUrl]),
+  );
 
   const checkins = checkinRes.data ?? [];
   const signed = await getSignedPhotoUrls(
@@ -74,6 +90,7 @@ export async function getHomeData(
     id: c.id as string,
     user_id: c.user_id as string,
     name: nameByUser[c.user_id as string] ?? "Member",
+    avatarUrl: avatarByUser[c.user_id as string] ?? null,
     photoUrl: signed[c.photo_url as string] ?? "",
     note: (c.note as string | null) ?? null,
     created_at: c.created_at as string,

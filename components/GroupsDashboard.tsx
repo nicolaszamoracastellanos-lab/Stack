@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { JoinByCode } from "@/components/JoinByCode";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -32,6 +33,7 @@ function Leaderboard({ members }: { members: LeaderEntry[] }) {
       {members.map((m, i) => (
         <li key={m.userId} className="flex items-center gap-3">
           <RankBadge index={i} />
+          <Avatar name={m.name} src={m.avatarUrl} size="sm" />
           <span className="min-w-0 flex-1 truncate text-body">
             {m.name}
             {m.isYou && (

@@ -5,6 +5,11 @@ export type Profile = {
   id: string;
   username: string;
   display_name: string | null;
+  bio: string | null;
+  favorite_sport: string | null;
+  usual_activity: string | null;
+  focus_sport: string | null;
+  avatar_url: string | null;
   created_at: string;
 };
 
