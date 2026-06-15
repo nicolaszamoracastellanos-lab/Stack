@@ -19,7 +19,7 @@ const MAX_WIDTH = 1080; // cap upload size; gym photos don't need full sensor re
 export function CheckinNoGroup() {
   const { t } = useLanguage();
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-xl flex-col items-center justify-center px-6 text-center">
+    <main className="mx-auto flex min-h-[80dvh] w-full max-w-xl flex-col items-center justify-center px-6 text-center">
       <p className="text-h2">{t("checkin_title")}</p>
       <p className="mt-3 text-body text-text-muted">{t("checkin_no_group")}</p>
       <Link href="/home" className="mt-8">
@@ -176,7 +176,7 @@ export function CheckinCamera({
   // ---- Permission denied ----
   if (phase === "denied") {
     return (
-      <main className="mx-auto flex min-h-full w-full max-w-xl flex-col items-center justify-center px-6 text-center">
+      <main className="mx-auto flex min-h-[80dvh] w-full max-w-xl flex-col items-center justify-center px-6 text-center">
         <p className="text-h2 text-danger">{t("checkin_permission_denied")}</p>
         <p className="mt-3 text-body text-text-muted">
           {t("checkin_permission_help")}

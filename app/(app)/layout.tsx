@@ -3,16 +3,18 @@ import { Nav } from "@/components/Nav";
 import { getUserAndProfile } from "@/lib/auth";
 
 /**
- * Shell for the logged-in app (home, check-in, profile, groups). Enforces the
- * two gates from the spec:
- *   - no session            -> /login
- *   - session but no username -> /onboarding
+ * Shell for the logged-in app (home, check-in, profile, groups).
  *
- * APP-SHELL LAYOUT: the whole app is a fixed 100dvh flex box. Only the inner
- * content div scrolls; the Nav is a non-scrolling flex child. This is why the
- * nav can never "scroll into the middle" — it isn't position:fixed against the
- * document, it's structurally outside the scroll region. Also sidesteps iOS
- * Safari's dynamic-toolbar quirks with fixed bottom bars.
+ * NAV STRATEGY (read before touching): the document scrolls NATIVELY (no inner
+ * scroll container, no 100dvh+overflow-hidden shell — that combo breaks on iOS
+ * Safari and leaves a black gap below the bar). The Nav is `position: fixed` and
+ * anchored to the viewport. This container is a plain, NON-TRANSFORMED top-level
+ * box, so the fixed nav resolves against the viewport (a transform/filter/
+ * perspective/will-change/backdrop-filter here would re-base it and make it
+ * drift — never add one to this element or any ancestor of the nav).
+ *
+ * The content gets bottom padding = nav height + the iOS home-indicator inset so
+ * nothing hides behind the bar and there's no dead space.
  */
 export default async function AppLayout({
   children,
@@ -24,9 +26,10 @@ export default async function AppLayout({
   if (!profile) redirect("/onboarding");
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden lg:flex-row">
-      {/* The ONLY scroll container. min-h-0 lets it shrink so overflow works. */}
-      <div className="order-1 min-h-0 flex-1 overflow-y-auto overflow-x-hidden lg:order-2">
+    <div className="min-h-[100dvh] lg:pl-20">
+      {/* Bottom clearance for the fixed mobile tab bar + safe area. Desktop uses
+          the left side rail, so no bottom padding there. */}
+      <div className="pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0">
         {children}
       </div>
       <Nav />
