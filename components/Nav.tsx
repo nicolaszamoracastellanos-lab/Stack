@@ -1,0 +1,131 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useLanguage } from "@/lib/language-context";
+import { type TranslationKey } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+
+type Item = {
+  href: string;
+  key: TranslationKey;
+  icon: (active: boolean) => React.ReactNode;
+  primary?: boolean;
+};
+
+function HomeIcon({ active }: { active: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
+      <path
+        d="M3 10.5 12 3l9 7.5M5 9.5V20h5v-6h4v6h5V9.5"
+        stroke="currentColor"
+        strokeWidth={active ? 2.2 : 1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CheckinIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" aria-hidden>
+      <path
+        d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.2l.9-1.4A1 1 0 0 1 8.4 4h7.2a1 1 0 0 1 .8.6L17.3 6h1.2A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-8Z"
+        stroke="currentColor"
+        strokeWidth={1.9}
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12.5" r="3.2" stroke="currentColor" strokeWidth={1.9} />
+    </svg>
+  );
+}
+
+function ProfileIcon({ active }: { active: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
+      <circle cx="12" cy="8" r="3.4" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} />
+      <path
+        d="M4.5 19.5a7.5 7.5 0 0 1 15 0"
+        stroke="currentColor"
+        strokeWidth={active ? 2.2 : 1.8}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+const items: Item[] = [
+  { href: "/home", key: "nav_home", icon: (a) => <HomeIcon active={a} /> },
+  { href: "/checkin", key: "nav_checkin", icon: () => <CheckinIcon />, primary: true },
+  { href: "/profile", key: "nav_profile", icon: (a) => <ProfileIcon active={a} /> },
+];
+
+/**
+ * Bottom tab bar on phones, vertical side rail on desktop. The check-in tab is
+ * the emphasized primary action in the middle.
+ */
+export function Nav() {
+  const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
+
+  return (
+    <nav
+      className={cn(
+        // Mobile: fixed bottom bar.
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur",
+        "px-6 pb-[env(safe-area-inset-bottom)]",
+        // Desktop: left side rail.
+        "lg:inset-y-0 lg:right-auto lg:left-0 lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
+        "flex items-center justify-between lg:justify-start lg:gap-8",
+      )}
+    >
+      <Link
+        href="/home"
+        className="hidden lg:flex h-10 w-full items-center justify-center text-h2 font-bold"
+      >
+        <span className="text-text">S</span>
+        <span className="text-volt">.</span>
+      </Link>
+
+      <ul className="flex w-full items-center justify-between lg:flex-col lg:gap-6">
+        {items.map((item) => {
+          const active = isActive(item.href);
+          if (item.primary) {
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-label={t(item.key)}
+                  className={cn(
+                    "flex h-14 w-14 items-center justify-center rounded-pill bg-volt text-bg",
+                    "transition-colors duration-150 hover:bg-volt-dim",
+                  )}
+                >
+                  {item.icon(active)}
+                </Link>
+              </li>
+            );
+          }
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-3 transition-colors duration-150",
+                  active ? "text-volt" : "text-text-dim hover:text-text",
+                )}
+              >
+                {item.icon(active)}
+                <span className="text-caption lg:hidden">{t(item.key)}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}

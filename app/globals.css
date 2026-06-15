@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+    /* Stack is dark, always. We do not follow the OS light theme. */
+    color-scheme: dark;
+  }
+
+  /* Volt focus ring everywhere, consistent and intentional. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-volt/70 ring-offset-2 ring-offset-bg;
+  }
+
+  /* Selection picks up the brand accent. */
+  ::selection {
+    @apply bg-volt/30 text-text;
+  }
+
+  /* Dark, slim scrollbars so the chrome stays out of the way. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme("colors.border.strong") transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-pill bg-border-strong;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Tabular figures keep streak counts and timestamps from jittering. */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
