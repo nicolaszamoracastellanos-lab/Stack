@@ -7,7 +7,12 @@ import { getUserAndProfile } from "@/lib/auth";
  * two gates from the spec:
  *   - no session            -> /login
  *   - session but no username -> /onboarding
- * Renders the persistent Nav (bottom bar on mobile, side rail on desktop).
+ *
+ * APP-SHELL LAYOUT: the whole app is a fixed 100dvh flex box. Only the inner
+ * content div scrolls; the Nav is a non-scrolling flex child. This is why the
+ * nav can never "scroll into the middle" — it isn't position:fixed against the
+ * document, it's structurally outside the scroll region. Also sidesteps iOS
+ * Safari's dynamic-toolbar quirks with fixed bottom bars.
  */
 export default async function AppLayout({
   children,
@@ -19,13 +24,9 @@ export default async function AppLayout({
   if (!profile) redirect("/onboarding");
 
   return (
-    <div className="min-h-dvh lg:pl-20">
-      {/*
-        Clear the fixed bottom tab bar on mobile, including the iOS home-indicator
-        safe area, so the last feed item is never hidden behind the nav. Desktop
-        uses the left side rail, so no bottom padding there.
-      */}
-      <div className="pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+    <div className="flex h-[100dvh] flex-col overflow-hidden lg:flex-row">
+      {/* The ONLY scroll container. min-h-0 lets it shrink so overflow works. */}
+      <div className="order-1 min-h-0 flex-1 overflow-y-auto overflow-x-hidden lg:order-2">
         {children}
       </div>
       <Nav />

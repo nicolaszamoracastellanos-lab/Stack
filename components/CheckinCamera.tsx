@@ -19,7 +19,7 @@ const MAX_WIDTH = 1080; // cap upload size; gym photos don't need full sensor re
 export function CheckinNoGroup() {
   const { t } = useLanguage();
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 text-center">
+    <main className="mx-auto flex min-h-full w-full max-w-xl flex-col items-center justify-center px-6 text-center">
       <p className="text-h2">{t("checkin_title")}</p>
       <p className="mt-3 text-body text-text-muted">{t("checkin_no_group")}</p>
       <Link href="/home" className="mt-8">
@@ -49,7 +49,7 @@ export function CheckinCamera({
   const [phase, setPhase] = useState<Phase>("starting");
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [note, setNote] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Default to the rear camera (proof of the gym), but let the user flip to the
   // front camera for a face check-in.
   const [facing, setFacing] = useState<Facing>("environment");
@@ -129,13 +129,13 @@ export function CheckinCamera({
   function retake() {
     if (photo) URL.revokeObjectURL(photo.url);
     setPhoto(null);
-    setError(false);
+    setError(null);
     setPhase("live");
   }
 
   async function submit() {
     if (!photo) return;
-    setError(false);
+    setError(null);
     setPhase("uploading");
 
     const supabase = createClient();
@@ -146,7 +146,8 @@ export function CheckinCamera({
       .from(CHECKINS_BUCKET)
       .upload(path, photo.blob, { contentType: "image/jpeg", upsert: false });
     if (uploadError) {
-      setError(true);
+      console.error("[checkin upload] error:", uploadError);
+      setError(`Photo upload failed: ${uploadError.message}`);
       setPhase("captured");
       return;
     }
@@ -159,7 +160,8 @@ export function CheckinCamera({
       note: note.trim() || null,
     });
     if (insertError) {
-      setError(true);
+      console.error("[checkin insert] error:", insertError);
+      setError(`${insertError.code ?? "ERR"}: ${insertError.message}`);
       setPhase("captured");
       return;
     }
@@ -174,7 +176,7 @@ export function CheckinCamera({
   // ---- Permission denied ----
   if (phase === "denied") {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 text-center">
+      <main className="mx-auto flex min-h-full w-full max-w-xl flex-col items-center justify-center px-6 text-center">
         <p className="text-h2 text-danger">{t("checkin_permission_denied")}</p>
         <p className="mt-3 text-body text-text-muted">
           {t("checkin_permission_help")}
@@ -275,7 +277,9 @@ export function CheckinCamera({
             className="w-full resize-none rounded-input border border-border bg-surface px-3.5 py-3 text-body text-text placeholder:text-text-dim focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"
           />
           {error && (
-            <p className="text-label text-danger">{t("error_generic")}</p>
+            <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
+              {error}
+            </p>
           )}
           <div className="flex gap-3">
             <Button

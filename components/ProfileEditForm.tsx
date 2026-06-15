@@ -31,7 +31,8 @@ export function ProfileEditForm({
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(false);
+  // Holds the REAL error string during this debugging pass — never generic.
+  const [error, setError] = useState<string | null>(null);
   // Object URL of the picked file while the cropper is open.
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ export function ProfileEditForm({
   function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError(false);
+    setError(null);
     // Open the cropper instead of uploading the raw file directly.
     setCropSrc(URL.createObjectURL(file));
     // Allow re-picking the same file later.
@@ -54,14 +55,15 @@ export function ProfileEditForm({
 
   async function onCropped(blob: Blob) {
     closeCropper();
-    setError(false);
+    setError(null);
     setUploading(true);
     const path = `${userId}/${crypto.randomUUID()}.jpg`;
     const { error: upErr } = await supabase.storage
       .from("avatars")
       .upload(path, blob, { contentType: "image/jpeg", upsert: true });
     if (upErr) {
-      setError(true);
+      console.error("[avatar upload] error:", upErr);
+      setError(`Avatar upload failed: ${upErr.message}`);
       setUploading(false);
       return;
     }
@@ -72,7 +74,7 @@ export function ProfileEditForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(false);
+    setError(null);
     setSaving(true);
 
     const { error: updErr } = await supabase
@@ -88,7 +90,8 @@ export function ProfileEditForm({
       .eq("id", userId);
 
     if (updErr) {
-      setError(true);
+      console.error("[profile save] error:", updErr);
+      setError(`${updErr.code ?? "ERR"}: ${updErr.message}`);
       setSaving(false);
       return;
     }
@@ -176,7 +179,11 @@ export function ProfileEditForm({
           maxLength={80}
         />
 
-        {error && <p className="text-label text-danger">{t("error_generic")}</p>}
+        {error && (
+          <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
+            {error}
+          </p>
+        )}
 
         <Button
           type="submit"

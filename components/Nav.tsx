@@ -119,12 +119,13 @@ export function Nav() {
   return (
     <nav
       className={cn(
-        // Mobile: fixed bottom bar. Solid (not translucent) so feed photos
-        // never bleed through behind it.
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface",
+        // Mobile: a non-scrolling flex child at the bottom of the app shell
+        // (order-2). Solid so feed photos never bleed through; safe-area pad
+        // for the iOS home indicator.
+        "order-2 z-40 shrink-0 border-t border-border bg-surface",
         "px-3 pb-[env(safe-area-inset-bottom)]",
-        // Desktop: left side rail.
-        "lg:inset-y-0 lg:right-auto lg:left-0 lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
+        // Desktop: left side rail (order-1), full height via flex stretch.
+        "lg:order-1 lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
         "flex items-center justify-between lg:justify-start lg:gap-8",
       )}
     >

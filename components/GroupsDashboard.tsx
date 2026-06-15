@@ -68,7 +68,7 @@ function GroupCard({
   active: boolean;
   userId: string;
   baseUrl: string;
-  onError: () => void;
+  onError: (msg: string) => void;
 }) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -97,7 +97,8 @@ function GroupCard({
   }
 
   // We .select() the deleted rows so a silent RLS block (0 rows, no error) is
-  // detected and surfaced instead of looking like a no-op.
+  // detected. The REAL Postgres error (code/message/details/hint) is surfaced
+  // and logged — never a generic "couldn't do that".
   async function doLeave() {
     setWorking(true);
     const { data, error } = await supabase
@@ -108,8 +109,14 @@ function GroupCard({
       .select();
     setWorking(false);
     setConfirm(null);
-    if (error || !data || data.length === 0) {
-      onError();
+    if (error) {
+      console.error("[leave group] error:", error);
+      onError(`${error.code ?? "ERR"}: ${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      console.error("[leave group] 0 rows deleted — RLS likely blocking");
+      onError("Leave removed 0 rows — RLS policy \"users leave groups\" is missing.");
       return;
     }
     if (active) clearActiveGroup();
@@ -125,8 +132,16 @@ function GroupCard({
       .select();
     setWorking(false);
     setConfirm(null);
-    if (error || !data || data.length === 0) {
-      onError();
+    if (error) {
+      console.error("[delete group] error:", error);
+      onError(`${error.code ?? "ERR"}: ${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      console.error("[delete group] 0 rows deleted — RLS likely blocking");
+      onError(
+        "Delete removed 0 rows — RLS policy \"creator deletes group\" is missing (or you're not the creator).",
+      );
       return;
     }
     if (active) clearActiveGroup();
@@ -251,18 +266,23 @@ export function GroupsDashboard({
   const { t } = useLanguage();
   const [toast, setToast] = useState<string | null>(null);
 
-  function showError() {
-    setToast(t("action_failed"));
-    setTimeout(() => setToast(null), 3500);
+  function showError(msg: string) {
+    setToast(msg);
+    // Longer dwell so the real error is readable.
+    setTimeout(() => setToast(null), 8000);
   }
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
-      {/* Error toast — leave/delete never fails silently. */}
+      {/* Error toast — shows the REAL error so failures are never silent. */}
       {toast && (
-        <div className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90%] rounded-pill border border-danger/40 bg-surface-2 px-4 py-2 text-label text-danger shadow-lg">
+        <button
+          type="button"
+          onClick={() => setToast(null)}
+          className="fixed inset-x-4 top-4 z-50 mx-auto max-w-md rounded-card border border-danger/40 bg-surface-2 px-4 py-3 text-left text-label text-danger shadow-lg"
+        >
           {toast}
-        </div>
+        </button>
       )}
 
       <header className="mb-6 flex items-center justify-between">
