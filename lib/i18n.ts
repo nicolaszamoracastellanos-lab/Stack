@@ -42,6 +42,11 @@ export const translations = {
     // Activity
     activity_title: "Your activity",
     activity_empty: "No posts yet. Your check-ins show up here.",
+    activity_today: "Today",
+    activity_week: "This week",
+    activity_month: "This month",
+    activity_count: "{n} check-ins",
+    activity_empty_window: "Nothing in this window yet.",
 
     // Groups dashboard
     groups_title: "Your groups",
@@ -227,6 +232,11 @@ export const translations = {
     // Activity
     activity_title: "Tu actividad",
     activity_empty: "Aún no hay publicaciones. Tus registros aparecen aquí.",
+    activity_today: "Hoy",
+    activity_week: "Esta semana",
+    activity_month: "Este mes",
+    activity_count: "{n} registros",
+    activity_empty_window: "Nada en este periodo todavía.",
 
     // Groups dashboard
     groups_title: "Tus grupos",

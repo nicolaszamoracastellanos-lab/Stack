@@ -282,7 +282,9 @@ export function HomeClient({
 
       {/* Live feed */}
       <section>
-        <h2 className="mb-3 text-label text-text-muted">{t("feed_title")}</h2>
+        <h2 className="mb-3 text-caption font-medium uppercase tracking-wide text-text-dim">
+          {t("feed_title")}
+        </h2>
         {feed.length === 0 ? (
           <div className="rounded-card border border-dashed border-border px-4 py-10 text-center">
             <p className="text-body text-text-dim">{t("feed_empty")}</p>

@@ -18,10 +18,18 @@ import type { TranslationKey } from "@/lib/i18n";
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col rounded-card border border-border bg-surface p-4">
+    <div className="flex flex-col rounded-card border border-border bg-surface p-5">
       <span className="font-mono text-h1 nums text-text">{value}</span>
       <span className="mt-1 text-caption text-text-muted">{label}</span>
     </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-caption font-medium uppercase tracking-wide text-text-dim">
+      {children}
+    </h2>
   );
 }
 
@@ -98,9 +106,9 @@ export function ProfileView({
 
       {/* About */}
       {hasAbout && (
-        <section className="mt-8">
-          <h2 className="text-label text-text-muted">{t("profile_about")}</h2>
-          <div className="mt-3 rounded-card border border-border bg-surface px-4 py-1">
+        <section className="mt-10">
+          <SectionLabel>{t("profile_about")}</SectionLabel>
+          <div className="mt-3 rounded-card border border-border bg-surface px-5 py-1">
             {aboutRows
               .filter((r) => r.value && r.value.trim())
               .map((r) => (
@@ -111,9 +119,9 @@ export function ProfileView({
       )}
 
       {/* Heatmap */}
-      <section className="mt-8">
-        <h2 className="text-label text-text-muted">{t("profile_heatmap_title")}</h2>
-        <div className="mt-3 rounded-card border border-border bg-surface p-4">
+      <section className="mt-10">
+        <SectionLabel>{t("profile_heatmap_title")}</SectionLabel>
+        <div className="mt-3 rounded-card border border-border bg-surface p-5">
           <Heatmap daySet={daySet} />
         </div>
       </section>
