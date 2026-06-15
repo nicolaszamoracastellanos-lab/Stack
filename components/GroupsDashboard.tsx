@@ -8,7 +8,8 @@ import { Button } from "@/components/Button";
 import { JoinByCode } from "@/components/JoinByCode";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/lib/language-context";
-import { setActiveGroup } from "@/lib/active-group";
+import { createClient } from "@/lib/supabase/client";
+import { setActiveGroup, clearActiveGroup } from "@/lib/active-group";
 import { cn } from "@/lib/utils";
 import type { DashboardGroup, LeaderEntry } from "@/lib/groups-dashboard";
 
@@ -29,11 +30,21 @@ function RankBadge({ index }: { index: number }) {
 function Leaderboard({ members }: { members: LeaderEntry[] }) {
   const { t } = useLanguage();
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-2.5">
       {members.map((m, i) => (
         <li key={m.userId} className="flex items-center gap-3">
           <RankBadge index={i} />
-          <Avatar name={m.name} src={m.avatarUrl} size="sm" />
+          {/* Avatar with an at-risk status dot: volt = showed up today, red = not yet. */}
+          <span className="relative shrink-0">
+            <Avatar name={m.name} src={m.avatarUrl} size="sm" />
+            <span
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-pill border-2 border-surface",
+                m.checkedInToday ? "bg-volt" : "bg-danger",
+              )}
+              title={m.checkedInToday ? "today ✓" : "not today"}
+            />
+          </span>
           <span className="min-w-0 flex-1 truncate text-body">
             {m.name}
             {m.isYou && (
@@ -42,9 +53,12 @@ function Leaderboard({ members }: { members: LeaderEntry[] }) {
               </span>
             )}
           </span>
+          <span className="font-mono text-caption text-text-dim nums">
+            {m.daysThisWeek}/7
+          </span>
           <span
             className={cn(
-              "flex items-center gap-1 font-mono text-label nums",
+              "flex w-10 items-center justify-end gap-1 font-mono text-label nums",
               i === 0 ? "text-volt" : "text-text-muted",
             )}
           >
@@ -60,16 +74,22 @@ function Leaderboard({ members }: { members: LeaderEntry[] }) {
 function GroupCard({
   item,
   active,
+  userId,
   baseUrl,
 }: {
   item: DashboardGroup;
   active: boolean;
+  userId: string;
   baseUrl: string;
 }) {
   const { t } = useLanguage();
   const router = useRouter();
+  const supabase = createClient();
   const [copied, setCopied] = useState(false);
+  const [confirm, setConfirm] = useState<null | "leave" | "delete">(null);
+  const [working, setWorking] = useState(false);
 
+  const isCreator = item.group.created_by === userId;
   const link = `${baseUrl}/join/${item.group.invite_code}`;
 
   async function copy() {
@@ -78,13 +98,35 @@ function GroupCard({
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      // clipboard blocked — link stays visible to copy manually
+      /* clipboard blocked — link stays visible */
     }
   }
 
   function open() {
     setActiveGroup(item.group.id);
     router.push("/home");
+    router.refresh();
+  }
+
+  async function doLeave() {
+    setWorking(true);
+    await supabase
+      .from("group_members")
+      .delete()
+      .eq("group_id", item.group.id)
+      .eq("user_id", userId);
+    if (active) clearActiveGroup();
+    setConfirm(null);
+    setWorking(false);
+    router.refresh();
+  }
+
+  async function doDelete() {
+    setWorking(true);
+    await supabase.from("groups").delete().eq("id", item.group.id);
+    if (active) clearActiveGroup();
+    setConfirm(null);
+    setWorking(false);
     router.refresh();
   }
 
@@ -111,7 +153,8 @@ function GroupCard({
             </p>
           )}
           <p className="mt-1 text-caption text-text-dim">
-            {t("groups_members_count", { n: item.members.length })}
+            {t("groups_members_count", { n: item.members.length })} ·{" "}
+            {t("groups_week_checkins", { n: item.weekTotal })}
           </p>
         </div>
         <Button variant={active ? "secondary" : "primary"} onClick={open}>
@@ -139,6 +182,54 @@ function GroupCard({
           </Button>
         </div>
       </div>
+
+      {/* Leave / delete */}
+      <div className="mt-4 border-t border-border pt-3">
+        {confirm ? (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-label text-text-muted">
+              {confirm === "delete"
+                ? t("groups_delete_confirm")
+                : t("groups_leave_confirm")}
+            </span>
+            <div className="flex shrink-0 gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setConfirm(null)}
+                disabled={working}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={confirm === "delete" ? doDelete : doLeave}
+                disabled={working}
+              >
+                {working ? t("loading") : t("groups_confirm_yes")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => setConfirm("leave")}
+              className="text-label text-text-muted hover:text-danger"
+            >
+              {t("groups_leave")}
+            </button>
+            {isCreator && (
+              <button
+                type="button"
+                onClick={() => setConfirm("delete")}
+                className="text-label text-danger hover:text-danger-dim"
+              >
+                {t("groups_delete")}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -146,10 +237,12 @@ function GroupCard({
 export function GroupsDashboard({
   groups,
   activeId,
+  userId,
   baseUrl,
 }: {
   groups: DashboardGroup[];
   activeId: string | null;
+  userId: string;
   baseUrl: string;
 }) {
   const { t } = useLanguage();
@@ -172,6 +265,7 @@ export function GroupsDashboard({
               key={item.group.id}
               item={item}
               active={item.group.id === activeId}
+              userId={userId}
               baseUrl={baseUrl}
             />
           ))}

@@ -166,12 +166,18 @@ create policy "members read their groups" on groups
   );
 create policy "authenticated create groups" on groups
   for insert with check (auth.uid() = created_by);
+-- Only the creator can delete a group (cascades to members/checkins/reactions).
+create policy "creator deletes group" on groups
+  for delete using (auth.uid() = created_by);
 
 -- GROUP MEMBERS: read membership of groups you belong to; you can join (as you).
 create policy "read membership of own groups" on group_members
   for select using (public.is_group_member(group_id));
 create policy "users join groups" on group_members
   for insert with check (auth.uid() = user_id);
+-- You can leave a group by removing your own membership row.
+create policy "users leave groups" on group_members
+  for delete using (auth.uid() = user_id);
 
 -- CHECKINS: members read all checkins in their group; you create your own (and
 -- only in a group you actually belong to).

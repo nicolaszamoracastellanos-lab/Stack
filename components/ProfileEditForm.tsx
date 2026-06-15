@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { ImageCropper } from "@/components/ImageCropper";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
@@ -31,20 +32,34 @@ export function ProfileEditForm({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
+  // Object URL of the picked file while the cropper is open.
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const name = displayName.trim() || `@${profile.username}`;
 
-  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setError(false);
-    setUploading(true);
+    // Open the cropper instead of uploading the raw file directly.
+    setCropSrc(URL.createObjectURL(file));
+    // Allow re-picking the same file later.
+    e.target.value = "";
+  }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  function closeCropper() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  }
+
+  async function onCropped(blob: Blob) {
+    closeCropper();
+    setError(false);
+    setUploading(true);
+    const path = `${userId}/${crypto.randomUUID()}.jpg`;
     const { error: upErr } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { contentType: file.type, upsert: true });
+      .upload(path, blob, { contentType: "image/jpeg", upsert: true });
     if (upErr) {
       setError(true);
       setUploading(false);
@@ -173,6 +188,14 @@ export function ProfileEditForm({
           {saving ? t("loading") : t("profile_save")}
         </Button>
       </form>
+
+      {cropSrc && (
+        <ImageCropper
+          src={cropSrc}
+          onCancel={closeCropper}
+          onCropped={onCropped}
+        />
+      )}
     </main>
   );
 }

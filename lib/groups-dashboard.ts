@@ -2,7 +2,11 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUserGroups } from "@/lib/groups";
 import { nameOf } from "@/lib/feed";
-import { computePersonalStreak } from "@/lib/streaks";
+import {
+  computePersonalStreak,
+  localDateKey,
+  toDaySet,
+} from "@/lib/streaks";
 import { ACTIVE_GROUP_COOKIE } from "@/lib/active-group";
 import type { Group } from "@/lib/types";
 
@@ -11,12 +15,18 @@ export type LeaderEntry = {
   name: string;
   avatarUrl: string | null;
   streak: number;
+  /** Has this member checked in today? (drives the at-risk flag) */
+  checkedInToday: boolean;
+  /** Distinct days checked in over the last 7 (0–7). */
+  daysThisWeek: number;
   isYou: boolean;
 };
 
 export type DashboardGroup = {
   group: Group;
   members: LeaderEntry[];
+  /** Total check-ins in this group over the last 7 days. */
+  weekTotal: number;
 };
 
 type ProfileLite = {
@@ -53,24 +63,43 @@ export async function getGroupsDashboard(userId: string): Promise<{
       ]);
 
       const checkins = checkinRes.data ?? [];
+
+      // Day keys for "today" and the last 7 days (local time).
+      const todayKey = localDateKey(now);
+      const last7: string[] = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        last7.push(localDateKey(d));
+      }
+      const last7Set = new Set(last7);
+
       const members: LeaderEntry[] = (memberRes.data ?? []).map((row) => {
         const uid = (row as { user_id: string }).user_id;
         const profile = (row as unknown as { profile: ProfileLite }).profile;
         const dates = checkins
           .filter((c) => c.user_id === uid)
           .map((c) => c.created_at as string);
+        const daySet = toDaySet(dates);
         return {
           userId: uid,
           name: nameOf(profile),
           avatarUrl: profile?.avatar_url ?? null,
           streak: computePersonalStreak(dates, now).count,
+          checkedInToday: daySet.has(todayKey),
+          daysThisWeek: last7.filter((k) => daySet.has(k)).length,
           isYou: uid === userId,
         };
       });
 
       // Rank: highest streak first, then alphabetical for stable ties.
       members.sort((a, b) => b.streak - a.streak || a.name.localeCompare(b.name));
-      return { group: g, members };
+
+      const weekTotal = checkins.filter((c) =>
+        last7Set.has(localDateKey(new Date(c.created_at as string))),
+      ).length;
+
+      return { group: g, members, weekTotal };
     }),
   );
 

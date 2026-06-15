@@ -14,6 +14,11 @@ export default async function GroupsPage() {
     process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? "";
 
   return (
-    <GroupsDashboard groups={groups} activeId={activeId} baseUrl={baseUrl} />
+    <GroupsDashboard
+      groups={groups}
+      activeId={activeId}
+      userId={userId}
+      baseUrl={baseUrl}
+    />
   );
 }

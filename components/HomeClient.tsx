@@ -20,6 +20,9 @@ import type { FeedCheckin, FeedMember, FeedReaction } from "@/lib/feed";
 
 type ClientCheckin = FeedCheckin & { isNew?: boolean };
 
+// Streak lengths worth celebrating with a milestone banner.
+const MILESTONES = [7, 14, 30, 60, 100, 180, 365];
+
 export function HomeClient({
   groupId,
   userId,
@@ -227,6 +230,16 @@ export function HomeClient({
           />
         </div>
       </section>
+
+      {/* Milestone moment — celebrate hitting a meaningful streak. */}
+      {MILESTONES.includes(personal.count) && (
+        <div className="rounded-card border border-volt/40 bg-volt/10 px-4 py-4">
+          <p className="text-h2 text-volt">
+            🔥 {t("milestone_title", { n: personal.count })}
+          </p>
+          <p className="mt-1 text-label text-text-muted">{t("milestone_sub")}</p>
+        </div>
+      )}
 
       {/* Check-in CTA */}
       {checkedInToday ? (
