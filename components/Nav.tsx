@@ -63,6 +63,18 @@ function CheckinIcon() {
   );
 }
 
+function ActivityIcon({ active }: { active: boolean }) {
+  const w = active ? 2.2 : 1.8;
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={w} />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={w} />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={w} />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={w} />
+    </svg>
+  );
+}
+
 function ProfileIcon({ active }: { active: boolean }) {
   return (
     <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
@@ -77,10 +89,13 @@ function ProfileIcon({ active }: { active: boolean }) {
   );
 }
 
+// Camera sits dead center of the five tabs (2 either side) so the primary
+// action is balanced, not off to one side.
 const items: Item[] = [
   { href: "/home", key: "nav_home", icon: (a) => <HomeIcon active={a} /> },
   { href: "/groups", key: "nav_groups", icon: (a) => <GroupsIcon active={a} /> },
   { href: "/checkin", key: "nav_checkin", icon: () => <CheckinIcon />, primary: true },
+  { href: "/activity", key: "nav_activity", icon: (a) => <ActivityIcon active={a} /> },
   { href: "/profile", key: "nav_profile", icon: (a) => <ProfileIcon active={a} /> },
 ];
 
@@ -104,9 +119,10 @@ export function Nav() {
   return (
     <nav
       className={cn(
-        // Mobile: fixed bottom bar.
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur",
-        "px-4 pb-[env(safe-area-inset-bottom)]",
+        // Mobile: fixed bottom bar. Solid (not translucent) so feed photos
+        // never bleed through behind it.
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface",
+        "px-3 pb-[env(safe-area-inset-bottom)]",
         // Desktop: left side rail.
         "lg:inset-y-0 lg:right-auto lg:left-0 lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
         "flex items-center justify-between lg:justify-start lg:gap-8",

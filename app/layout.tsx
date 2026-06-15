@@ -18,12 +18,22 @@ export const metadata: Metadata = {
   title: "Stack — Show up. Every day.",
   description:
     "A private accountability app for small crews. Check in with a photo, build the streak, never break it alone.",
+  // Add-to-Home-Screen on iOS launches Stack full-screen with no browser
+  // chrome — the real phone-first experience (and it fixes the toolbar
+  // overlapping the bottom nav).
+  appleWebApp: {
+    capable: true,
+    title: "Stack",
+    statusBarStyle: "black",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#0A0A0B",
   width: "device-width",
   initialScale: 1,
+  // Let content extend into the safe areas so env(safe-area-inset-*) works.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

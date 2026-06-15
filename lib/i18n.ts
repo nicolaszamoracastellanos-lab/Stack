@@ -36,7 +36,12 @@ export const translations = {
     nav_home: "Home",
     nav_groups: "Groups",
     nav_checkin: "Check in",
+    nav_activity: "Activity",
     nav_profile: "Profile",
+
+    // Activity
+    activity_title: "Your activity",
+    activity_empty: "No posts yet. Your check-ins show up here.",
 
     // Groups dashboard
     groups_title: "Your groups",
@@ -187,7 +192,12 @@ export const translations = {
     nav_home: "Inicio",
     nav_groups: "Grupos",
     nav_checkin: "Registrar",
+    nav_activity: "Actividad",
     nav_profile: "Perfil",
+
+    // Activity
+    activity_title: "Tu actividad",
+    activity_empty: "Aún no hay publicaciones. Tus registros aparecen aquí.",
 
     // Groups dashboard
     groups_title: "Tus grupos",
