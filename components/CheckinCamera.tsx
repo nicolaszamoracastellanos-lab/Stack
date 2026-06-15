@@ -8,8 +8,10 @@ import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET, checkinPhotoPath } from "@/lib/storage";
 import { setActiveGroup } from "@/lib/active-group";
+import { cn } from "@/lib/utils";
 
 type Phase = "starting" | "live" | "denied" | "captured" | "uploading";
+type Facing = "environment" | "user";
 
 const MAX_WIDTH = 1080; // cap upload size; gym photos don't need full sensor res
 
@@ -48,39 +50,50 @@ export function CheckinCamera({
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [note, setNote] = useState("");
   const [error, setError] = useState(false);
+  // Default to the rear camera (proof of the gym), but let the user flip to the
+  // front camera for a face check-in.
+  const [facing, setFacing] = useState<Facing>("environment");
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
   }, []);
 
-  const startCamera = useCallback(async () => {
-    setPhase("starting");
-    try {
-      // Prefer the rear camera (proof of the gym, not a selfie); fall back to
-      // any camera (e.g. a laptop webcam).
-      const stream = await navigator.mediaDevices
-        .getUserMedia({ video: { facingMode: "environment" }, audio: false })
-        .catch(() =>
-          navigator.mediaDevices.getUserMedia({ video: true, audio: false }),
-        );
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
+  const startCamera = useCallback(
+    async (mode: Facing) => {
+      stopStream(); // release any existing stream before switching cameras
+      setPhase("starting");
+      try {
+        const stream = await navigator.mediaDevices
+          .getUserMedia({ video: { facingMode: mode }, audio: false })
+          .catch(() =>
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false }),
+          );
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+        setPhase("live");
+      } catch {
+        // Permission denied, no camera, or insecure context.
+        setPhase("denied");
       }
-      setPhase("live");
-    } catch {
-      // Permission denied, no camera, or insecure context.
-      setPhase("denied");
-    }
-  }, []);
+    },
+    [stopStream],
+  );
 
   // Start on mount; always release the camera on unmount.
   useEffect(() => {
-    startCamera();
+    startCamera("environment");
     return () => stopStream();
   }, [startCamera, stopStream]);
+
+  function flipCamera() {
+    const next: Facing = facing === "environment" ? "user" : "environment";
+    setFacing(next);
+    startCamera(next);
+  }
 
   function capture() {
     const video = videoRef.current;
@@ -95,6 +108,11 @@ export function CheckinCamera({
     canvas.height = h;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // Mirror the front camera so the saved photo matches the mirrored preview.
+    if (facing === "user") {
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, 0, 0, w, h);
 
     canvas.toBlob(
@@ -162,7 +180,7 @@ export function CheckinCamera({
           {t("checkin_permission_help")}
         </p>
         <div className="mt-8 flex gap-3">
-          <Button variant="primary" size="lg" onClick={startCamera}>
+          <Button variant="primary" size="lg" onClick={() => startCamera(facing)}>
             {t("checkin_capture")}
           </Button>
           <Link href="/home">
@@ -194,12 +212,39 @@ export function CheckinCamera({
           autoPlay
           playsInline
           muted
-          className={
-            phase === "captured"
-              ? "hidden"
-              : "h-full w-full object-cover"
-          }
+          className={cn(
+            "h-full w-full object-cover",
+            phase === "captured" && "hidden",
+            // Mirror the front camera so the preview feels like a selfie.
+            facing === "user" && "scale-x-[-1]",
+          )}
         />
+
+        {/* Flip camera — only over the live preview. */}
+        {phase === "live" && (
+          <button
+            type="button"
+            onClick={flipCamera}
+            aria-label={t("checkin_flip")}
+            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-pill bg-bg/60 text-text backdrop-blur transition-colors duration-150 hover:bg-bg/80"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
+              <path
+                d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.2l.9-1.4A1 1 0 0 1 8.4 4h7.2a1 1 0 0 1 .8.6L17.3 6h1.2A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-8Z"
+                stroke="currentColor"
+                strokeWidth={1.6}
+                strokeLinejoin="round"
+              />
+              <path
+                d="M9.5 12.5a2.5 2.5 0 0 1 4.3-1.7m.7 1.7a2.5 2.5 0 0 1-4.3 1.7m4.3-1.7-.3-1.5m.3 1.5 1.4.2m-6.4 1.3.3 1.5m-.3-1.5-1.4-.2"
+                stroke="currentColor"
+                strokeWidth={1.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
         {phase === "captured" && photo && (
           // eslint-disable-next-line @next/next/no-img-element -- local object URL preview
           <img

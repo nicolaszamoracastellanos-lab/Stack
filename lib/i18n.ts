@@ -34,8 +34,20 @@ export const translations = {
 
     // Nav
     nav_home: "Home",
+    nav_groups: "Groups",
     nav_checkin: "Check in",
     nav_profile: "Profile",
+
+    // Groups dashboard
+    groups_title: "Your groups",
+    groups_active_badge: "Active",
+    groups_open: "Open",
+    groups_set_active: "View group",
+    groups_members_count: "{n} members",
+    groups_leaderboard: "Leaderboard",
+    groups_invite_label: "Invite link",
+    groups_you_tag: "you",
+    groups_new: "New group",
 
     // Sign up
     signup_title: "Start stacking",
@@ -120,6 +132,7 @@ export const translations = {
     checkin_subtitle: "Take the shot here, now. That's the proof.",
     checkin_capture: "Capture",
     checkin_retake: "Retake",
+    checkin_flip: "Flip camera",
     checkin_note_placeholder: "How did it go? (optional)",
     checkin_submit: "Stack it",
     checkin_starting_camera: "Starting camera…",
@@ -172,8 +185,20 @@ export const translations = {
 
     // Nav
     nav_home: "Inicio",
+    nav_groups: "Grupos",
     nav_checkin: "Registrar",
     nav_profile: "Perfil",
+
+    // Groups dashboard
+    groups_title: "Tus grupos",
+    groups_active_badge: "Activo",
+    groups_open: "Abrir",
+    groups_set_active: "Ver grupo",
+    groups_members_count: "{n} integrantes",
+    groups_leaderboard: "Tabla de posiciones",
+    groups_invite_label: "Enlace de invitación",
+    groups_you_tag: "tú",
+    groups_new: "Nuevo grupo",
 
     // Sign up
     signup_title: "Empieza a sumar",
@@ -259,6 +284,7 @@ export const translations = {
     checkin_subtitle: "Toma la foto aquí, ahora. Esa es la prueba.",
     checkin_capture: "Capturar",
     checkin_retake: "Repetir",
+    checkin_flip: "Cambiar cámara",
     checkin_note_placeholder: "¿Cómo te fue? (opcional)",
     checkin_submit: "Sumar",
     checkin_starting_camera: "Encendiendo la cámara…",

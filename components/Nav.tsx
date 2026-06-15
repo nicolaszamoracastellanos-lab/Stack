@@ -11,6 +11,7 @@ type Item = {
   key: TranslationKey;
   icon: (active: boolean) => React.ReactNode;
   primary?: boolean;
+  match?: string; // active-state prefix override
 };
 
 function HomeIcon({ active }: { active: boolean }) {
@@ -22,6 +23,27 @@ function HomeIcon({ active }: { active: boolean }) {
         strokeWidth={active ? 2.2 : 1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function GroupsIcon({ active }: { active: boolean }) {
+  const w = active ? 2.2 : 1.8;
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
+      <circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth={w} />
+      <path
+        d="M3.5 19.5a5.5 5.5 0 0 1 11 0"
+        stroke="currentColor"
+        strokeWidth={w}
+        strokeLinecap="round"
+      />
+      <path
+        d="M16 5.2a3 3 0 0 1 0 5.6M17.5 14.2a5.5 5.5 0 0 1 3 5.3"
+        stroke="currentColor"
+        strokeWidth={w}
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -57,27 +79,34 @@ function ProfileIcon({ active }: { active: boolean }) {
 
 const items: Item[] = [
   { href: "/home", key: "nav_home", icon: (a) => <HomeIcon active={a} /> },
+  { href: "/groups", key: "nav_groups", icon: (a) => <GroupsIcon active={a} /> },
   { href: "/checkin", key: "nav_checkin", icon: () => <CheckinIcon />, primary: true },
   { href: "/profile", key: "nav_profile", icon: (a) => <ProfileIcon active={a} /> },
 ];
 
 /**
  * Bottom tab bar on phones, vertical side rail on desktop. The check-in tab is
- * the emphasized primary action in the middle.
+ * the emphasized primary action.
  */
 export function Nav() {
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const isActive = (item: Item) => {
+    // /groups should not light up while on /groups/new (that's the create flow),
+    // but /groups itself and deeper group routes should.
+    if (item.href === "/groups") {
+      return pathname === "/groups";
+    }
+    return pathname === item.href || pathname.startsWith(item.href + "/");
+  };
 
   return (
     <nav
       className={cn(
         // Mobile: fixed bottom bar.
         "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur",
-        "px-6 pb-[env(safe-area-inset-bottom)]",
+        "px-4 pb-[env(safe-area-inset-bottom)]",
         // Desktop: left side rail.
         "lg:inset-y-0 lg:right-auto lg:left-0 lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
         "flex items-center justify-between lg:justify-start lg:gap-8",
@@ -91,9 +120,9 @@ export function Nav() {
         <span className="text-volt">.</span>
       </Link>
 
-      <ul className="flex w-full items-center justify-between lg:flex-col lg:gap-6">
+      <ul className="flex w-full items-center justify-between lg:flex-col lg:gap-5">
         {items.map((item) => {
-          const active = isActive(item.href);
+          const active = isActive(item);
           if (item.primary) {
             return (
               <li key={item.href}>
@@ -115,12 +144,14 @@ export function Nav() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-3 transition-colors duration-150",
+                  "flex flex-col items-center gap-1 py-2.5 transition-colors duration-150",
                   active ? "text-volt" : "text-text-dim hover:text-text",
                 )}
               >
                 {item.icon(active)}
-                <span className="text-caption lg:hidden">{t(item.key)}</span>
+                <span className="text-[10px] leading-none lg:hidden">
+                  {t(item.key)}
+                </span>
               </Link>
             </li>
           );
