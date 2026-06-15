@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { getUserAndProfile } from "@/lib/auth";
+import { isProfileComplete } from "@/lib/profile";
 
 /**
  * Shell for the logged-in app (home, check-in, profile, groups).
@@ -23,7 +24,8 @@ export default async function AppLayout({
 }) {
   const { userId, profile } = await getUserAndProfile();
   if (!userId) redirect("/login");
-  if (!profile) redirect("/onboarding");
+  // Every user — new or existing — must complete onboarding before the app.
+  if (!isProfileComplete(profile)) redirect("/onboarding");
 
   return (
     <div className="min-h-[100dvh] lg:pl-20">

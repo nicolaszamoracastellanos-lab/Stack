@@ -9,6 +9,8 @@ import { Input } from "@/components/Input";
 import { useLanguage } from "@/lib/language-context";
 import { type TranslationKey } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
+import { isProfileComplete } from "@/lib/profile";
+import type { Profile } from "@/lib/types";
 
 function LoginForm() {
   const { t } = useLanguage();
@@ -39,18 +41,22 @@ function LoginForm() {
       return;
     }
 
-    // Route by onboarding state: username set -> home (or the original target),
-    // otherwise finish onboarding first.
+    // Route by onboarding state: a fully-completed profile -> home (or the
+    // original target), otherwise into the onboarding flow to finish it.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("username")
+      .select("*")
       .eq("id", data.user.id)
       .maybeSingle();
 
-    if (profile?.username) {
+    if (isProfileComplete(profile as Profile | null)) {
       router.replace(next && next.startsWith("/") ? next : "/home");
     } else {
-      router.replace("/onboarding");
+      const target =
+        next && next.startsWith("/")
+          ? `/onboarding?next=${encodeURIComponent(next)}`
+          : "/onboarding";
+      router.replace(target);
     }
   }
 

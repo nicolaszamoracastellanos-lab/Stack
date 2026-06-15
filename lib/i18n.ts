@@ -98,6 +98,28 @@ export const translations = {
     error_username_invalid:
       "Use 3–20 letters, numbers or underscores.",
 
+    // Multi-step onboarding
+    ob_step: "Step {n} of {total}",
+    ob_continue: "Continue",
+    ob_finish: "Enter Stack",
+    ob_required: "This field is required.",
+    ob_username_title: "Claim your name",
+    ob_username_sub: "This is how your crew sees you. Choose well.",
+    ob_avatar_title: "Put a face to it",
+    ob_avatar_sub: "Add a profile photo so your group knows it's you.",
+    ob_avatar_choose: "Choose photo",
+    ob_avatar_required: "A profile picture is required.",
+    ob_name_title: "Your name",
+    ob_name_sub: "What should we call you?",
+    ob_sport_title: "Your sport",
+    ob_sport_sub: "What do you train most?",
+    ob_routine_title: "Your routine",
+    ob_routine_sub: "What do you usually do?",
+    ob_focus_title: "This month's focus",
+    ob_focus_sub: "What are you chasing right now?",
+    ob_bio_title: "One line about you",
+    ob_bio_sub: "Optional — make it count.",
+
     // Home — empty state
     home_no_group_title: "No crew yet",
     home_no_group_subtitle:
@@ -287,6 +309,28 @@ export const translations = {
     error_username_taken: "Ese usuario ya existe.",
     error_username_invalid:
       "Usa 3 a 20 letras, números o guiones bajos.",
+
+    // Multi-step onboarding
+    ob_step: "Paso {n} de {total}",
+    ob_continue: "Continuar",
+    ob_finish: "Entrar a Stack",
+    ob_required: "Este campo es obligatorio.",
+    ob_username_title: "Elige tu nombre",
+    ob_username_sub: "Así te ve tu grupo. Elígelo bien.",
+    ob_avatar_title: "Ponle cara",
+    ob_avatar_sub: "Agrega una foto para que tu grupo sepa que eres tú.",
+    ob_avatar_choose: "Elegir foto",
+    ob_avatar_required: "La foto de perfil es obligatoria.",
+    ob_name_title: "Tu nombre",
+    ob_name_sub: "¿Cómo te llamamos?",
+    ob_sport_title: "Tu deporte",
+    ob_sport_sub: "¿Qué entrenas más?",
+    ob_routine_title: "Tu rutina",
+    ob_routine_sub: "¿Qué sueles hacer normalmente?",
+    ob_focus_title: "Tu enfoque este mes",
+    ob_focus_sub: "¿Qué estás persiguiendo ahora?",
+    ob_bio_title: "Una línea sobre ti",
+    ob_bio_sub: "Opcional — que valga la pena.",
 
     // Home — empty state
     home_no_group_title: "Todavía no tienes grupo",

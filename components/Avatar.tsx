@@ -5,7 +5,7 @@ type AvatarProps = {
   name: string;
   /** Optional photo; falls back to initials when absent. */
   src?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 };
 
@@ -13,6 +13,7 @@ const sizes = {
   sm: "h-8 w-8 text-caption",
   md: "h-10 w-10 text-label",
   lg: "h-14 w-14 text-h2",
+  xl: "h-28 w-28 text-display",
 };
 
 function initials(name: string): string {
