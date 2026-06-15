@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
+import { SPORTS, iconFor, labelFor } from "@/lib/workout-options";
 
 type ActivityItem = {
   id: string;
   photoUrl: string;
   note: string | null;
+  sport: string | null;
   createdAt: string;
 };
 
@@ -60,11 +62,13 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
             <div
               key={item.id}
               className="group relative aspect-square overflow-hidden rounded-card bg-surface-2 ring-1 ring-border"
-              title={
-                item.note
-                  ? `${item.note} · ${new Date(item.createdAt).toLocaleDateString(lang)}`
-                  : new Date(item.createdAt).toLocaleDateString(lang)
-              }
+              title={[
+                item.sport ? labelFor(SPORTS, item.sport, lang) : null,
+                item.note,
+                new Date(item.createdAt).toLocaleDateString(lang),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
               <img
@@ -72,6 +76,11 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
                 alt=""
                 className="h-full w-full object-cover transition-transform duration-200 group-active:scale-[1.03]"
               />
+              {item.sport && (
+                <span className="absolute left-1 top-1 rounded bg-bg/70 px-1.5 py-0.5 text-[11px] leading-none backdrop-blur-sm">
+                  {iconFor(SPORTS, item.sport)}
+                </span>
+              )}
               <span className="absolute bottom-1 left-1 rounded bg-bg/70 px-1.5 py-0.5 font-mono text-[10px] leading-none text-text backdrop-blur-sm">
                 {new Date(item.createdAt).toLocaleDateString(lang, {
                   month: "short",

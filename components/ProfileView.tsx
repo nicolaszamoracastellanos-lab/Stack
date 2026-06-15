@@ -48,21 +48,23 @@ function AboutRow({ labelKey, value }: { labelKey: TranslationKey; value: string
 export function ProfileView({
   profile,
   checkinDates,
+  totalPosts,
 }: {
   profile: Profile;
   checkinDates: string[];
+  totalPosts: number;
 }) {
   const { t } = useLanguage();
 
-  const { current, longest, total, daySet } = useMemo(() => {
+  const { current, longest, daySet } = useMemo(() => {
     const now = new Date();
     return {
       current: computePersonalStreak(checkinDates, now).count,
       longest: computeLongestStreak(checkinDates),
-      total: checkinDates.length,
       daySet: toDaySet(checkinDates),
     };
   }, [checkinDates]);
+  const total = totalPosts;
 
   const name = profile.display_name?.trim() || `@${profile.username}`;
 
