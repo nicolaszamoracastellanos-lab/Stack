@@ -77,6 +77,13 @@ export const translations = {
     error_weak_password: "Password must be at least 6 characters.",
     signup_check_email:
       "Account created. Check your email to confirm, then log in.",
+    verify_email_title: "Check your email",
+    verify_email_body:
+      "We sent a confirmation link to {email}. Tap it to activate your account and finish setting up.",
+    verify_email_hint: "Don't see it? Check your spam folder.",
+    verify_email_login: "Back to log in",
+    error_confirm_failed:
+      "We couldn't confirm that link. Try logging in, or sign up again.",
 
     // Log in
     login_title: "Welcome back",
@@ -306,6 +313,13 @@ export const translations = {
     error_weak_password: "La contraseña debe tener al menos 6 caracteres.",
     signup_check_email:
       "Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.",
+    verify_email_title: "Revisa tu correo",
+    verify_email_body:
+      "Te enviamos un enlace de confirmación a {email}. Tócalo para activar tu cuenta y terminar de configurarla.",
+    verify_email_hint: "¿No lo ves? Revisa tu carpeta de spam.",
+    verify_email_login: "Volver a iniciar sesión",
+    error_confirm_failed:
+      "No pudimos confirmar ese enlace. Inicia sesión o regístrate de nuevo.",
 
     // Log in
     login_title: "Qué bueno verte",

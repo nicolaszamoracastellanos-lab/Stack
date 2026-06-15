@@ -7,7 +7,6 @@ import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { useLanguage } from "@/lib/language-context";
-import { type TranslationKey } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 
 function SignupForm() {
@@ -18,50 +17,67 @@ function SignupForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<TranslationKey | null>(null);
-  const [notice, setNotice] = useState<TranslationKey | null>(null);
+  // Holds either a translated string or a raw Supabase message — never a silent
+  // generic for unexpected errors.
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Where the email confirmation link returns to. Prefer the configured base
+  // URL (prod), fall back to the current origin in dev. Never hardcode localhost.
+  function callbackUrl() {
+    const base =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      (typeof window !== "undefined" ? window.location.origin : "");
+    const suffix =
+      next && next.startsWith("/") ? `?next=${encodeURIComponent(next)}` : "";
+    return `${base.replace(/\/$/, "")}/auth/callback${suffix}`;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setNotice(null);
     setLoading(true);
 
     const supabase = createClient();
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      options: { emailRedirectTo: callbackUrl() },
     });
 
     if (signUpError) {
-      // Map Supabase messages to translated, friendly copy.
       const msg = signUpError.message.toLowerCase();
       if (msg.includes("already") || msg.includes("registered")) {
-        setError("error_email_taken");
+        setError(t("error_email_taken"));
       } else if (msg.includes("password")) {
-        setError("error_weak_password");
+        setError(t("error_weak_password"));
       } else {
-        setError("error_generic");
+        // Show the real reason (e.g. email rate limit) instead of a generic.
+        setError(signUpError.message);
       }
       setLoading(false);
       return;
     }
 
-    // If email confirmation is OFF (recommended for Phase 1) we get a session
-    // immediately and go straight to onboarding. If it's ON, there's no session
-    // yet — tell the user to confirm, then log in.
+    // Supabase obfuscates an already-registered confirmed email as a "success"
+    // with no identities — surface it as taken rather than "check your email".
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setError(t("error_email_taken"));
+      setLoading(false);
+      return;
+    }
+
     if (data.session) {
-      // Carry the invite target through onboarding so a new user who arrived
-      // from a /join link lands back there after choosing a username.
+      // Confirmation OFF: logged in immediately -> onboarding.
       const onboarding =
         next && next.startsWith("/")
           ? `/onboarding?next=${encodeURIComponent(next)}`
           : "/onboarding";
       router.replace(onboarding);
     } else {
-      setNotice("signup_check_email");
-      setLoading(false);
+      // Confirmation ON: account created, no session yet. NOT an error — send
+      // them to the confirmation-pending screen.
+      router.replace(`/verify-email?email=${encodeURIComponent(email.trim())}`);
     }
   }
 
@@ -101,8 +117,11 @@ function SignupForm() {
           required
         />
 
-        {error && <p className="text-label text-danger">{t(error)}</p>}
-        {notice && <p className="text-label text-volt">{t(notice)}</p>}
+        {error && (
+          <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
+            {error}
+          </p>
+        )}
 
         <Button
           type="submit"

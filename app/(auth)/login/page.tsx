@@ -20,7 +20,10 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<TranslationKey | null>(null);
+  // Seed an error if the email-confirmation callback bounced here.
+  const [error, setError] = useState<TranslationKey | null>(
+    searchParams.get("error") === "confirm" ? "error_confirm_failed" : null,
+  );
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
