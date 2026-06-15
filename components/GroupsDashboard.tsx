@@ -13,57 +13,43 @@ import { setActiveGroup, clearActiveGroup } from "@/lib/active-group";
 import { cn } from "@/lib/utils";
 import type { DashboardGroup, LeaderEntry } from "@/lib/groups-dashboard";
 
-function RankBadge({ index }: { index: number }) {
-  const top = index === 0;
-  return (
-    <span
-      className={cn(
-        "flex h-6 w-6 shrink-0 items-center justify-center rounded-pill text-caption font-bold",
-        top ? "bg-volt text-bg" : "border border-border text-text-muted",
-      )}
-    >
-      {index + 1}
-    </span>
-  );
-}
-
 function Leaderboard({ members }: { members: LeaderEntry[] }) {
   const { t } = useLanguage();
   return (
-    <ul className="flex flex-col gap-2.5">
+    <ul className="flex flex-col">
       {members.map((m, i) => (
-        <li key={m.userId} className="flex items-center gap-3">
-          <RankBadge index={i} />
-          {/* Avatar with an at-risk status dot: volt = showed up today, red = not yet. */}
+        <li
+          key={m.userId}
+          className="flex items-center gap-3 border-t border-border py-3 first:border-t-0 first:pt-0"
+        >
+          <span className="w-4 shrink-0 text-center font-mono text-caption text-text-dim">
+            {i + 1}
+          </span>
+          {/* Avatar with an at-risk red dot when they haven't checked in today. */}
           <span className="relative shrink-0">
-            <Avatar name={m.name} src={m.avatarUrl} size="sm" />
-            <span
-              className={cn(
-                "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-pill border-2 border-surface",
-                m.checkedInToday ? "bg-volt" : "bg-danger",
+            <Avatar name={m.name} src={m.avatarUrl} size="md" />
+            {!m.checkedInToday && (
+              <span
+                className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
+                title="hasn't checked in today"
+              />
+            )}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-body font-medium text-text">
+              {m.name}
+              {m.isYou && (
+                <span className="ml-1.5 text-caption text-text-dim">
+                  ({t("groups_you_tag")})
+                </span>
               )}
-              title={m.checkedInToday ? "today ✓" : "not today"}
-            />
-          </span>
-          <span className="min-w-0 flex-1 truncate text-body">
-            {m.name}
-            {m.isYou && (
-              <span className="ml-2 text-caption text-text-dim">
-                ({t("groups_you_tag")})
-              </span>
-            )}
-          </span>
-          <span className="font-mono text-caption text-text-dim nums">
-            {m.daysThisWeek}/7
-          </span>
-          <span
-            className={cn(
-              "flex w-10 items-center justify-end gap-1 font-mono text-label nums",
-              i === 0 ? "text-volt" : "text-text-muted",
-            )}
-          >
+            </p>
+            <p className="text-caption text-text-dim">
+              {t("leaderboard_days", { n: m.daysThisWeek })}
+            </p>
+          </div>
+          <span className="font-mono text-h1 nums leading-none text-volt">
             {m.streak}
-            <span aria-hidden>🔥</span>
           </span>
         </li>
       ))}
@@ -76,11 +62,13 @@ function GroupCard({
   active,
   userId,
   baseUrl,
+  onError,
 }: {
   item: DashboardGroup;
   active: boolean;
   userId: string;
   baseUrl: string;
+  onError: () => void;
 }) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -108,32 +96,47 @@ function GroupCard({
     router.refresh();
   }
 
+  // We .select() the deleted rows so a silent RLS block (0 rows, no error) is
+  // detected and surfaced instead of looking like a no-op.
   async function doLeave() {
     setWorking(true);
-    await supabase
+    const { data, error } = await supabase
       .from("group_members")
       .delete()
       .eq("group_id", item.group.id)
-      .eq("user_id", userId);
-    if (active) clearActiveGroup();
-    setConfirm(null);
+      .eq("user_id", userId)
+      .select();
     setWorking(false);
+    setConfirm(null);
+    if (error || !data || data.length === 0) {
+      onError();
+      return;
+    }
+    if (active) clearActiveGroup();
     router.refresh();
   }
 
   async function doDelete() {
     setWorking(true);
-    await supabase.from("groups").delete().eq("id", item.group.id);
-    if (active) clearActiveGroup();
-    setConfirm(null);
+    const { data, error } = await supabase
+      .from("groups")
+      .delete()
+      .eq("id", item.group.id)
+      .select();
     setWorking(false);
+    setConfirm(null);
+    if (error || !data || data.length === 0) {
+      onError();
+      return;
+    }
+    if (active) clearActiveGroup();
     router.refresh();
   }
 
   return (
     <div
       className={cn(
-        "rounded-card border bg-surface p-4",
+        "rounded-card border bg-surface p-5",
         active ? "border-volt/40" : "border-border",
       )}
     >
@@ -246,9 +249,22 @@ export function GroupsDashboard({
   baseUrl: string;
 }) {
   const { t } = useLanguage();
+  const [toast, setToast] = useState<string | null>(null);
+
+  function showError() {
+    setToast(t("action_failed"));
+    setTimeout(() => setToast(null), 3500);
+  }
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
+      {/* Error toast — leave/delete never fails silently. */}
+      {toast && (
+        <div className="fixed inset-x-0 top-4 z-50 mx-auto w-fit max-w-[90%] rounded-pill border border-danger/40 bg-surface-2 px-4 py-2 text-label text-danger shadow-lg">
+          {toast}
+        </div>
+      )}
+
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-h1">{t("groups_title")}</h1>
         <LanguageToggle />
@@ -267,6 +283,7 @@ export function GroupsDashboard({
               active={item.group.id === activeId}
               userId={userId}
               baseUrl={baseUrl}
+              onError={showError}
             />
           ))}
         </div>

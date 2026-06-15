@@ -257,9 +257,10 @@ create policy "group members read checkin photos" on storage.objects
 -- proof photos, so this bucket is public-read (no signing needed in the feed),
 -- but a user may only write under their own folder.
 -- ----------------------------------------------------------------------------
+-- Force public on conflict so an existing private/misconfigured bucket is fixed.
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
-on conflict (id) do nothing;
+on conflict (id) do update set public = true;
 
 drop policy if exists "avatar public read" on storage.objects;
 drop policy if exists "avatar uploads by owner" on storage.objects;

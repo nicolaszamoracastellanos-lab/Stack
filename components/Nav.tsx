@@ -136,7 +136,7 @@ export function Nav() {
         <span className="text-volt">.</span>
       </Link>
 
-      <ul className="flex w-full items-center justify-between lg:flex-col lg:gap-5">
+      <ul className="mx-auto flex w-full max-w-[22rem] items-center justify-between lg:max-w-none lg:flex-col lg:gap-5">
         {items.map((item) => {
           const active = isActive(item);
           if (item.primary) {

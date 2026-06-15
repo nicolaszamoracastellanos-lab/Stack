@@ -114,6 +114,9 @@ export const translations = {
     feed_empty: "No check-ins yet today. Be the one who starts.",
     feed_title: "Today's feed",
     group_switcher_label: "Your groups",
+    home_consistency: "consistency this week",
+    leaderboard_days: "{n} of last 7 days",
+    action_failed: "Couldn't do that. Please try again.",
 
     // Create group
     creategroup_title: "Create a group",
@@ -296,6 +299,9 @@ export const translations = {
     feed_empty: "Nadie ha registrado hoy. Sé quien empieza.",
     feed_title: "Hoy en el grupo",
     group_switcher_label: "Tus grupos",
+    home_consistency: "constancia esta semana",
+    leaderboard_days: "{n} de los últimos 7 días",
+    action_failed: "No se pudo. Inténtalo de nuevo.",
 
     // Create group
     creategroup_title: "Crear un grupo",

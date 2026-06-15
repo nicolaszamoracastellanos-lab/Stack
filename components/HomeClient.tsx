@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/Button";
 import { StreakBadge } from "@/components/StreakBadge";
+import { ConsistencyRing } from "@/components/ConsistencyRing";
 import { FeedItem, type FeedItemData } from "@/components/FeedItem";
 import { useLanguage } from "@/lib/language-context";
 import { useCountUp } from "@/lib/use-count-up";
@@ -196,6 +197,19 @@ export function HomeClient({
 
   const displayedStreak = useCountUp(personal.count);
 
+  // Weekly consistency: share of the last 7 days the user checked in (any group).
+  const consistency = useMemo(() => {
+    const now = new Date();
+    const set = toDaySet(personalDates);
+    let days = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      if (set.has(localDateKey(d))) days++;
+    }
+    return { days, value: days / 7, percent: Math.round((days / 7) * 100) };
+  }, [personalDates]);
+
   // Status line under the streak. Only surfaced for the costly states — when
   // the streak is alive the green confirmation CTA already says "you showed up".
   const statusLine =
@@ -207,27 +221,38 @@ export function HomeClient({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Streak header */}
-      <section>
-        <StreakBadge
-          count={displayedStreak}
-          label={t("streak_label")}
-          state={personal.state}
-          size="display"
+      {/* Hero: weekly consistency ring */}
+      <section className="flex flex-col items-center">
+        <ConsistencyRing
+          value={consistency.value}
+          percent={consistency.percent}
+          label={t("home_consistency")}
+          sublabel={`${consistency.days}/7`}
         />
         {statusLine && (
-          <p className={`mt-3 text-label ${statusLine.tone}`}>
+          <p className={`mt-4 text-label ${statusLine.tone}`}>
             {statusLine.text}
           </p>
         )}
 
-        <div className="mt-5 inline-flex items-center rounded-card border border-border bg-surface px-4 py-3">
-          <StreakBadge
-            count={group.count}
-            label={t("group_streak_label")}
-            state={group.state}
-            size="md"
-          />
+        {/* Personal + group streak as supporting stats */}
+        <div className="mt-6 grid w-full grid-cols-2 gap-3">
+          <div className="rounded-card border border-border bg-surface p-5">
+            <StreakBadge
+              count={displayedStreak}
+              label={t("streak_label")}
+              state={personal.state}
+              size="md"
+            />
+          </div>
+          <div className="rounded-card border border-border bg-surface p-5">
+            <StreakBadge
+              count={group.count}
+              label={t("group_streak_label")}
+              state={group.state}
+              size="md"
+            />
+          </div>
         </div>
       </section>
 
