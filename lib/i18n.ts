@@ -186,6 +186,23 @@ export const translations = {
     checkin_no_group:
       "Join or create a group before you check in.",
 
+    // Check-in detail screen
+    cd_groups: "Post to",
+    cd_sport: "Sport",
+    cd_environment: "Environment",
+    cd_goal: "Focus",
+    cd_notes: "Notes",
+    cd_search_sport: "Search sport…",
+    cd_other_placeholder: "Type your own…",
+    cd_notes_placeholder: "How did it go? How did you feel? What did you do?",
+    cd_err_groups: "Select at least one group.",
+    cd_err_sport: "Choose a sport.",
+    cd_err_environment: "Choose indoor or outdoor.",
+    cd_err_goal: "Choose a focus.",
+    cd_err_other: "Add a name.",
+    env_indoor: "Indoor",
+    env_outdoor: "Outdoor",
+
     // Profile
     profile_title: "Profile",
     profile_current_streak: "Current streak",
@@ -398,6 +415,23 @@ export const translations = {
       "Stack necesita tu cámara para capturar la prueba en el momento. Actívala en los ajustes de tu navegador y recarga.",
     checkin_no_group:
       "Únete o crea un grupo antes de registrar.",
+
+    // Check-in detail screen
+    cd_groups: "Publicar en",
+    cd_sport: "Deporte",
+    cd_environment: "Entorno",
+    cd_goal: "Enfoque",
+    cd_notes: "Notas",
+    cd_search_sport: "Buscar deporte…",
+    cd_other_placeholder: "Escribe el tuyo…",
+    cd_notes_placeholder: "¿Cómo te fue? ¿Cómo te sentiste? ¿Qué hiciste?",
+    cd_err_groups: "Selecciona al menos un grupo.",
+    cd_err_sport: "Elige un deporte.",
+    cd_err_environment: "Elige interior o exterior.",
+    cd_err_goal: "Elige un enfoque.",
+    cd_err_other: "Escribe un nombre.",
+    env_indoor: "Interior",
+    env_outdoor: "Exterior",
 
     // Profile
     profile_title: "Perfil",

@@ -1,0 +1,8 @@
+# Supabase CLI config. Apply migrations with:
+#   supabase link --project-ref jmwbmyfqhyxcnktjzgrt
+#   supabase db push
+project_id = "stack"
+
+[db]
+# Postgres major version of the linked Supabase project.
+major_version = 15

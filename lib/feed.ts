@@ -8,6 +8,9 @@ export type FeedCheckin = {
   avatarUrl: string | null;
   photoUrl: string;
   note: string | null;
+  sport: string | null;
+  environment: string | null;
+  goal: string | null;
   created_at: string;
 };
 
@@ -93,6 +96,9 @@ export async function getHomeData(
     avatarUrl: avatarByUser[c.user_id as string] ?? null,
     photoUrl: signed[c.photo_url as string] ?? "",
     note: (c.note as string | null) ?? null,
+    sport: (c.sport as string | null) ?? null,
+    environment: (c.environment as string | null) ?? null,
+    goal: (c.goal as string | null) ?? null,
     created_at: c.created_at as string,
   }));
 

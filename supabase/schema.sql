@@ -72,8 +72,19 @@ create table if not exists checkins (
   user_id uuid references profiles(id) on delete cascade not null,
   photo_url text not null,
   note text,
+  sport text,
+  environment text,
+  goal text,
+  post_id uuid,
   created_at timestamptz default now()
 );
+
+-- Structured-workout fields, added after the initial release (idempotent).
+alter table checkins add column if not exists sport text;
+alter table checkins add column if not exists environment text;
+alter table checkins add column if not exists goal text;
+alter table checkins add column if not exists post_id uuid;
+create index if not exists checkins_post_idx on checkins (post_id);
 
 create table if not exists reactions (
   id uuid default gen_random_uuid() primary key,
@@ -235,20 +246,26 @@ on conflict (id) do nothing;
 drop policy if exists "authenticated upload checkins" on storage.objects;
 drop policy if exists "group members read checkin photos" on storage.objects;
 
--- Upload: an authenticated user may write only under their own user folder.
+-- Upload: an authenticated user may write only under their own user folder
+-- (<user_id>/<filename>) so one photo can back a multi-group post.
 create policy "authenticated upload checkins" on storage.objects
   for insert to authenticated
   with check (
     bucket_id = 'checkins'
-    and (storage.foldername(name))[2] = auth.uid()::text
+    and (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- Read: group members may read photos stored under their group's folder.
+-- Read: a member of ANY group that has a check-in referencing this photo may
+-- read it (supports multi-group posting; also covers legacy paths via photo_url).
 create policy "group members read checkin photos" on storage.objects
   for select to authenticated
   using (
     bucket_id = 'checkins'
-    and public.is_group_member(((storage.foldername(name))[1])::uuid)
+    and exists (
+      select 1 from checkins c
+      join group_members gm on gm.group_id = c.group_id
+      where c.photo_url = name and gm.user_id = auth.uid()
+    )
   );
 
 -- ----------------------------------------------------------------------------

@@ -3,17 +3,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const CHECKINS_BUCKET = "checkins";
 
 /**
- * Storage object key for a check-in photo. The path encodes the group and the
- * user so the storage RLS policies can authorize reads/writes:
- *   <group_id>/<user_id>/<filename>
- * foldername()[1] = group_id (read = group members), [2] = user_id (write = self)
+ * Storage object key for a check-in photo: <user_id>/<filename>.
+ * One uploaded photo can back a check-in in several groups (multi-group post).
+ * Upload is authorized by foldername()[1] = user_id; READ is authorized by
+ * membership in any group whose check-in references this object (see the
+ * storage RLS policy in supabase/migrations).
  */
-export function checkinPhotoPath(
-  groupId: string,
-  userId: string,
-  filename: string,
-): string {
-  return `${groupId}/${userId}/${filename}`;
+export function checkinPhotoPath(userId: string, filename: string): string {
+  return `${userId}/${filename}`;
 }
 
 /**

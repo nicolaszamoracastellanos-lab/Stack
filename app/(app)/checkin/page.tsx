@@ -4,14 +4,14 @@ import { CheckinCamera, CheckinNoGroup } from "@/components/CheckinCamera";
 
 export default async function CheckinPage() {
   const { userId } = await getUserAndProfile();
-  const { active } = await getActiveGroup();
+  const { active, groups } = await getActiveGroup();
 
   // You can only check in to a group you belong to.
-  if (!active || !userId) {
+  if (!userId || groups.length === 0) {
     return <CheckinNoGroup />;
   }
 
   return (
-    <CheckinCamera groupId={active.id} userId={userId} groupName={active.name} />
+    <CheckinCamera userId={userId} groups={groups} activeId={active?.id ?? null} />
   );
 }

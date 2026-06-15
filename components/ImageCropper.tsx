@@ -5,22 +5,25 @@ import { Button } from "@/components/Button";
 import { useLanguage } from "@/lib/language-context";
 
 const FRAME = 280; // on-screen crop viewport (px)
-const OUT = 512; // exported avatar size (px)
-
 /**
- * Facebook-style avatar cropper. Drag to pan, slider to zoom, a circular guide
- * shows the avatar crop. Exports a square JPEG so the round avatar always looks
- * intentional. Touch-first (pointer events + a zoom slider).
+ * Drag-to-pan, zoom-slider image cropper. Exports a square JPEG. Used for round
+ * avatars (shape="circle", 512px) and for square check-in photos
+ * (shape="square", higher res). Touch-first (pointer events + a zoom slider).
  */
 export function ImageCropper({
   src,
   onCancel,
   onCropped,
+  shape = "circle",
+  outputSize = 512,
 }: {
   src: string;
   onCancel: () => void;
   onCropped: (blob: Blob) => void;
+  shape?: "circle" | "square";
+  outputSize?: number;
 }) {
+  const OUT = outputSize;
   const { t } = useLanguage();
   const imgRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ px: number; py: number; ox: number; oy: number } | null>(
@@ -153,19 +156,29 @@ export function ImageCropper({
               className="absolute max-w-none select-none"
               style={{ width: dw, height: dh, left: offset.x, top: offset.y }}
             />
-            {/* Circular guide: dim everything outside the avatar circle. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-md"
-              style={{
-                boxShadow: "0 0 0 9999px rgba(10,10,11,0.55)",
-                clipPath: "circle(50% at 50% 50%)",
-              }}
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-full border border-white/30"
-            />
+            {/* Crop guide. Circle for avatars; square just shows the frame. */}
+            {shape === "circle" && (
+              <>
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 rounded-md"
+                  style={{
+                    boxShadow: "0 0 0 9999px rgba(10,10,11,0.55)",
+                    clipPath: "circle(50% at 50% 50%)",
+                  }}
+                />
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 rounded-full border border-white/30"
+                />
+              </>
+            )}
+            {shape === "square" && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-md border border-white/20"
+              />
+            )}
           </div>
         </div>
 
