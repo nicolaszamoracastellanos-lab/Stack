@@ -46,6 +46,7 @@ export function GroupDetail({
 
   const [window, setWindow] = useState<Window>("week");
   const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [confirm, setConfirm] = useState<null | "leave" | "delete">(null);
   const [working, setWorking] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -55,6 +56,16 @@ export function GroupDetail({
   function showError(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 8000);
+  }
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(data.group.invite_code);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 1800);
+    } catch {
+      /* clipboard blocked — code stays visible */
+    }
   }
 
   async function copy() {
@@ -242,9 +253,19 @@ export function GroupDetail({
         </Button>
       </div>
 
-      {/* Invite link */}
+      {/* Invite: code (prominent) + full link */}
       <div className="mt-8">
-        <p className="text-caption text-text-dim">{t("groups_invite_label")}</p>
+        <p className="text-caption text-text-dim">{t("invite_code_label")}</p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <code className="flex-1 rounded-input border border-border bg-bg px-3 py-2.5 text-center font-mono text-h2 tracking-[0.2em] text-volt">
+            {data.group.invite_code}
+          </code>
+          <Button variant="secondary" onClick={copyCode} className="shrink-0">
+            {copiedCode ? t("copied") : t("copy")}
+          </Button>
+        </div>
+
+        <p className="mt-4 text-caption text-text-dim">{t("groups_invite_label")}</p>
         <div className="mt-1.5 flex items-center gap-2">
           <code className="min-w-0 flex-1 truncate rounded-input border border-border bg-bg px-3 py-2 font-mono text-caption text-text-muted">
             {data.inviteLink}
