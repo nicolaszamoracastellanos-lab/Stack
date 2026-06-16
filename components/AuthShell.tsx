@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { Wordmark } from "@/components/Wordmark";
 import { useLanguage } from "@/lib/language-context";
 
 /**
@@ -29,9 +30,8 @@ export function AuthShell({
       />
 
       <header className="flex items-center justify-between px-6 py-6 sm:px-10">
-        <Link href="/" className="text-h2 font-bold tracking-tight">
-          {t("brand")}
-          <span className="text-volt">.</span>
+        <Link href="/" aria-label={t("brand")}>
+          <Wordmark size="md" />
         </Link>
         <LanguageToggle />
       </header>

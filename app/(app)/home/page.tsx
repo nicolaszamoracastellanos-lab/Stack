@@ -11,6 +11,7 @@ import { HomeClient } from "@/components/HomeClient";
 import { EmptyGroupState } from "@/components/EmptyGroupState";
 import { GroupSwitcher } from "@/components/GroupSwitcher";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { Wordmark } from "@/components/Wordmark";
 
 // The heart of the app. Server-fetches the group's feed + the data needed to
 // seed the streaks, then hands off to HomeClient for the live, interactive UI.
@@ -20,7 +21,11 @@ export default async function HomePage() {
 
   if (!active || !userId) {
     return (
-      <main className="mx-auto w-full max-w-xl px-6 py-10">
+      <main className="mx-auto w-full max-w-xl px-6 py-8">
+        <div className="mb-8 flex items-center justify-between">
+          <Wordmark size="sm" />
+          <LanguageToggle />
+        </div>
         <EmptyGroupState />
       </main>
     );
@@ -40,20 +45,25 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
-      <header className="mb-8 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          {groups.length > 1 ? (
-            <GroupSwitcher groups={groups} activeId={active.id} />
-          ) : (
-            <h1 className="truncate text-h2">{active.name}</h1>
-          )}
-          {active.goal && (
-            <p className="mt-1 truncate text-caption text-text-dim">
-              {active.goal}
-            </p>
-          )}
-        </div>
+      {/* Brand strip — the Stack wordmark sits at the top of the home screen so
+          the logo is present in the app itself, not just the auth/landing
+          screens. */}
+      <div className="mb-7 flex items-center justify-between">
+        <Wordmark size="sm" />
         <LanguageToggle />
+      </div>
+
+      <header className="mb-8 min-w-0">
+        {groups.length > 1 ? (
+          <GroupSwitcher groups={groups} activeId={active.id} />
+        ) : (
+          <h1 className="truncate text-h2">{active.name}</h1>
+        )}
+        {active.goal && (
+          <p className="mt-1 truncate text-caption text-text-dim">
+            {active.goal}
+          </p>
+        )}
       </header>
 
       <HomeClient

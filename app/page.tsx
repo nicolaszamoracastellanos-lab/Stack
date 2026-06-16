@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/Button";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { Wordmark } from "@/components/Wordmark";
 import { useLanguage } from "@/lib/language-context";
 
 export default function LandingPage() {
@@ -17,18 +18,17 @@ export default function LandingPage() {
       />
 
       <header className="flex items-center justify-between px-6 py-6 sm:px-10">
-        <span className="text-h2 font-bold tracking-tight">
-          {t("brand")}
-          <span className="text-volt">.</span>
-        </span>
+        <Wordmark size="md" />
         <LanguageToggle />
       </header>
 
       <div className="flex flex-1 items-center px-6 sm:px-10">
         <div className="mx-auto w-full max-w-2xl py-16">
-          <h1 className="text-balance text-[clamp(3rem,12vw,6rem)] font-bold leading-[0.95] tracking-tight">
-            {t("brand")}
-            <span className="text-volt">.</span>
+          <h1>
+            <Wordmark
+              size="lg"
+              style={{ fontSize: "clamp(3rem, 12vw, 6rem)" }}
+            />
           </h1>
 
           <p className="mt-6 text-balance text-h1 text-text">
