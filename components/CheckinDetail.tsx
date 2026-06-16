@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { SharePhotoButton } from "@/components/SharePhotoButton";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET, checkinPhotoPath } from "@/lib/storage";
@@ -77,34 +78,6 @@ export function CheckinDetail({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
-
-  // Export the (already watermarked) photo: native share sheet on mobile —
-  // which includes "Save Image" / Instagram / etc. — falling back to a direct
-  // download on desktop.
-  async function sharePhoto() {
-    const file = new File([photoBlob], "stack-checkin.jpg", {
-      type: "image/jpeg",
-    });
-    if (
-      typeof navigator !== "undefined" &&
-      navigator.canShare?.({ files: [file] })
-    ) {
-      try {
-        await navigator.share({ files: [file] });
-      } catch {
-        // User dismissed the share sheet — nothing to do.
-      }
-      return;
-    }
-    const url = URL.createObjectURL(photoBlob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "stack-checkin.jpg";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
 
   const filteredSports = useMemo(() => {
     const q = sportQuery.trim().toLowerCase();
@@ -198,29 +171,7 @@ export function CheckinDetail({
       <div className="relative overflow-hidden rounded-card border border-border bg-surface-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- local object URL */}
         <img src={photoUrl} alt="" className="aspect-square w-full object-cover" />
-        <button
-          type="button"
-          onClick={sharePhoto}
-          aria-label={t("cd_share")}
-          className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-pill bg-bg/60 text-text backdrop-blur transition-colors duration-150 hover:bg-bg/80"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
-            <path
-              d="M12 15V4m0 0L8.5 7.5M12 4l3.5 3.5"
-              stroke="currentColor"
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M5 13v4.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5V13"
-              stroke="currentColor"
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        <SharePhotoButton src={photoBlob} className="absolute bottom-3 right-3" />
       </div>
 
       <div className="mt-6 flex flex-col gap-6">

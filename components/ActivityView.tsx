@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { BrandBar } from "@/components/BrandBar";
+import { SharePhotoButton } from "@/components/SharePhotoButton";
 import { useLanguage } from "@/lib/language-context";
 import { SPORTS, iconFor, labelFor } from "@/lib/workout-options";
 
@@ -89,6 +90,11 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
                   day: "numeric",
                 })}
               </span>
+              <SharePhotoButton
+                src={item.photoUrl}
+                size="sm"
+                className="absolute bottom-1 right-1"
+              />
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
+import { SharePhotoButton } from "@/components/SharePhotoButton";
 import { useLanguage } from "@/lib/language-context";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { SPORTS, GOALS, labelFor, iconFor } from "@/lib/workout-options";
@@ -60,9 +61,13 @@ export function FeedItem({ item, isNew, onToggleReaction }: FeedItemProps) {
         <time className="font-mono text-caption text-text-dim nums">{time}</time>
       </header>
 
-      <div className="aspect-square w-full bg-surface-2">
+      <div className="relative aspect-square w-full bg-surface-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
         <img src={item.photoUrl} alt="" className="h-full w-full object-cover" />
+        <SharePhotoButton
+          src={item.photoUrl}
+          className="absolute bottom-3 right-3"
+        />
       </div>
 
       <div className="flex flex-col gap-3 p-4">
