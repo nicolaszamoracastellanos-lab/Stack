@@ -19,12 +19,27 @@ export type FeedMember = {
   name: string;
   avatarUrl: string | null;
 };
-export type FeedReaction = { checkin_id: string; user_id: string };
+export type FeedReaction = {
+  checkin_id: string;
+  user_id: string;
+  emoji: string;
+};
+
+export type FeedComment = {
+  id: string;
+  checkin_id: string;
+  user_id: string;
+  name: string;
+  avatarUrl: string | null;
+  body: string;
+  created_at: string;
+};
 
 export type HomeData = {
   feed: FeedCheckin[];
   members: FeedMember[];
   reactions: FeedReaction[];
+  comments: FeedComment[];
   /** The current user's check-in timestamps across ALL their groups (personal streak). */
   personalDates: string[];
 };
@@ -104,15 +119,29 @@ export async function getHomeData(
 
   const ids = checkins.map((c) => c.id as string);
   let reactions: FeedReaction[] = [];
+  let comments: FeedComment[] = [];
   if (ids.length > 0) {
-    const { data: rx } = await supabase
-      .from("reactions")
-      .select("checkin_id, user_id")
-      .in("checkin_id", ids);
-    reactions = (rx ?? []) as FeedReaction[];
+    const [rxRes, cmRes] = await Promise.all([
+      supabase.from("reactions").select("checkin_id, user_id, emoji").in("checkin_id", ids),
+      supabase
+        .from("comments")
+        .select("id, checkin_id, user_id, body, created_at")
+        .in("checkin_id", ids)
+        .order("created_at", { ascending: true }),
+    ]);
+    reactions = (rxRes.data ?? []) as FeedReaction[];
+    comments = (cmRes.data ?? []).map((c) => ({
+      id: c.id as string,
+      checkin_id: c.checkin_id as string,
+      user_id: c.user_id as string,
+      name: nameByUser[c.user_id as string] ?? "Member",
+      avatarUrl: avatarByUser[c.user_id as string] ?? null,
+      body: c.body as string,
+      created_at: c.created_at as string,
+    }));
   }
 
   const personalDates = (mineRes.data ?? []).map((r) => r.created_at as string);
 
-  return { feed, members, reactions, personalDates };
+  return { feed, members, reactions, comments, personalDates };
 }

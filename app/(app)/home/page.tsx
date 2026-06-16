@@ -62,6 +62,7 @@ export default async function HomePage() {
         initialFeed={data.feed}
         members={data.members}
         initialReactions={data.reactions}
+        initialComments={data.comments}
         initialPersonalDates={data.personalDates}
         initialPersonal={personal}
         initialGroup={group}

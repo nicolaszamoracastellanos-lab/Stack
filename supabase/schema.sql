@@ -93,8 +93,18 @@ create table if not exists reactions (
   user_id uuid references profiles(id) on delete cascade not null,
   emoji text default 'fire',
   created_at timestamptz default now(),
-  unique (checkin_id, user_id)
+  -- Multiple distinct emojis per member per check-in (Batch 2 §5).
+  unique (checkin_id, user_id, emoji)
 );
+
+create table if not exists comments (
+  id uuid default gen_random_uuid() primary key,
+  checkin_id uuid references checkins(id) on delete cascade not null,
+  user_id uuid references profiles(id) on delete cascade not null,
+  body text not null,
+  created_at timestamptz default now()
+);
+create index if not exists comments_checkin_idx on comments (checkin_id, created_at);
 
 -- Helpful indexes for the feed / streak queries.
 create index if not exists checkins_group_created_idx on checkins (group_id, created_at desc);
@@ -183,6 +193,7 @@ alter table groups enable row level security;
 alter table group_members enable row level security;
 alter table checkins enable row level security;
 alter table reactions enable row level security;
+alter table comments enable row level security;
 
 -- Drop existing policies so this file can be re-run cleanly in dev.
 do $$
@@ -191,7 +202,7 @@ begin
   for r in
     select policyname, tablename from pg_policies
     where schemaname = 'public'
-      and tablename in ('profiles','groups','group_members','checkins','reactions')
+      and tablename in ('profiles','groups','group_members','checkins','reactions','comments')
   loop
     execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
   end loop;
@@ -248,6 +259,20 @@ create policy "users create own reactions" on reactions
 create policy "users delete own reactions" on reactions
   for delete using (auth.uid() = user_id);
 
+-- COMMENTS: readable by members of the checkin's group; authors create their
+-- own (only in a group they belong to) and delete their own.
+create policy "members read comments" on comments
+  for select using (
+    public.is_group_member((select c.group_id from checkins c where c.id = checkin_id))
+  );
+create policy "members create own comments" on comments
+  for insert with check (
+    auth.uid() = user_id
+    and public.is_group_member((select c.group_id from checkins c where c.id = checkin_id))
+  );
+create policy "authors delete own comments" on comments
+  for delete using (auth.uid() = user_id);
+
 -- ----------------------------------------------------------------------------
 -- REALTIME
 -- Add the feed tables to the realtime publication so the home feed updates
@@ -261,6 +286,10 @@ begin
   end;
   begin
     alter publication supabase_realtime add table reactions;
+  exception when duplicate_object then null;
+  end;
+  begin
+    alter publication supabase_realtime add table comments;
   exception when duplicate_object then null;
   end;
 end $$;

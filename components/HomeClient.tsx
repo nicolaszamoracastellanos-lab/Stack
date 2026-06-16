@@ -17,7 +17,13 @@ import {
   toDaySet,
   type Streak,
 } from "@/lib/streaks";
-import type { FeedCheckin, FeedMember, FeedReaction } from "@/lib/feed";
+import type {
+  FeedCheckin,
+  FeedComment,
+  FeedMember,
+  FeedReaction,
+} from "@/lib/feed";
+import type { ReactionAgg } from "@/lib/reactions";
 
 type ClientCheckin = FeedCheckin & { isNew?: boolean };
 
@@ -30,6 +36,7 @@ export function HomeClient({
   initialFeed,
   members,
   initialReactions,
+  initialComments,
   initialPersonalDates,
   initialPersonal,
   initialGroup,
@@ -40,6 +47,7 @@ export function HomeClient({
   initialFeed: FeedCheckin[];
   members: FeedMember[];
   initialReactions: FeedReaction[];
+  initialComments: FeedComment[];
   initialPersonalDates: string[];
   initialPersonal: Streak;
   initialGroup: Streak;
@@ -50,6 +58,7 @@ export function HomeClient({
 
   const [feed, setFeed] = useState<ClientCheckin[]>(initialFeed);
   const [reactions, setReactions] = useState<FeedReaction[]>(initialReactions);
+  const [comments, setComments] = useState<FeedComment[]>(initialComments);
   const [personalDates, setPersonalDates] = useState<string[]>(initialPersonalDates);
 
   // Streak state. Seeded from server-computed values (so SSR and first client
@@ -92,7 +101,7 @@ export function HomeClient({
     }
     const { data } = await supabase
       .from("reactions")
-      .select("checkin_id, user_id")
+      .select("checkin_id, user_id, emoji")
       .in("checkin_id", ids);
     setReactions((data ?? []) as FeedReaction[]);
   }, [supabase]);
@@ -156,6 +165,38 @@ export function HomeClient({
           refetchReactions();
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "comments" },
+        (payload) => {
+          const c = payload.new as FeedComment & { user_id: string };
+          if (!feedRef.current.some((f) => f.id === c.checkin_id)) return;
+          setComments((prev) =>
+            prev.some((x) => x.id === c.id)
+              ? prev
+              : [
+                  ...prev,
+                  {
+                    id: c.id,
+                    checkin_id: c.checkin_id,
+                    user_id: c.user_id,
+                    name: nameByUser[c.user_id] ?? "Member",
+                    avatarUrl: avatarByUser[c.user_id] ?? null,
+                    body: c.body,
+                    created_at: c.created_at,
+                  },
+                ],
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "comments" },
+        (payload) => {
+          const oldId = (payload.old as { id?: string })?.id;
+          if (oldId) setComments((prev) => prev.filter((c) => c.id !== oldId));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -163,39 +204,81 @@ export function HomeClient({
     };
   }, [supabase, groupId, userId, nameByUser, avatarByUser, refetchReactions]);
 
-  // Per-checkin reaction counts + whether the viewer has reacted.
-  const reactionInfo = useMemo(() => {
-    const counts: Record<string, number> = {};
-    const mine: Record<string, boolean> = {};
+  // Per-checkin, per-emoji aggregate: count, whether you reacted, and who.
+  const reactionAgg = useMemo(() => {
+    const out: Record<string, ReactionAgg> = {};
     for (const r of reactions) {
-      counts[r.checkin_id] = (counts[r.checkin_id] ?? 0) + 1;
-      if (r.user_id === userId) mine[r.checkin_id] = true;
+      const byEmoji = (out[r.checkin_id] ??= {});
+      const cell = (byEmoji[r.emoji] ??= { count: 0, mine: false, who: [] });
+      cell.count++;
+      if (r.user_id === userId) cell.mine = true;
+      cell.who.push(
+        r.user_id === userId ? t("groups_you_tag") : nameByUser[r.user_id] ?? "Member",
+      );
     }
-    return { counts, mine };
-  }, [reactions, userId]);
+    return out;
+  }, [reactions, userId, nameByUser, t]);
 
-  async function toggleReaction(checkinId: string) {
-    const reacted = reactionInfo.mine[checkinId];
+  // Comments grouped per check-in (server returns them oldest-first).
+  const commentsByCheckin = useMemo(() => {
+    const out: Record<string, FeedComment[]> = {};
+    for (const c of comments) (out[c.checkin_id] ??= []).push(c);
+    return out;
+  }, [comments]);
+
+  async function toggleReaction(checkinId: string, emoji: string) {
+    const mine = reactionAgg[checkinId]?.[emoji]?.mine ?? false;
     // Optimistic update for instant feedback.
     setReactions((prev) =>
-      reacted
+      mine
         ? prev.filter(
-            (r) => !(r.checkin_id === checkinId && r.user_id === userId),
+            (r) =>
+              !(r.checkin_id === checkinId && r.user_id === userId && r.emoji === emoji),
           )
-        : [...prev, { checkin_id: checkinId, user_id: userId }],
+        : [...prev, { checkin_id: checkinId, user_id: userId, emoji }],
     );
-
-    if (reacted) {
+    if (mine) {
       await supabase
         .from("reactions")
         .delete()
         .eq("checkin_id", checkinId)
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .eq("emoji", emoji);
     } else {
       await supabase
         .from("reactions")
-        .insert({ checkin_id: checkinId, user_id: userId });
+        .insert({ checkin_id: checkinId, user_id: userId, emoji });
     }
+  }
+
+  async function addComment(checkinId: string, body: string) {
+    const { data, error } = await supabase
+      .from("comments")
+      .insert({ checkin_id: checkinId, user_id: userId, body })
+      .select("id, checkin_id, user_id, body, created_at")
+      .single();
+    if (error || !data) return;
+    setComments((prev) =>
+      prev.some((c) => c.id === data.id)
+        ? prev
+        : [
+            ...prev,
+            {
+              id: data.id as string,
+              checkin_id: data.checkin_id as string,
+              user_id: data.user_id as string,
+              name: nameByUser[userId] ?? "You",
+              avatarUrl: avatarByUser[userId] ?? null,
+              body: data.body as string,
+              created_at: data.created_at as string,
+            },
+          ],
+    );
+  }
+
+  async function deleteComment(commentId: string) {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    await supabase.from("comments").delete().eq("id", commentId);
   }
 
   const displayedStreak = useCountUp(personal.count);
@@ -306,15 +389,18 @@ export function HomeClient({
                 environment: c.environment,
                 goal: c.goal,
                 createdAt: c.created_at,
-                reactionCount: reactionInfo.counts[c.id] ?? 0,
-                reacted: Boolean(reactionInfo.mine[c.id]),
               };
               return (
                 <FeedItem
                   key={c.id}
                   item={data}
                   isNew={c.isNew}
+                  reactions={reactionAgg[c.id] ?? {}}
+                  comments={commentsByCheckin[c.id] ?? []}
+                  currentUserId={userId}
                   onToggleReaction={toggleReaction}
+                  onAddComment={addComment}
+                  onDeleteComment={deleteComment}
                 />
               );
             })}
