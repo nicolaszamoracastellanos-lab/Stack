@@ -316,6 +316,9 @@ create policy "users create own checkins" on checkins
   for insert with check (
     auth.uid() = user_id and public.is_group_member(group_id)
   );
+-- Authors delete their own check-ins (cascades to reactions/comments) (Fix #4).
+create policy "users delete own checkins" on checkins
+  for delete using (auth.uid() = user_id);
 
 -- REACTIONS: readable by members of the checkin's group; you create/delete your
 -- own, and only on checkins in a group you belong to.
@@ -420,6 +423,7 @@ on conflict (id) do nothing;
 
 drop policy if exists "authenticated upload checkins" on storage.objects;
 drop policy if exists "group members read checkin photos" on storage.objects;
+drop policy if exists "owners delete checkin photos" on storage.objects;
 
 -- Upload: an authenticated user may write only under their own user folder
 -- (<user_id>/<filename>) so one photo can back a multi-group post.
@@ -441,6 +445,14 @@ create policy "group members read checkin photos" on storage.objects
       join group_members gm on gm.group_id = c.group_id
       where c.photo_url = name and gm.user_id = auth.uid()
     )
+  );
+
+-- Owner may delete photos under their own folder (Fix #4).
+create policy "owners delete checkin photos" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'checkins'
+    and (storage.foldername(name))[1] = auth.uid()::text
   );
 
 -- ----------------------------------------------------------------------------

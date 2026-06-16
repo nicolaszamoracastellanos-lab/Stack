@@ -7,6 +7,9 @@ export type FeedCheckin = {
   name: string;
   avatarUrl: string | null;
   photoUrl: string;
+  /** Raw storage path + post id, needed to delete a check-in (Fix #4). */
+  photoPath: string;
+  postId: string | null;
   note: string | null;
   sport: string | null;
   environment: string | null;
@@ -112,6 +115,8 @@ export async function getHomeData(
     name: nameByUser[c.user_id as string] ?? "Member",
     avatarUrl: avatarByUser[c.user_id as string] ?? null,
     photoUrl: signed[c.photo_url as string] ?? "",
+    photoPath: c.photo_url as string,
+    postId: (c.post_id as string | null) ?? null,
     note: (c.note as string | null) ?? null,
     sport: (c.sport as string | null) ?? null,
     environment: (c.environment as string | null) ?? null,

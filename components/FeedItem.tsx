@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { Button } from "@/components/Button";
 import { SharePhotoButton } from "@/components/SharePhotoButton";
 import { useLanguage } from "@/lib/language-context";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -32,6 +33,7 @@ type FeedItemProps = {
   onToggleReaction: (checkinId: string, emoji: string) => void;
   onAddComment: (checkinId: string, body: string) => void;
   onDeleteComment: (commentId: string) => void;
+  onDelete: (checkinId: string) => Promise<string | null>;
 };
 
 /**
@@ -49,9 +51,27 @@ export function FeedItem({
   onToggleReaction,
   onAddComment,
   onDeleteComment,
+  onDelete,
 }: FeedItemProps) {
   const { t, lang } = useLanguage();
   const [draft, setDraft] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const isAuthor = item.userId === currentUserId;
+
+  async function doDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+    const err = await onDelete(item.id);
+    if (err) {
+      setDeleteError(err);
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+    // On success the item is removed by the parent (optimistic + realtime).
+  }
 
   const [now, setNow] = useState<number>(() => new Date(item.createdAt).getTime());
   useEffect(() => {
@@ -86,7 +106,44 @@ export function FeedItem({
           <p className="truncate text-body font-medium text-text">{item.name}</p>
         </Link>
         <time className="font-mono text-caption text-text-dim nums">{time}</time>
+        {isAuthor && (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            aria-label={t("checkin_delete")}
+            className="shrink-0 text-text-dim transition-colors hover:text-danger"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
+              <path
+                d="M5 7h14M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"
+                stroke="currentColor"
+                strokeWidth={1.6}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
       </header>
+
+      {confirmDelete && (
+        <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-2 px-4 py-3">
+          <span className="text-label text-text-muted">{t("checkin_delete_confirm")}</span>
+          <div className="flex shrink-0 gap-2">
+            <Button variant="ghost" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+              {t("cancel")}
+            </Button>
+            <Button variant="danger" onClick={doDelete} disabled={deleting}>
+              {deleting ? t("loading") : t("groups_confirm_yes")}
+            </Button>
+          </div>
+        </div>
+      )}
+      {deleteError && (
+        <p className="border-b border-danger/40 bg-danger/10 px-4 py-2 text-label text-danger">
+          {deleteError}
+        </p>
+      )}
 
       <div className="relative aspect-[9/16] w-full bg-surface-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ConsistencyRing } from "@/components/ConsistencyRing";
@@ -12,6 +13,7 @@ import { useLanguage } from "@/lib/language-context";
 import { useCountUp } from "@/lib/use-count-up";
 import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET } from "@/lib/storage";
+import { deleteCheckinPost } from "@/lib/checkins";
 import {
   computePersonalStreak,
   computeGroupStreak,
@@ -60,6 +62,7 @@ export function HomeClient({
   showTour?: boolean;
 }) {
   const { t } = useLanguage();
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
   const [feed, setFeed] = useState<ClientCheckin[]>(initialFeed);
@@ -187,6 +190,8 @@ export function HomeClient({
             name,
             avatarUrl,
             photoUrl: signed?.signedUrl ?? "",
+            photoPath: c.photo_url,
+            postId: (c as { post_id?: string | null }).post_id ?? null,
             note: c.note ?? null,
             sport: c.sport ?? null,
             environment: c.environment ?? null,
@@ -238,6 +243,14 @@ export function HomeClient({
         (payload) => {
           const oldId = (payload.old as { id?: string })?.id;
           if (oldId) setComments((prev) => prev.filter((c) => c.id !== oldId));
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "checkins" },
+        (payload) => {
+          const oldId = (payload.old as { id?: string })?.id;
+          if (oldId) setFeed((prev) => prev.filter((f) => f.id !== oldId));
         },
       )
       .subscribe();
@@ -322,6 +335,29 @@ export function HomeClient({
   async function deleteComment(commentId: string) {
     setComments((prev) => prev.filter((c) => c.id !== commentId));
     await supabase.from("comments").delete().eq("id", commentId);
+  }
+
+  // Delete one of YOUR check-ins (Fix #4). Optimistic removal; reconciles
+  // streaks/feed from the server afterward. Returns the real error or null.
+  async function deleteCheckin(checkinId: string): Promise<string | null> {
+    const item = feedRef.current.find((f) => f.id === checkinId);
+    if (!item) return null;
+    setFeed((prev) => prev.filter((f) => f.id !== checkinId));
+    const { error } = await deleteCheckinPost(supabase, {
+      id: item.id,
+      postId: item.postId,
+      photoPath: item.photoPath,
+      userId,
+    });
+    if (error) {
+      router.refresh(); // restore the removed item from the server
+      return error;
+    }
+    if (item.user_id === userId) {
+      setPersonalDates((prev) => prev.filter((d) => d !== item.created_at));
+    }
+    router.refresh(); // reconcile streaks / consistency / feed
+    return null;
   }
 
   const displayedStreak = useCountUp(personal.count);
@@ -468,6 +504,7 @@ export function HomeClient({
                   onToggleReaction={toggleReaction}
                   onAddComment={addComment}
                   onDeleteComment={deleteComment}
+                  onDelete={deleteCheckin}
                 />
               );
             })}
