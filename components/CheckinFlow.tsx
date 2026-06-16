@@ -11,7 +11,7 @@ import {
 } from "@/components/CheckinDetailsStep";
 import { CheckinPhotoStep } from "@/components/CheckinPhotoStep";
 import { CheckinCardStep } from "@/components/CheckinCardStep";
-import type { StoryCardData } from "@/components/StoryCard";
+import { StoryCard, type StoryCardData } from "@/components/StoryCard";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET, checkinPhotoPath } from "@/lib/storage";
@@ -99,7 +99,19 @@ export function CheckinFlow({
     notes: "",
     sportQuery: "",
   }));
-  const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
+  const [photo, setPhoto] = useState<
+    { blob: Blob; url: string; dataUrl: string } | null
+  >(null);
+
+  // The card uses a data-URL copy of the photo so html-to-image has nothing to
+  // fetch (blob: URLs break with cacheBust and can taint the export on iOS).
+  function handlePhoto(blob: Blob, url: string) {
+    if (photo) URL.revokeObjectURL(photo.url);
+    const reader = new FileReader();
+    reader.onload = () =>
+      setPhoto({ blob, url, dataUrl: reader.result as string });
+    reader.readAsDataURL(blob);
+  }
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [cardBusy, setCardBusy] = useState(false);
@@ -115,18 +127,32 @@ export function CheckinFlow({
       // Loaded on demand so the heavy lib stays out of the check-in route's
       // initial JS bundle.
       const { toPng } = await import("html-to-image");
-      await document.fonts.ready;
-      const opts = {
-        pixelRatio: 1,
-        cacheBust: true,
+      try {
+        await document.fonts.ready;
+      } catch {
+        /* fonts API unavailable — proceed */
+      }
+      // No cacheBust (it corrupts data/blob URLs). Captured from a dedicated
+      // off-screen full-size node, so the scaled preview can't interfere.
+      const base = {
         width: 1080,
         height: 1920,
+        pixelRatio: 1,
         backgroundColor: "#0A0A0B",
       };
-      await toPng(node, opts);
-      const dataUrl = await toPng(node, opts);
+      let dataUrl: string;
+      try {
+        await toPng(node, base); // iOS Safari warm-up pass
+        dataUrl = await toPng(node, base);
+      } catch (fontErr) {
+        // Font embedding can throw on iOS Safari — retry with system fonts so
+        // the card still exports (slightly off-brand beats not working).
+        console.error("[card] capture failed, retrying without fonts", fontErr);
+        dataUrl = await toPng(node, { ...base, skipFonts: true });
+      }
       return await (await fetch(dataUrl)).blob();
-    } catch {
+    } catch (err) {
+      console.error("[card] export failed", err);
       return null;
     }
   }
@@ -179,7 +205,8 @@ export function CheckinFlow({
 
   const cardData: StoryCardData = useMemo(
     () => ({
-      photoUrl: photo?.url ?? "",
+      // Data URL (not blob:) so html-to-image embeds it without a fetch.
+      photoUrl: photo?.dataUrl ?? "",
       sportLabel:
         details.sport === OTHER_KEY
           ? details.sportOther
@@ -338,25 +365,28 @@ export function CheckinFlow({
       )}
 
       {step === "photo" && (
-        <CheckinPhotoStep
-          photoUrl={photo?.url ?? null}
-          onCapture={(blob, url) => {
-            if (photo) URL.revokeObjectURL(photo.url);
-            setPhoto({ blob, url });
-          }}
-        />
+        <CheckinPhotoStep photoUrl={photo?.url ?? null} onCapture={handlePhoto} />
       )}
 
       {step === "review" && photo && (
-        <CheckinCardStep
-          ref={cardRef}
-          data={cardData}
-          template={template}
-          onTemplate={changeTemplate}
-          toggles={toggles}
-          onToggles={setToggles}
-          milestone={milestone}
-        />
+        <>
+          <CheckinCardStep
+            data={cardData}
+            template={template}
+            onTemplate={changeTemplate}
+            toggles={toggles}
+            onToggles={setToggles}
+            milestone={milestone}
+          />
+          {/* Dedicated off-screen full-size node captured for export — kept out
+              of the scaled preview so transforms can't interfere. */}
+          <div
+            aria-hidden
+            style={{ position: "fixed", left: "-99999px", top: 0, pointerEvents: "none" }}
+          >
+            <StoryCard ref={cardRef} template={template} data={cardData} toggles={toggles} />
+          </div>
+        </>
       )}
 
       {error && (

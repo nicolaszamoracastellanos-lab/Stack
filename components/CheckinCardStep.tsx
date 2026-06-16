@@ -1,6 +1,5 @@
 "use client";
 
-import { forwardRef } from "react";
 import { StoryCard, type StoryCardData } from "@/components/StoryCard";
 import { useLanguage } from "@/lib/language-context";
 import {
@@ -24,22 +23,26 @@ const TOGGLE_ITEMS: { key: keyof CardToggles; labelKey: TranslationKey }[] = [
 ];
 
 /**
- * Story-card step (Batch 3 §3). Live preview of the 1080x1920 card, a template
- * picker (4 base + a milestone variant when a streak milestone is hit), and
- * element toggles. The forwarded ref points at the true-size card node so §4 can
- * capture it to PNG. Save/Share buttons are wired in §4.
+ * Story-card step (Batch 3 §3). Live preview of the 1080x1920 card (scaled down),
+ * a template picker (4 base + a milestone variant when a streak milestone is
+ * hit), and element toggles. The true-size node captured for export is rendered
+ * separately, off-screen, by CheckinFlow.
  */
-export const CheckinCardStep = forwardRef<
-  HTMLDivElement,
-  {
-    data: StoryCardData;
-    template: CardTemplateKey;
-    onTemplate: (k: CardTemplateKey) => void;
-    toggles: CardToggles;
-    onToggles: (t: CardToggles) => void;
-    milestone: boolean;
-  }
->(function CheckinCardStep({ data, template, onTemplate, toggles, onToggles, milestone }, ref) {
+export function CheckinCardStep({
+  data,
+  template,
+  onTemplate,
+  toggles,
+  onToggles,
+  milestone,
+}: {
+  data: StoryCardData;
+  template: CardTemplateKey;
+  onTemplate: (k: CardTemplateKey) => void;
+  toggles: CardToggles;
+  onToggles: (t: CardToggles) => void;
+  milestone: boolean;
+}) {
   const { t } = useLanguage();
 
   const templates: CardTemplate[] = milestone
@@ -61,7 +64,7 @@ export const CheckinCardStep = forwardRef<
             height: 1920,
           }}
         >
-          <StoryCard ref={ref} template={template} data={data} toggles={toggles} />
+          <StoryCard template={template} data={data} toggles={toggles} />
         </div>
       </div>
 
@@ -120,4 +123,4 @@ export const CheckinCardStep = forwardRef<
       </div>
     </div>
   );
-});
+}
