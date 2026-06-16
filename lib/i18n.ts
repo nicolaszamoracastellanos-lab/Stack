@@ -198,6 +198,9 @@ export const translations = {
     tour8_title: "Profile & The Stack",
     tour8_body:
       "Your profile shows your streaks, your totals, and The Stack — your full check-in history. Tap anyone's name to see theirs.",
+    tour_install_title: "Install Stack as an app",
+    tour_install_body:
+      "Add Stack to your home screen for the full-screen app experience. On iPhone, use Safari: open Profile → “Install as an app”, then Share → Add to Home Screen.",
     tour9_title: "You're ready",
     tour9_body: "That's it. Take your first photo and start your streak today.",
 
@@ -599,6 +602,9 @@ export const translations = {
     tour8_title: "Perfil y La Pila",
     tour8_body:
       "Tu perfil muestra tus rachas, tus totales y La Pila — tu historial completo de registros. Toca el nombre de cualquiera para ver el suyo.",
+    tour_install_title: "Instala Stack como app",
+    tour_install_body:
+      "Agrega Stack a tu pantalla de inicio para la experiencia de app en pantalla completa. En iPhone, usa Safari: abre Perfil → “Instalar como app”, luego Compartir → Agregar a inicio.",
     tour9_title: "Estás listo",
     tour9_body: "Eso es todo. Toma tu primera foto y empieza tu racha hoy.",
 

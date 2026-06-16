@@ -22,5 +22,8 @@ export const TOUR_STEPS: TourStep[] = [
   { target: null, titleKey: "tour6_title", bodyKey: "tour6_body" },
   { target: "nav-groups", titleKey: "tour7_title", bodyKey: "tour7_body" },
   { target: "nav-profile", titleKey: "tour8_title", bodyKey: "tour8_body" },
+  // Install-as-app (Fix #8). The button lives in Profile, not Home, so this is
+  // an explanation step (centered, no spotlight) with the iOS Safari tip.
+  { target: null, titleKey: "tour_install_title", bodyKey: "tour_install_body" },
   { target: null, titleKey: "tour9_title", bodyKey: "tour9_body" },
 ];
