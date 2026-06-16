@@ -239,6 +239,38 @@ export const translations = {
     profile_saved: "Saved",
     profile_about: "About",
 
+    // Install / Add to Home Screen guide
+    install_cta: "Install as an app",
+    install_title: "Add Stack to your iPhone",
+    install_subtitle:
+      "Turn Stack into an app on your Home Screen — no App Store needed. It opens full-screen, just like a real app.",
+    install_beta_note:
+      "Stack is in early beta, so this is the best way to use it every day.",
+    install_safari_title: "Open this in Safari first",
+    install_safari_body:
+      "This only works in Safari on iPhone. If you're in another browser or app, open {url} in Safari, then come back here.",
+    install_not_safari:
+      "You don't seem to be in Safari. Copy the link below, open Safari, and paste it there.",
+    install_copy_link: "Copy link",
+    install_link_copied: "Link copied",
+    install_step1_title: "Open Stack in Safari",
+    install_step1_body:
+      "In Safari on your iPhone, go to {url}. The address bar sits at the bottom of the screen.",
+    install_step2_title: "Tap the Share button",
+    install_step2_body:
+      "It's the square with an arrow pointing up, in the bar at the bottom.",
+    install_step3_title: "Tap “Add to Home Screen”",
+    install_step3_body:
+      "Scroll down the menu until you see it — next to a box with a + inside. Tap it.",
+    install_step4_title: "Tap “Add”",
+    install_step4_body:
+      "You'll see the Stack icon and name. Tap Add in the top-right corner.",
+    install_step5_title: "Done — open Stack from your Home Screen",
+    install_step5_body:
+      "The Stack icon is now on your Home Screen. Tap it to open Stack full-screen, like an app.",
+    install_step_label: "Step {n}",
+    install_done: "Back to Stack",
+
     // Time (relative)
     time_now: "just now",
 
@@ -476,6 +508,38 @@ export const translations = {
     profile_save: "Guardar perfil",
     profile_saved: "Guardado",
     profile_about: "Sobre ti",
+
+    // Install / Add to Home Screen guide
+    install_cta: "Instalar como app",
+    install_title: "Agrega Stack a tu iPhone",
+    install_subtitle:
+      "Convierte Stack en una app en tu pantalla de inicio — sin App Store. Se abre en pantalla completa, como una app de verdad.",
+    install_beta_note:
+      "Stack está en beta temprana, así que esta es la mejor forma de usarlo todos los días.",
+    install_safari_title: "Primero abre esto en Safari",
+    install_safari_body:
+      "Esto solo funciona en Safari en iPhone. Si estás en otro navegador o app, abre {url} en Safari y vuelve aquí.",
+    install_not_safari:
+      "Parece que no estás en Safari. Copia el enlace de abajo, abre Safari y pégalo ahí.",
+    install_copy_link: "Copiar enlace",
+    install_link_copied: "Enlace copiado",
+    install_step1_title: "Abre Stack en Safari",
+    install_step1_body:
+      "En Safari en tu iPhone, entra a {url}. La barra de direcciones está abajo en la pantalla.",
+    install_step2_title: "Toca el botón Compartir",
+    install_step2_body:
+      "Es el cuadrado con una flecha hacia arriba, en la barra de abajo.",
+    install_step3_title: "Toca “Agregar a inicio”",
+    install_step3_body:
+      "Desliza el menú hacia abajo hasta verlo — junto a un cuadro con un + adentro. Tócalo.",
+    install_step4_title: "Toca “Agregar”",
+    install_step4_body:
+      "Verás el ícono y el nombre de Stack. Toca Agregar en la esquina superior derecha.",
+    install_step5_title: "¡Listo! Abre Stack desde tu pantalla de inicio",
+    install_step5_body:
+      "El ícono de Stack ya está en tu pantalla de inicio. Tócalo para abrir Stack en pantalla completa, como una app.",
+    install_step_label: "Paso {n}",
+    install_done: "Volver a Stack",
 
     // Time (relative)
     time_now: "ahora",

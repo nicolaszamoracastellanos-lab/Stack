@@ -127,7 +127,12 @@ export function ProfileView({
       </section>
 
       {/* Account */}
-      <div className="mt-10">
+      <div className="mt-10 flex flex-col gap-3">
+        <Link href="/install">
+          <Button variant="primary" fullWidth>
+            {t("install_cta")}
+          </Button>
+        </Link>
         <SignOutButton variant="secondary" />
       </div>
     </main>
