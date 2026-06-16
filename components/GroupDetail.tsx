@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Leaderboard } from "@/components/Leaderboard";
 import { NudgeButton } from "@/components/NudgeButton";
+import { RecapCard } from "@/components/RecapCard";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -142,6 +143,11 @@ export function GroupDetail({
             <p className="truncate text-label text-text-muted">{data.group.goal}</p>
           )}
         </div>
+      </div>
+
+      {/* Weekly recap (Section 7) */}
+      <div className="mb-8">
+        <RecapCard data={data} />
       </div>
 
       {/* SECTION A — group stats */}

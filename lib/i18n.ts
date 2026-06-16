@@ -80,6 +80,11 @@ export const translations = {
     nudge_cta: "Nudge",
     nudge_sent: "Nudged",
     nudge_banner: "{who} nudged you 👀 Your group is waiting.",
+    // Weekly recap
+    recap_title: "This week",
+    recap_subtitle: "How the group is showing up",
+    recap_checkins: "Check-ins",
+    recap_perfect: "Perfect week",
     milestone_title: "{n}-day streak",
     milestone_sub: "You're on fire. Keep it alive.",
 
@@ -385,6 +390,11 @@ export const translations = {
     nudge_cta: "Empújalo",
     nudge_sent: "Enviado",
     nudge_banner: "{who} te dio un empujón 👀 Tu grupo te está esperando.",
+    // Weekly recap
+    recap_title: "Esta semana",
+    recap_subtitle: "Cómo se está presentando el grupo",
+    recap_checkins: "Registros",
+    recap_perfect: "Semana perfecta",
     milestone_title: "racha de {n} días",
     milestone_sub: "Estás encendido. Mantenla viva.",
 
