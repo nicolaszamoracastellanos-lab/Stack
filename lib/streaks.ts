@@ -89,6 +89,11 @@ function streakFromDaySet(
 /**
  * Personal streak: consecutive days, ending today or yesterday, on which the
  * user has at least one check-in.
+ *
+ * A streak belongs to the PERSON, not a group (Fix #7): callers MUST pass the
+ * user's GLOBAL check-in history (across all groups), never check-ins scoped to
+ * a single group — otherwise it wrongly resets when a user joins a new group.
+ * Group collective streaks use computeGroupStreak with per-member arrays.
  */
 export function computePersonalStreak(
   checkinDates: Array<string | number | Date>,

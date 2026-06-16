@@ -87,25 +87,49 @@ export async function getGroupDetail(
   const datesOf = (uid: string) =>
     checkins.filter((c) => c.user_id === uid).map((c) => c.created_at as string);
 
-  // Section B — per-member rows (privacy-aware), same shape as the leaderboard.
-  const members: LeaderEntry[] = rows.map((row) => {
-    const uid = (row as { user_id: string }).user_id;
-    const profile = (row as unknown as { profile: ProfileLite }).profile;
-    const dates = datesOf(uid);
-    const daySet = toDaySet(dates);
-    const isYou = uid === userId;
-    const showStats = isYou || profile?.show_stats !== false;
-    return {
-      userId: uid,
-      name: nameOf(profile),
-      avatarUrl: profile?.avatar_url ?? null,
-      streak: showStats ? computePersonalStreak(dates, now).count : 0,
-      checkedInToday: daySet.has(todayKey),
-      daysThisWeek: showStats ? last7.filter((k) => daySet.has(k)).length : 0,
-      isYou,
-      showStats,
-    };
-  });
+  // Section B — per-member rows (privacy-aware).
+  // Fix #7: the per-member STREAK is the member's PERSONAL (global) streak —
+  // computed from ALL their check-ins + rest days via the gated RPCs, NOT from
+  // this group's check-ins. A streak belongs to the person, not the group, so it
+  // must not reset to 0 in a newly-joined group. The at-risk dot and the weekly
+  // consistency ring stay GROUP-scoped (participation in this group).
+  const members: LeaderEntry[] = await Promise.all(
+    rows.map(async (row) => {
+      const uid = (row as { user_id: string }).user_id;
+      const profile = (row as unknown as { profile: ProfileLite }).profile;
+      const groupDaySet = toDaySet(datesOf(uid));
+      const isYou = uid === userId;
+      const showStats = isYou || profile?.show_stats !== false;
+
+      let streak = 0;
+      if (showStats) {
+        const [datesRes, restRes] = await Promise.all([
+          supabase.rpc("member_checkin_dates", { _user_id: uid }),
+          supabase.rpc("member_rest_days", { _user_id: uid }),
+        ]);
+        const globalDates = Array.isArray(datesRes.data)
+          ? (datesRes.data as { created_at: string }[]).map((r) => r.created_at)
+          : [];
+        const restDays = Array.isArray(restRes.data)
+          ? (restRes.data as { day: string }[]).map((r) => r.day)
+          : [];
+        streak = computePersonalStreak(globalDates, now, restDays).count;
+      }
+
+      return {
+        userId: uid,
+        name: nameOf(profile),
+        avatarUrl: profile?.avatar_url ?? null,
+        streak,
+        checkedInToday: groupDaySet.has(todayKey),
+        daysThisWeek: showStats
+          ? last7.filter((k) => groupDaySet.has(k)).length
+          : 0,
+        isYou,
+        showStats,
+      };
+    }),
+  );
   members.sort((a, b) =>
     a.showStats !== b.showStats
       ? a.showStats

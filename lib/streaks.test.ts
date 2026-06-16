@@ -84,6 +84,18 @@ check("longest of empty is 0", () => {
   assert.equal(computeLongestStreak([]), 0);
 });
 
+// Fix #7: the personal streak is global to the user — it operates on whatever
+// check-in set is passed and has NO group concept. The group dimension lives
+// only in computeGroupStreak (per-member arrays), verified separately below.
+check("personal streak is computed from the full set passed (global, not per-group)", () => {
+  // Same three consecutive days a user might have spread across groups → one
+  // continuous personal streak of 3.
+  assert.deepEqual(computePersonalStreak([ago(2), ago(1), ago(0)], NOW), {
+    count: 3,
+    state: "alive",
+  });
+});
+
 // ---- Rest days (Section 9) ----
 check("rest day today keeps the streak alive (protected)", () => {
   // Checked in yesterday + 2 days ago, didn't today, but marked today a rest day.
