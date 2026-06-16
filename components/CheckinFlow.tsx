@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toPng } from "html-to-image";
 import { Button } from "@/components/Button";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import {
@@ -102,6 +103,65 @@ export function CheckinFlow({
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  const [cardBusy, setCardBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Capture the true-size (1080x1920) card node to a PNG blob. Real HTML → PNG
+  // via html-to-image. On iOS Safari the first pass can come back blank while
+  // images/fonts settle, so we warm up once and use the second pass.
+  async function generateCardBlob(): Promise<Blob | null> {
+    const node = cardRef.current;
+    if (!node) return null;
+    try {
+      await document.fonts.ready;
+      const opts = {
+        pixelRatio: 1,
+        cacheBust: true,
+        width: 1080,
+        height: 1920,
+        backgroundColor: "#0A0A0B",
+      };
+      await toPng(node, opts);
+      const dataUrl = await toPng(node, opts);
+      return await (await fetch(dataUrl)).blob();
+    } catch {
+      return null;
+    }
+  }
+
+  function downloadBlob(blob: Blob, name: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // Honest constraint: a PWA can't post to the IG Stories composer directly, so
+  // we save / open the native share sheet and the user posts it themselves.
+  // PHASE 4: a native wrapper could deep-link into Instagram.
+  async function exportCard(mode: "save" | "share") {
+    setError(null);
+    setCardBusy(true);
+    const blob = await generateCardBlob();
+    setCardBusy(false);
+    if (!blob) return setError(t("card_export_failed"));
+
+    const file = new File([blob], "stack-story.png", { type: "image/png" });
+    if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Stack", text: t("card_share_text") });
+      } catch {
+        /* user dismissed the sheet */
+      }
+    } else {
+      downloadBlob(blob, "stack-story.png");
+    }
+    if (mode === "save") setSaved(true);
+  }
 
   function changeOrder(next: Order) {
     setOrder(next);
@@ -306,9 +366,38 @@ export function CheckinFlow({
       {/* Footer */}
       <div className="mt-8">
         {step === "review" ? (
-          <Button variant="primary" size="lg" fullWidth onClick={post} disabled={posting}>
-            {posting ? t("checkin_uploading") : t("checkin_submit")}
-          </Button>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onClick={() => exportCard("save")}
+                disabled={cardBusy}
+              >
+                {cardBusy ? t("card_generating") : t("card_save")}
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onClick={() => exportCard("share")}
+                disabled={cardBusy}
+              >
+                {t("card_share_btn")}
+              </Button>
+            </div>
+            {saved ? (
+              <p className="rounded-input border border-volt/30 bg-volt/10 px-3 py-2 text-center text-label text-volt">
+                {t("card_saved")}
+              </p>
+            ) : (
+              <p className="text-center text-caption text-text-dim">{t("card_hint")}</p>
+            )}
+            <Button variant="primary" size="lg" fullWidth onClick={post} disabled={posting}>
+              {posting ? t("checkin_uploading") : t("checkin_submit")}
+            </Button>
+          </div>
         ) : (
           <Button variant="primary" size="lg" fullWidth onClick={next}>
             {t("cd_next")}
