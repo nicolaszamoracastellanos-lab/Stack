@@ -3,7 +3,6 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toPng } from "html-to-image";
 import { Button } from "@/components/Button";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import {
@@ -113,6 +112,9 @@ export function CheckinFlow({
     const node = cardRef.current;
     if (!node) return null;
     try {
+      // Loaded on demand so the heavy lib stays out of the check-in route's
+      // initial JS bundle.
+      const { toPng } = await import("html-to-image");
       await document.fonts.ready;
       const opts = {
         pixelRatio: 1,
