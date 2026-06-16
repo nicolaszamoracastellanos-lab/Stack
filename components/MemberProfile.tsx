@@ -13,7 +13,7 @@ import { useLanguage } from "@/lib/language-context";
 import {
   computeLongestStreak,
   computePersonalStreak,
-  toDaySet,
+  localDateKey,
 } from "@/lib/streaks";
 import type { MemberProfileData } from "@/lib/member-profile";
 import type { TranslationKey } from "@/lib/i18n";
@@ -77,14 +77,18 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
     sharedGroups,
   } = data;
 
-  const { current, longest, daySet } = useMemo(
-    () => ({
+  const { current, longest, counts } = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const d of checkinDates) {
+      const k = localDateKey(new Date(d));
+      map[k] = (map[k] ?? 0) + 1;
+    }
+    return {
       current: computePersonalStreak(checkinDates, new Date()).count,
       longest: computeLongestStreak(checkinDates),
-      daySet: toDaySet(checkinDates),
-    }),
-    [checkinDates],
-  );
+      counts: map,
+    };
+  }, [checkinDates]);
 
   const name = profile.display_name?.trim() || `@${profile.username}`;
 
@@ -184,7 +188,7 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
         <section className="mt-10">
           <SectionLabel>{t("profile_heatmap_title")}</SectionLabel>
           <div className="mt-3 rounded-card border border-border bg-surface p-5">
-            <Heatmap daySet={daySet} />
+            <Heatmap counts={counts} />
           </div>
         </section>
       )}

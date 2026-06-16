@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { localDateKey } from "@/lib/streaks";
 import { cn } from "@/lib/utils";
 
-const WEEKS = 53; // ~1 year, GitHub-style
+type Range = "3m" | "1y";
+const WEEKS: Record<Range, number> = { "3m": 13, "1y": 53 };
 
 function addDays(d: Date, n: number): Date {
   const x = new Date(d);
@@ -12,53 +14,124 @@ function addDays(d: Date, n: number): Date {
   return x;
 }
 
-type Day = { date: Date; key: string; inSet: boolean; future: boolean };
+type Cell = {
+  key: string;
+  date: Date;
+  count: number;
+  rest: boolean;
+  future: boolean;
+};
+
+// Discrete GitHub-style intensity from a day's check-in count. Rest days and
+// missed days are handled separately (distinct shape, not just hue) so state is
+// never conveyed by color alone — important for color-blind users.
+function levelClass(count: number): string {
+  if (count >= 3) return "bg-volt";
+  if (count === 2) return "bg-volt/60";
+  if (count === 1) return "bg-volt/30";
+  return "bg-surface-2";
+}
 
 /**
- * Check-in history heatmap: one cell per day for the past year, volt on days
- * the user checked in, dim otherwise. This is the visual of the stack growing
- * over time — built to look good enough to screenshot.
+ * Check-in history heatmap ("The Stack"). Defaults to the past 3 months for
+ * legibility on a phone; toggles to a full year (horizontal scroll). Discrete
+ * color steps + a Less→More legend, month + weekday labels, and a per-day
+ * tooltip with the exact date and state. Rest days (Section 9) render as a
+ * distinct outlined cell.
  */
-export function Heatmap({ daySet }: { daySet: Set<string> }) {
+export function Heatmap({
+  counts,
+  restDays,
+}: {
+  counts: Record<string, number>;
+  restDays?: Set<string>;
+}) {
   const { t, lang } = useLanguage();
+  const [range, setRange] = useState<Range>("3m");
 
-  // Build the grid anchored to local "today". Columns are weeks (Sun→Sat).
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const thisSunday = addDays(today, -today.getDay());
-  const start = addDays(thisSunday, -(WEEKS - 1) * 7);
+  const start = addDays(thisSunday, -(WEEKS[range] - 1) * 7);
 
-  const weeks: Day[][] = [];
+  const weeks: Cell[][] = [];
   let cursor = start;
   while (cursor <= today) {
-    const week: Day[] = [];
+    const week: Cell[] = [];
     for (let d = 0; d < 7; d++) {
       const date = addDays(cursor, d);
       const key = localDateKey(date);
-      week.push({ date, key, inSet: daySet.has(key), future: date > today });
+      week.push({
+        key,
+        date,
+        count: counts[key] ?? 0,
+        rest: restDays?.has(key) ?? false,
+        future: date > today,
+      });
     }
     weeks.push(week);
     cursor = addDays(cursor, 7);
   }
 
-  // Month labels above the columns, placed when the month changes.
-  const monthLabel = (week: Day[], i: number): string => {
+  const monthLabel = (week: Cell[], i: number): string => {
     const first = week[0].date;
-    const prevFirst = i > 0 ? weeks[i - 1][0].date : null;
-    if (prevFirst && prevFirst.getMonth() === first.getMonth()) return "";
+    const prev = i > 0 ? weeks[i - 1][0].date : null;
+    if (prev && prev.getMonth() === first.getMonth()) return "";
     return first.toLocaleString(lang, { month: "short" });
   };
 
-  const weekdayLabels = [1, 3, 5]; // Mon, Wed, Fri rows
+  const tooltip = (c: Cell): string => {
+    const date = c.date.toLocaleDateString(lang, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const state = c.rest
+      ? t("heatmap_rest")
+      : c.count > 0
+        ? t("heatmap_checked")
+        : t("heatmap_missed");
+    return `${date} · ${state}`;
+  };
+
+  const weekdayRows = [1, 3, 5]; // Mon, Wed, Fri
+  const cellSize = range === "3m" ? "h-3.5 w-3.5" : "h-3 w-3";
 
   return (
     <div>
+      {/* Range toggle */}
+      <div className="mb-4 flex justify-end">
+        <div className="inline-flex rounded-pill border border-border p-0.5">
+          {(["3m", "1y"] as Range[]).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRange(r)}
+              className={cn(
+                "rounded-pill px-3 py-1 text-caption font-medium transition-colors",
+                range === r
+                  ? "bg-surface-2 text-text"
+                  : "text-text-dim hover:text-text",
+              )}
+            >
+              {r === "3m" ? "3M" : "1Y"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="overflow-x-auto pb-2">
         <div className="inline-flex flex-col gap-1">
           {/* Month labels */}
           <div className="flex gap-1 pl-8">
             {weeks.map((week, i) => (
-              <div key={i} className="w-3 text-[10px] leading-none text-text-dim">
+              <div
+                key={i}
+                className={cn(
+                  "text-[10px] leading-none text-text-dim",
+                  range === "3m" ? "w-3.5" : "w-3",
+                )}
+              >
                 {monthLabel(week, i)}
               </div>
             ))}
@@ -70,9 +143,12 @@ export function Heatmap({ daySet }: { daySet: Set<string> }) {
               {Array.from({ length: 7 }).map((_, row) => (
                 <div
                   key={row}
-                  className="h-3 text-[10px] leading-3 text-text-dim"
+                  className={cn(
+                    "text-[10px] leading-3 text-text-dim",
+                    range === "3m" ? "h-3.5" : "h-3",
+                  )}
                 >
-                  {weekdayLabels.includes(row)
+                  {weekdayRows.includes(row)
                     ? new Date(2026, 5, 1 + row).toLocaleString(lang, {
                         weekday: "short",
                       })[0]
@@ -84,17 +160,18 @@ export function Heatmap({ daySet }: { daySet: Set<string> }) {
             {/* Week columns */}
             {weeks.map((week, i) => (
               <div key={i} className="flex flex-col gap-1">
-                {week.map((day) => (
+                {week.map((c) => (
                   <div
-                    key={day.key}
-                    title={day.future ? undefined : day.key}
+                    key={c.key}
+                    title={c.future ? undefined : tooltip(c)}
                     className={cn(
-                      "h-3 w-3 rounded-[3px]",
-                      day.future
+                      "rounded-[3px]",
+                      cellSize,
+                      c.future
                         ? "bg-transparent"
-                        : day.inSet
-                          ? "bg-volt"
-                          : "bg-surface-2",
+                        : c.rest
+                          ? "border border-border-strong bg-transparent"
+                          : levelClass(c.count),
                     )}
                   />
                 ))}
@@ -105,11 +182,19 @@ export function Heatmap({ daySet }: { daySet: Set<string> }) {
       </div>
 
       {/* Legend */}
-      <div className="mt-2 flex items-center gap-1.5 text-caption text-text-dim">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-text-dim">
         <span>{t("profile_heatmap_subtitle")}</span>
-        <span className="ml-auto flex items-center gap-1">
+        <span className="ml-auto flex items-center gap-1.5">
+          <span>{t("heatmap_less")}</span>
           <span className="h-3 w-3 rounded-[3px] bg-surface-2" />
+          <span className="h-3 w-3 rounded-[3px] bg-volt/30" />
+          <span className="h-3 w-3 rounded-[3px] bg-volt/60" />
           <span className="h-3 w-3 rounded-[3px] bg-volt" />
+          <span>{t("heatmap_more")}</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-[3px] border border-border-strong bg-transparent" />
+          <span>{t("heatmap_rest")}</span>
         </span>
       </div>
     </div>
