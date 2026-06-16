@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { SegmentedControl } from "@/components/SegmentedControl";
+import { BrandBar } from "@/components/BrandBar";
 import { useLanguage } from "@/lib/language-context";
 import { SPORTS, iconFor, labelFor } from "@/lib/workout-options";
 
@@ -38,6 +39,7 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
+      <BrandBar />
       <h1 className="text-h1">{t("activity_title")}</h1>
 
       <div className="mt-6">

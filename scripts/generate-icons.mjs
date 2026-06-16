@@ -109,4 +109,15 @@ const wordmarkPng = new Resvg(wordmarkSvg, {
 writeFileSync(`${OUT}/wordmark.png`, wordmarkPng);
 console.log(`  wordmark.svg/.png        ${W}x${H}  (measured "Stack" ${textW.toFixed(0)}px)`);
 
+// Transparent wordmark for burning into check-in photos (white text + volt
+// square, no background). Composited bottom-left with a drop shadow at capture
+// time — see lib/watermark.ts. Rendered at high res so it stays crisp.
+const wordmarkWatermark = new Resvg(wordmarkSvg, {
+  fitTo: { mode: "width", value: 720 },
+  background: "transparent",
+  font: { fontFiles: wordmarkFonts, loadSystemFonts: false, defaultFontFamily: "Geist" },
+}).render().asPng();
+writeFileSync(`${OUT}/wordmark-watermark.png`, wordmarkWatermark);
+console.log(`  wordmark-watermark.png   720px transparent`);
+
 console.log("done.");

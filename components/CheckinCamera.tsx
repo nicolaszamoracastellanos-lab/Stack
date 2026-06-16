@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { ImageCropper } from "@/components/ImageCropper";
 import { CheckinDetail } from "@/components/CheckinDetail";
 import { useLanguage } from "@/lib/language-context";
+import { watermarkPhoto } from "@/lib/watermark";
 import { cn } from "@/lib/utils";
 import type { Group } from "@/lib/types";
 
@@ -234,10 +235,13 @@ export function CheckinCamera({
             setRaw(null);
             setPhase("live");
           }}
-          onCropped={(blob) => {
+          onCropped={async (blob) => {
             URL.revokeObjectURL(raw.url);
             setRaw(null);
-            setCropped({ blob, url: URL.createObjectURL(blob) });
+            // Burn the Stack wordmark into the bottom-left before we move on, so
+            // the feed photo and any export carry the brand. Fails open.
+            const stamped = await watermarkPhoto(blob);
+            setCropped({ blob: stamped, url: URL.createObjectURL(stamped) });
             setPhase("detail");
           }}
         />

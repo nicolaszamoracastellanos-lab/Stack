@@ -6,7 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { Heatmap } from "@/components/Heatmap";
 import { Button } from "@/components/Button";
 import { SignOutButton } from "@/components/SignOutButton";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { BrandBar } from "@/components/BrandBar";
 import { useLanguage } from "@/lib/language-context";
 import {
   computeLongestStreak,
@@ -78,10 +78,8 @@ export function ProfileView({
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-h2">{t("profile_title")}</h1>
-        <LanguageToggle />
-      </header>
+      <BrandBar />
+      <h1 className="text-h2">{t("profile_title")}</h1>
 
       {/* Identity */}
       <div className="mt-8 flex items-center gap-4">

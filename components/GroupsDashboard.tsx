@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { JoinByCode } from "@/components/JoinByCode";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { BrandBar } from "@/components/BrandBar";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { setActiveGroup, clearActiveGroup } from "@/lib/active-group";
@@ -285,9 +285,10 @@ export function GroupsDashboard({
         </button>
       )}
 
+      <BrandBar />
+
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-h1">{t("groups_title")}</h1>
-        <LanguageToggle />
       </header>
 
       {groups.length === 0 ? (
