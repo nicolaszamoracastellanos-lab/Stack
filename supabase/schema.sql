@@ -119,8 +119,11 @@ create table if not exists nudges (
   to_user uuid references profiles(id) on delete cascade not null,
   day date not null default (now() at time zone 'utc')::date,
   created_at timestamptz default now(),
+  -- Set when the recipient acts on or dismisses the nudge (Fix #2).
+  read_at timestamptz,
   unique (from_user, to_user, day)
 );
+alter table nudges add column if not exists read_at timestamptz;
 create index if not exists nudges_to_idx on nudges (to_user, created_at desc);
 
 -- Group chat messages (Batch 2 §8).
@@ -356,6 +359,8 @@ create policy "send nudges" on nudges
       where gm.group_id = nudges.group_id and gm.user_id = to_user
     )
   );
+create policy "recipient marks nudge read" on nudges
+  for update using (to_user = auth.uid()) with check (to_user = auth.uid());
 
 -- MESSAGES (group chat): members read/send in their group; authors delete own.
 create policy "members read messages" on messages

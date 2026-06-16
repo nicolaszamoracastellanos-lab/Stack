@@ -79,7 +79,8 @@ export const translations = {
     // Nudge
     nudge_cta: "Nudge",
     nudge_sent: "Nudged",
-    nudge_banner: "{who} nudged you 👀 Your group is waiting.",
+    nudge_banner: "{who} nudged you 👀 Tap to check in.",
+    nudge_dismiss: "Dismiss",
     // Weekly recap
     recap_title: "This week",
     recap_subtitle: "How the group is showing up",
@@ -475,7 +476,8 @@ export const translations = {
     // Nudge
     nudge_cta: "Empújalo",
     nudge_sent: "Enviado",
-    nudge_banner: "{who} te dio un empujón 👀 Tu grupo te está esperando.",
+    nudge_banner: "{who} te dio un empujón 👀 Toca para registrar.",
+    nudge_dismiss: "Descartar",
     // Weekly recap
     recap_title: "Esta semana",
     recap_subtitle: "Cómo se está presentando el grupo",
