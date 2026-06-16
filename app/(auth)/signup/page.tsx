@@ -68,12 +68,12 @@ function SignupForm() {
     }
 
     if (data.session) {
-      // Confirmation OFF: logged in immediately -> onboarding.
-      const onboarding =
+      // Confirmation OFF: logged in immediately -> welcome story, then setup.
+      const welcome =
         next && next.startsWith("/")
-          ? `/onboarding?next=${encodeURIComponent(next)}`
-          : "/onboarding";
-      router.replace(onboarding);
+          ? `/welcome?next=${encodeURIComponent(next)}`
+          : "/welcome";
+      router.replace(welcome);
     } else {
       // Confirmation ON: account created, no session yet. NOT an error — send
       // them to the confirmation-pending screen.

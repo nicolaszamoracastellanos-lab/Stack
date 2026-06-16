@@ -12,6 +12,9 @@ export type Profile = {
   avatar_url: string | null;
   /** Privacy: when false, hide streak/longest/total from other group members. */
   show_stats: boolean;
+  /** First-run: welcome story seen, feature tour completed (Onboarding). */
+  has_seen_welcome: boolean;
+  has_completed_tour: boolean;
   created_at: string;
 };
 

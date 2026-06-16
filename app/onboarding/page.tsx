@@ -14,6 +14,9 @@ export default async function OnboardingPage({
   const { userId, profile } = await getUserAndProfile();
   if (!userId) redirect("/login");
 
+  // Existing users who haven't seen the welcome story go there first.
+  if (profile && profile.has_seen_welcome === false) redirect("/welcome");
+
   const next = searchParams.next;
   if (isProfileComplete(profile)) {
     redirect(next && next.startsWith("/") ? next : "/home");

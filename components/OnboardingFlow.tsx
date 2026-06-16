@@ -165,6 +165,8 @@ export function OnboardingFlow({
         focus_sport: focusSport.trim(),
         bio: bio.trim() || null,
         avatar_url: avatarUrl,
+        // They saw the welcome story before reaching profile setup.
+        has_seen_welcome: true,
       },
       { onConflict: "id" },
     );

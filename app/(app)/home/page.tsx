@@ -15,8 +15,10 @@ import { BrandBar } from "@/components/BrandBar";
 // The heart of the app. Server-fetches the group's feed + the data needed to
 // seed the streaks, then hands off to HomeClient for the live, interactive UI.
 export default async function HomePage() {
-  const { userId } = await getUserAndProfile();
+  const { userId, profile } = await getUserAndProfile();
   const { active, groups } = await getActiveGroup();
+  // First-run feature tour: starts once when a user with a group lands on Home.
+  const showTour = profile?.has_completed_tour === false;
 
   if (!active || !userId) {
     return (
@@ -68,6 +70,7 @@ export default async function HomePage() {
         initialPersonal={personal}
         initialGroup={group}
         initialCheckedInToday={checkedInToday}
+        showTour={showTour}
       />
     </main>
   );

@@ -24,6 +24,9 @@ export default async function AppLayout({
 }) {
   const { userId, profile } = await getUserAndProfile();
   if (!userId) redirect("/login");
+  // Existing users replay the welcome story once (flag defaults false for all).
+  // Guard on `=== false` so a pre-migration undefined never traps anyone.
+  if (profile && profile.has_seen_welcome === false) redirect("/welcome");
   // Every user — new or existing — must complete onboarding before the app.
   if (!isProfileComplete(profile)) redirect("/onboarding");
 

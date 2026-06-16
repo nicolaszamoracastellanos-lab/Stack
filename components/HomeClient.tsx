@@ -7,6 +7,7 @@ import { StreakBadge } from "@/components/StreakBadge";
 import { ConsistencyRing } from "@/components/ConsistencyRing";
 import { FeedItem, type FeedItemData } from "@/components/FeedItem";
 import { NudgeBanner } from "@/components/NudgeBanner";
+import { Tour } from "@/components/Tour";
 import { useLanguage } from "@/lib/language-context";
 import { useCountUp } from "@/lib/use-count-up";
 import { createClient } from "@/lib/supabase/client";
@@ -43,6 +44,7 @@ export function HomeClient({
   initialPersonal,
   initialGroup,
   initialCheckedInToday,
+  showTour = false,
 }: {
   groupId: string;
   userId: string;
@@ -55,6 +57,7 @@ export function HomeClient({
   initialPersonal: Streak;
   initialGroup: Streak;
   initialCheckedInToday: boolean;
+  showTour?: boolean;
 }) {
   const { t } = useLanguage();
   const supabase = useMemo(() => createClient(), []);
@@ -64,6 +67,15 @@ export function HomeClient({
   const [comments, setComments] = useState<FeedComment[]>(initialComments);
   const [personalDates, setPersonalDates] = useState<string[]>(initialPersonalDates);
   const [restDays, setRestDays] = useState<string[]>(initialRestDays);
+  const [tourActive, setTourActive] = useState(showTour);
+
+  async function completeTour() {
+    setTourActive(false);
+    await supabase
+      .from("profiles")
+      .update({ has_completed_tour: true })
+      .eq("id", userId);
+  }
 
   // Streak state. Seeded from server-computed values (so SSR and first client
   // render match), then recomputed client-side with the device's local "today".
@@ -338,6 +350,9 @@ export function HomeClient({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* First-run feature tour (Onboarding Part 2). */}
+      {tourActive && <Tour onComplete={completeTour} />}
+
       {/* Someone nudged you today (Section 6). */}
       <NudgeBanner userId={userId} />
 

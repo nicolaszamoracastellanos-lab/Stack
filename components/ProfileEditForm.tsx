@@ -74,6 +74,15 @@ export function ProfileEditForm({
     setUploading(false);
   }
 
+  async function replayTour() {
+    await supabase
+      .from("profiles")
+      .update({ has_completed_tour: false })
+      .eq("id", userId);
+    router.push("/home");
+    router.refresh();
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -201,6 +210,15 @@ export function ProfileEditForm({
             {t("privacy_explainer")}
           </p>
         </div>
+
+        {/* Replay the feature tour */}
+        <button
+          type="button"
+          onClick={replayTour}
+          className="text-left text-label text-text-muted underline-offset-4 hover:text-text hover:underline"
+        >
+          {t("tour_replay")}
+        </button>
 
         {error && (
           <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
