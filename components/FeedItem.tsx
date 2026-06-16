@@ -88,7 +88,7 @@ export function FeedItem({
         <time className="font-mono text-caption text-text-dim nums">{time}</time>
       </header>
 
-      <div className="relative aspect-square w-full bg-surface-2">
+      <div className="relative aspect-[9/16] w-full bg-surface-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
         <img src={item.photoUrl} alt="" className="h-full w-full object-cover" />
         <SharePhotoButton src={item.photoUrl} className="absolute bottom-3 right-3" />

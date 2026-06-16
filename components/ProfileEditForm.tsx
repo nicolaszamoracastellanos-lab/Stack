@@ -240,6 +240,7 @@ export function ProfileEditForm({
       {cropSrc && (
         <ImageCropper
           src={cropSrc}
+          shape="circle"
           onCancel={closeCropper}
           onCropped={onCropped}
         />

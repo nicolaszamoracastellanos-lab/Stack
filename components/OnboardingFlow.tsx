@@ -348,7 +348,7 @@ export function OnboardingFlow({
       </div>
 
       {cropSrc && (
-        <ImageCropper src={cropSrc} onCancel={closeCropper} onCropped={onCropped} />
+        <ImageCropper src={cropSrc} shape="circle" onCancel={closeCropper} onCropped={onCropped} />
       )}
     </main>
   );

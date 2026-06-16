@@ -205,7 +205,7 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
             {recentPhotos.map((p) => (
               <div
                 key={p.id}
-                className="aspect-square overflow-hidden rounded-card bg-surface-2 ring-1 ring-border"
+                className="aspect-[9/16] overflow-hidden rounded-card bg-surface-2 ring-1 ring-border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
                 <img src={p.photoUrl} alt="" className="h-full w-full object-cover" />

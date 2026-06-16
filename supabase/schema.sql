@@ -51,6 +51,8 @@ alter table profiles add column if not exists avatar_url text;
 alter table profiles add column if not exists show_stats boolean not null default true;
 alter table profiles add column if not exists has_seen_welcome boolean not null default false;
 alter table profiles add column if not exists has_completed_tour boolean not null default false;
+alter table profiles add column if not exists checkin_order text not null default 'details';
+alter table profiles add column if not exists card_template text not null default 'minimal';
 
 create table if not exists groups (
   id uuid default gen_random_uuid() primary key,

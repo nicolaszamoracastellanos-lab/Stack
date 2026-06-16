@@ -1,9 +1,9 @@
 import { getUserAndProfile } from "@/lib/auth";
 import { getActiveGroup } from "@/lib/groups";
-import { CheckinCamera, CheckinNoGroup } from "@/components/CheckinCamera";
+import { CheckinFlow, CheckinNoGroup } from "@/components/CheckinFlow";
 
 export default async function CheckinPage() {
-  const { userId } = await getUserAndProfile();
+  const { userId, profile } = await getUserAndProfile();
   const { active, groups } = await getActiveGroup();
 
   // You can only check in to a group you belong to.
@@ -11,7 +11,14 @@ export default async function CheckinPage() {
     return <CheckinNoGroup />;
   }
 
+  const order = profile?.checkin_order === "photo" ? "photo" : "details";
+
   return (
-    <CheckinCamera userId={userId} groups={groups} activeId={active?.id ?? null} />
+    <CheckinFlow
+      userId={userId}
+      groups={groups}
+      activeId={active?.id ?? null}
+      initialOrder={order}
+    />
   );
 }

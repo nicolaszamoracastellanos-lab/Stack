@@ -72,6 +72,8 @@ export const GOALS: Option[] = [
   { key: "recovery", icon: "🌿", en: "Recovery / active rest", es: "Recuperación" },
   { key: "technique", icon: "🎯", en: "Skill / technique", es: "Técnica" },
   { key: "competition", icon: "🏆", en: "Competition prep", es: "Preparar competencia" },
+  { key: "just_for_fun", icon: "😄", en: "Just for fun", es: "Solo por diversión" },
+  { key: "to_win", icon: "🏅", en: "To win", es: "Para ganar" },
   { key: OTHER_KEY, icon: "➕", en: "Other", es: "Otro" },
 ];
 

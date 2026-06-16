@@ -64,7 +64,7 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="group relative aspect-square overflow-hidden rounded-card bg-surface-2 ring-1 ring-border"
+              className="group relative aspect-[9/16] overflow-hidden rounded-card bg-surface-2 ring-1 ring-border"
               title={[
                 item.sport ? labelFor(SPORTS, item.sport, lang) : null,
                 item.note,

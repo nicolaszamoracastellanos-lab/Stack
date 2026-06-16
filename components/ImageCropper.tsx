@@ -4,71 +4,96 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/Button";
 import { useLanguage } from "@/lib/language-context";
 
-const FRAME = 280; // on-screen crop viewport (px)
+// Burned-in watermark asset (Stack wordmark, transparent). Drawn in the SAME
+// pass as the crop so the photo is encoded only once (no double compression).
+const WATERMARK_SRC = "/wordmark-watermark.png";
+let cachedMark: Promise<HTMLImageElement> | null = null;
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+function loadWatermark() {
+  if (!cachedMark) cachedMark = loadImage(WATERMARK_SRC);
+  return cachedMark;
+}
+
 /**
- * Drag-to-pan, zoom-slider image cropper. Exports a square JPEG. Used for round
- * avatars (shape="circle", 512px) and for square check-in photos
- * (shape="square", higher res). Touch-first (pointer events + a zoom slider).
+ * Drag-to-pan, zoom-slider image cropper. Exports a single high-quality JPEG at
+ * an arbitrary aspect ratio: 1:1 circle avatars and 9:16 story-format check-in
+ * photos (Batch 3). When `watermark` is set, the Stack wordmark is composited
+ * bottom-left in the same canvas pass — one encode, no recompression.
  */
 export function ImageCropper({
   src,
   onCancel,
   onCropped,
-  shape = "circle",
-  outputSize = 512,
+  shape = "rect",
+  aspectW = 1,
+  aspectH = 1,
+  outputW = 512,
+  outputH = 512,
+  watermark = false,
 }: {
   src: string;
   onCancel: () => void;
   onCropped: (blob: Blob) => void;
-  shape?: "circle" | "square";
-  outputSize?: number;
+  shape?: "circle" | "rect";
+  aspectW?: number;
+  aspectH?: number;
+  outputW?: number;
+  outputH?: number;
+  watermark?: boolean;
 }) {
-  const OUT = outputSize;
   const { t } = useLanguage();
   const imgRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ px: number; py: number; ox: number; oy: number } | null>(
     null,
   );
 
+  // On-screen crop viewport, sized to the target aspect within a max box.
+  const aspect = aspectW / aspectH;
+  const FRAME_W = aspect >= 1 ? 300 : Math.round(440 * aspect);
+  const FRAME_H = aspect >= 1 ? Math.round(300 / aspect) : 440;
+
   const [nat, setNat] = useState<{ w: number; h: number } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [busy, setBusy] = useState(false);
 
-  // Scale that makes the image exactly cover the frame at zoom = 1.
-  const coverScale = nat ? Math.max(FRAME / nat.w, FRAME / nat.h) : 1;
+  const coverScale = nat ? Math.max(FRAME_W / nat.w, FRAME_H / nat.h) : 1;
   const dw = nat ? nat.w * coverScale * zoom : 0;
   const dh = nat ? nat.h * coverScale * zoom : 0;
 
   function clamp(o: { x: number; y: number }, w: number, h: number) {
     return {
-      x: Math.min(0, Math.max(FRAME - w, o.x)),
-      y: Math.min(0, Math.max(FRAME - h, o.y)),
+      x: Math.min(0, Math.max(FRAME_W - w, o.x)),
+      y: Math.min(0, Math.max(FRAME_H - h, o.y)),
     };
   }
 
-  // Center the image once we know its natural size.
   function onImgLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     const el = e.currentTarget;
     const w = el.naturalWidth;
     const h = el.naturalHeight;
-    const cs = Math.max(FRAME / w, FRAME / h);
-    const iw = w * cs;
-    const ih = h * cs;
+    const cs = Math.max(FRAME_W / w, FRAME_H / h);
     setNat({ w, h });
     setZoom(1);
-    setOffset({ x: (FRAME - iw) / 2, y: (FRAME - ih) / 2 });
+    setOffset({ x: (FRAME_W - w * cs) / 2, y: (FRAME_H - h * cs) / 2 });
   }
 
-  // Zoom anchored to the frame center so it feels natural.
   function changeZoom(nextZoom: number) {
     if (!nat) return;
-    const fc = FRAME / 2;
+    const fcx = FRAME_W / 2;
+    const fcy = FRAME_H / 2;
     const ratio = nextZoom / zoom;
     const nw = nat.w * coverScale * nextZoom;
     const nh = nat.h * coverScale * nextZoom;
     const next = clamp(
-      { x: fc - (fc - offset.x) * ratio, y: fc - (fc - offset.y) * ratio },
+      { x: fcx - (fcx - offset.x) * ratio, y: fcy - (fcy - offset.y) * ratio },
       nw,
       nh,
     );
@@ -84,11 +109,7 @@ export function ImageCropper({
     if (!dragRef.current) return;
     const d = dragRef.current;
     setOffset(
-      clamp(
-        { x: d.ox + (e.clientX - d.px), y: d.oy + (e.clientY - d.py) },
-        dw,
-        dh,
-      ),
+      clamp({ x: d.ox + (e.clientX - d.px), y: d.oy + (e.clientY - d.py) }, dw, dh),
     );
   }
   function onPointerUp() {
@@ -99,31 +120,50 @@ export function ImageCropper({
     if (!imgRef.current || !nat) return;
     setBusy(true);
     const s = coverScale * zoom;
-    // Source rectangle currently framed.
     const sx = -offset.x / s;
     const sy = -offset.y / s;
-    const sSize = FRAME / s;
+    const sw = FRAME_W / s;
+    const sh = FRAME_H / s;
 
     const canvas = document.createElement("canvas");
-    canvas.width = OUT;
-    canvas.height = OUT;
+    canvas.width = outputW;
+    canvas.height = outputH;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       setBusy(false);
       return;
     }
-    ctx.drawImage(imgRef.current, sx, sy, sSize, sSize, 0, 0, OUT, OUT);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, outputW, outputH);
+
+    if (watermark) {
+      try {
+        const mark = await loadWatermark();
+        const markW = Math.round(outputW * 0.3);
+        const markH = Math.round((mark.naturalHeight / mark.naturalWidth) * markW);
+        const pad = Math.round(outputW * 0.045);
+        ctx.save();
+        ctx.globalAlpha = 0.95;
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = Math.round(outputW * 0.012);
+        ctx.shadowOffsetY = Math.round(outputW * 0.003);
+        ctx.drawImage(mark, pad, outputH - pad - markH, markW, markH);
+        ctx.restore();
+      } catch {
+        /* asset failed to load — ship the photo without the burn-in */
+      }
+    }
+
     canvas.toBlob(
       (blob) => {
         setBusy(false);
         if (blob) onCropped(blob);
       },
       "image/jpeg",
-      0.9,
+      0.92,
     );
   }
 
-  // Lock background scroll while the cropper is open.
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -140,7 +180,7 @@ export function ImageCropper({
         <div className="mt-5 flex justify-center">
           <div
             className="relative overflow-hidden rounded-md bg-bg touch-none"
-            style={{ width: FRAME, height: FRAME }}
+            style={{ width: FRAME_W, height: FRAME_H }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -156,7 +196,6 @@ export function ImageCropper({
               className="absolute max-w-none select-none"
               style={{ width: dw, height: dh, left: offset.x, top: offset.y }}
             />
-            {/* Crop guide. Circle for avatars; square just shows the frame. */}
             {shape === "circle" && (
               <>
                 <div
@@ -173,7 +212,7 @@ export function ImageCropper({
                 />
               </>
             )}
-            {shape === "square" && (
+            {shape === "rect" && (
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 rounded-md border border-white/20"
@@ -182,7 +221,6 @@ export function ImageCropper({
           </div>
         </div>
 
-        {/* Zoom */}
         <input
           type="range"
           min={1}
@@ -198,13 +236,7 @@ export function ImageCropper({
           <Button variant="secondary" size="lg" onClick={onCancel} disabled={busy}>
             {t("cancel")}
           </Button>
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={usephoto}
-            disabled={busy}
-          >
+          <Button variant="primary" size="lg" fullWidth onClick={usephoto} disabled={busy}>
             {busy ? t("loading") : t("cropper_use")}
           </Button>
         </div>

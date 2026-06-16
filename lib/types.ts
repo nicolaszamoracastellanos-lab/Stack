@@ -15,6 +15,9 @@ export type Profile = {
   /** First-run: welcome story seen, feature tour completed (Onboarding). */
   has_seen_welcome: boolean;
   has_completed_tour: boolean;
+  /** Check-in prefs (Batch 3): flow order + chosen card template. */
+  checkin_order: "details" | "photo";
+  card_template: string;
   created_at: string;
 };
 
