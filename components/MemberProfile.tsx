@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { Heatmap } from "@/components/Heatmap";
@@ -67,6 +67,7 @@ function AboutRow({ labelKey, value }: { labelKey: TranslationKey; value: string
  */
 export function MemberProfile({ data }: { data: MemberProfileData }) {
   const { t } = useLanguage();
+  const [lightbox, setLightbox] = useState(false);
   const {
     profile,
     isOwner,
@@ -132,7 +133,18 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
 
       {/* 1. Identity */}
       <div className="flex items-center gap-4">
-        <Avatar name={name} src={profile.avatar_url} size="lg" />
+        {profile.avatar_url ? (
+          <button
+            type="button"
+            onClick={() => setLightbox(true)}
+            className="shrink-0 rounded-pill"
+            aria-label={name}
+          >
+            <Avatar name={name} src={profile.avatar_url} size="lg" />
+          </button>
+        ) : (
+          <Avatar name={name} src={profile.avatar_url} size="lg" />
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-h2">{name}</p>
           <p className="truncate text-label text-text-muted">@{profile.username}</p>
@@ -243,6 +255,30 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
             </Button>
           </Link>
           <SignOutButton variant="secondary" />
+        </div>
+      )}
+
+      {/* Avatar lightbox (Fix #6) */}
+      {lightbox && profile.avatar_url && (
+        <div
+          onClick={() => setLightbox(false)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-bg/95 p-6"
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(false)}
+            aria-label={t("a11y_close")}
+            className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-pill bg-surface-2 text-text-muted hover:text-text"
+          >
+            ✕
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element -- public avatar url */}
+          <img
+            src={profile.avatar_url}
+            alt={name}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[80dvh] max-w-[90vw] rounded-card object-contain"
+          />
         </div>
       )}
     </main>

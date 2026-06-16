@@ -407,6 +407,7 @@ export const translations = {
     // Accessibility
     a11y_language: "Language",
     a11y_switch_group: "Switch group",
+    a11y_close: "Close",
   },
 
   es: {
@@ -808,6 +809,7 @@ export const translations = {
     // Accessibility
     a11y_language: "Idioma",
     a11y_switch_group: "Cambiar de grupo",
+    a11y_close: "Cerrar",
   },
 } as const;
 
