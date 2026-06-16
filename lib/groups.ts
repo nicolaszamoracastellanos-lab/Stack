@@ -5,13 +5,24 @@ import type { Group } from "@/lib/types";
 
 /**
  * Server-side: all groups the current user belongs to, most recently joined
- * first. RLS guarantees only their own memberships come back.
+ * first.
+ *
+ * IMPORTANT (Fix #3): filter by `user_id = me`. RLS on group_members is
+ * `is_group_member(group_id)` — it returns EVERY member's row in every group
+ * you're in (needed for leaderboards), so WITHOUT this filter the join yields
+ * one row per (group, member) and each group is duplicated by its member count.
  */
 export async function getUserGroups(): Promise<Group[]> {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from("group_members")
     .select("group:groups(*)")
+    .eq("user_id", user.id)
     .order("joined_at", { ascending: false });
 
   if (error || !data) return [];
