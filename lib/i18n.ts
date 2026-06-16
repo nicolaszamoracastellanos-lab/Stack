@@ -243,6 +243,13 @@ export const translations = {
     u_recent: "Recent",
     u_no_posts: "No check-ins yet.",
     u_shared_groups: "Shared groups",
+    stats_hidden: "Stats hidden",
+
+    // Privacy
+    privacy_label: "Privacy",
+    privacy_show_stats: "Show my stats to group members",
+    privacy_explainer:
+      "When off, your current streak, longest streak and total check-ins are hidden from others on your profile and the leaderboard. Your name, photo, and whether you checked in today stay visible — your group can always see if you showed up.",
 
     // Install / Add to Home Screen guide
     install_cta: "Install as an app",
@@ -518,6 +525,13 @@ export const translations = {
     u_recent: "Recientes",
     u_no_posts: "Aún no hay registros.",
     u_shared_groups: "Grupos en común",
+    stats_hidden: "Estadísticas ocultas",
+
+    // Privacy
+    privacy_label: "Privacidad",
+    privacy_show_stats: "Mostrar mis estadísticas a los miembros del grupo",
+    privacy_explainer:
+      "Cuando está apagado, tu racha actual, tu racha más larga y tus registros totales se ocultan para los demás en tu perfil y en la tabla de posiciones. Tu nombre, tu foto y si te presentaste hoy siguen visibles — tu grupo siempre puede ver si apareciste.",
 
     // Install / Add to Home Screen guide
     install_cta: "Instalar como app",

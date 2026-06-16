@@ -8,6 +8,8 @@ export type MemberPhoto = { id: string; photoUrl: string; createdAt: string };
 export type MemberProfileData = {
   profile: Profile;
   isOwner: boolean;
+  /** True when this member hid their stats and you're not them (Section 2). */
+  statsHidden: boolean;
   /** One timestamp per post, across all the member's groups (gated by RPC). */
   checkinDates: string[];
   totalPosts: number;
@@ -37,6 +39,11 @@ export async function getMemberProfile(
     .eq("id", targetId)
     .single();
   if (!prof) return null;
+
+  // Privacy (Section 2): a member who hid their stats shows a hidden state to
+  // others — but never to themselves. The RPC already returns no rows in that
+  // case; this flag drives the UI so 0s don't masquerade as real numbers.
+  const statsHidden = !isOwner && (prof as Profile).show_stats === false;
 
   // Hero stats: cross-group post dates via the SECURITY DEFINER RPC. If the
   // migration hasn't been applied yet, fall back to RLS-visible check-ins so
@@ -112,6 +119,7 @@ export async function getMemberProfile(
   return {
     profile: prof as Profile,
     isOwner,
+    statsHidden,
     checkinDates,
     totalPosts,
     recentPhotos,

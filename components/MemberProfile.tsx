@@ -67,8 +67,15 @@ function AboutRow({ labelKey, value }: { labelKey: TranslationKey; value: string
  */
 export function MemberProfile({ data }: { data: MemberProfileData }) {
   const { t } = useLanguage();
-  const { profile, isOwner, checkinDates, totalPosts, recentPhotos, sharedGroups } =
-    data;
+  const {
+    profile,
+    isOwner,
+    statsHidden,
+    checkinDates,
+    totalPosts,
+    recentPhotos,
+    sharedGroups,
+  } = data;
 
   const { current, longest, daySet } = useMemo(
     () => ({
@@ -135,12 +142,27 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
         <p className="mt-4 text-body text-text-muted">{profile.bio}</p>
       )}
 
-      {/* 2. Hero stats */}
-      <div className="mt-8 grid grid-cols-3 gap-3">
-        <Stat value={current} label={t("profile_current_streak")} accent />
-        <Stat value={longest} label={t("profile_longest_streak")} />
-        <Stat value={totalPosts} label={t("profile_total_checkins")} />
-      </div>
+      {/* 2. Hero stats — hidden if this member turned stats off (Section 2). */}
+      {statsHidden ? (
+        <div className="mt-8 flex items-center gap-3 rounded-card border border-border bg-surface px-5 py-6 text-text-muted">
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" aria-hidden>
+            <path
+              d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.9 4.2A9.8 9.8 0 0112 4c5 0 9 4.5 9 8a12 12 0 01-2.2 3.3M6.1 6.1A12 12 0 003 12c0 3.5 4 8 9 8a9.7 9.7 0 003.5-.65"
+              stroke="currentColor"
+              strokeWidth={1.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="text-body">{t("stats_hidden")}</span>
+        </div>
+      ) : (
+        <div className="mt-8 grid grid-cols-3 gap-3">
+          <Stat value={current} label={t("profile_current_streak")} accent />
+          <Stat value={longest} label={t("profile_longest_streak")} />
+          <Stat value={totalPosts} label={t("profile_total_checkins")} />
+        </div>
+      )}
 
       {/* About (bio + identity details) */}
       {hasAbout && (
@@ -156,13 +178,16 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
         </section>
       )}
 
-      {/* 3. Heatmap */}
-      <section className="mt-10">
-        <SectionLabel>{t("profile_heatmap_title")}</SectionLabel>
-        <div className="mt-3 rounded-card border border-border bg-surface p-5">
-          <Heatmap daySet={daySet} />
-        </div>
-      </section>
+      {/* 3. Heatmap — also hidden when stats are private (it would reveal the
+          streak pattern). */}
+      {!statsHidden && (
+        <section className="mt-10">
+          <SectionLabel>{t("profile_heatmap_title")}</SectionLabel>
+          <div className="mt-3 rounded-card border border-border bg-surface p-5">
+            <Heatmap daySet={daySet} />
+          </div>
+        </section>
+      )}
 
       {/* 4. Recent check-in photos */}
       <section className="mt-10">

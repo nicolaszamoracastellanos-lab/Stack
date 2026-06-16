@@ -10,6 +10,8 @@ export type Profile = {
   usual_activity: string | null;
   focus_sport: string | null;
   avatar_url: string | null;
+  /** Privacy: when false, hide streak/longest/total from other group members. */
+  show_stats: boolean;
   created_at: string;
 };
 

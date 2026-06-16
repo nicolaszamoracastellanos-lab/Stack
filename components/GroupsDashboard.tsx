@@ -23,7 +23,7 @@ function Leaderboard({ members }: { members: LeaderEntry[] }) {
           className="flex items-center gap-3 border-t border-border py-3 first:border-t-0 first:pt-0"
         >
           <span className="w-4 shrink-0 text-center font-mono text-caption text-text-dim">
-            {i + 1}
+            {m.showStats ? i + 1 : "—"}
           </span>
           <Link
             href={`/u/${m.userId}`}
@@ -49,13 +49,27 @@ function Leaderboard({ members }: { members: LeaderEntry[] }) {
                 )}
               </p>
               <p className="text-caption text-text-dim">
-                {t("leaderboard_days", { n: m.daysThisWeek })}
+                {m.showStats
+                  ? t("leaderboard_days", { n: m.daysThisWeek })
+                  : t("stats_hidden")}
               </p>
             </div>
           </Link>
-          <span className="font-mono text-h1 nums leading-none text-volt">
-            {m.streak}
-          </span>
+          {m.showStats ? (
+            <span className="font-mono text-h1 nums leading-none text-volt">
+              {m.streak}
+            </span>
+          ) : (
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4 shrink-0 text-text-dim"
+              fill="none"
+              aria-hidden
+            >
+              <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth={1.6} />
+              <path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" strokeWidth={1.6} />
+            </svg>
+          )}
         </li>
       ))}
     </ul>

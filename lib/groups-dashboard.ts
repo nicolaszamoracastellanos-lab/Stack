@@ -20,6 +20,8 @@ export type LeaderEntry = {
   /** Distinct days checked in over the last 7 (0–7). */
   daysThisWeek: number;
   isYou: boolean;
+  /** Section 2: false → hide streak/ranking, keep name/avatar/at-risk. */
+  showStats: boolean;
 };
 
 export type DashboardGroup = {
@@ -33,6 +35,7 @@ type ProfileLite = {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  show_stats: boolean | null;
 } | null;
 
 /**
@@ -53,7 +56,9 @@ export async function getGroupsDashboard(userId: string): Promise<{
       const [memberRes, checkinRes] = await Promise.all([
         supabase
           .from("group_members")
-          .select("user_id, profile:profiles(username, display_name, avatar_url)")
+          .select(
+            "user_id, profile:profiles(username, display_name, avatar_url, show_stats)",
+          )
           .eq("group_id", g.id),
         supabase
           .from("checkins")
@@ -81,19 +86,33 @@ export async function getGroupsDashboard(userId: string): Promise<{
           .filter((c) => c.user_id === uid)
           .map((c) => c.created_at as string);
         const daySet = toDaySet(dates);
+        const isYou = uid === userId;
+        // Privacy floor: hidden-stat members keep name/avatar/at-risk, but their
+        // streak/consistency are zeroed in the payload so nothing leaks.
+        const showStats = isYou || profile?.show_stats !== false;
         return {
           userId: uid,
           name: nameOf(profile),
           avatarUrl: profile?.avatar_url ?? null,
-          streak: computePersonalStreak(dates, now).count,
+          streak: showStats ? computePersonalStreak(dates, now).count : 0,
           checkedInToday: daySet.has(todayKey),
-          daysThisWeek: last7.filter((k) => daySet.has(k)).length,
-          isYou: uid === userId,
+          daysThisWeek: showStats
+            ? last7.filter((k) => daySet.has(k)).length
+            : 0,
+          isYou,
+          showStats,
         };
       });
 
-      // Rank: highest streak first, then alphabetical for stable ties.
-      members.sort((a, b) => b.streak - a.streak || a.name.localeCompare(b.name));
+      // Rank visible members by streak; hidden-stat members fall to the bottom
+      // (no rank shown), alphabetical for stable ties.
+      members.sort((a, b) =>
+        a.showStats !== b.showStats
+          ? a.showStats
+            ? -1
+            : 1
+          : b.streak - a.streak || a.name.localeCompare(b.name),
+      );
 
       const weekTotal = checkins.filter((c) =>
         last7Set.has(localDateKey(new Date(c.created_at as string))),

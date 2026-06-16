@@ -48,6 +48,7 @@ alter table profiles add column if not exists favorite_sport text;
 alter table profiles add column if not exists usual_activity text;
 alter table profiles add column if not exists focus_sport text;
 alter table profiles add column if not exists avatar_url text;
+alter table profiles add column if not exists show_stats boolean not null default true;
 
 create table if not exists groups (
   id uuid default gen_random_uuid() primary key,
@@ -157,12 +158,15 @@ as $$
   where c.user_id = _user_id
     and (
       _user_id = auth.uid()
-      or exists (
-        select 1
-        from group_members me
-        join group_members them on them.group_id = me.group_id
-        where me.user_id = auth.uid()
-          and them.user_id = _user_id
+      or (
+        coalesce((select p.show_stats from profiles p where p.id = _user_id), true)
+        and exists (
+          select 1
+          from group_members me
+          join group_members them on them.group_id = me.group_id
+          where me.user_id = auth.uid()
+            and them.user_id = _user_id
+        )
       )
     )
   order by coalesce(c.post_id, c.id), c.created_at desc;

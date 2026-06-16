@@ -6,6 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { ImageCropper } from "@/components/ImageCropper";
+import { Toggle } from "@/components/Toggle";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
@@ -28,6 +29,7 @@ export function ProfileEditForm({
   const [usualActivity, setUsualActivity] = useState(profile.usual_activity ?? "");
   const [focusSport, setFocusSport] = useState(profile.focus_sport ?? "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
+  const [showStats, setShowStats] = useState(profile.show_stats ?? true);
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -86,6 +88,7 @@ export function ProfileEditForm({
         usual_activity: usualActivity.trim() || null,
         focus_sport: focusSport.trim() || null,
         avatar_url: avatarUrl,
+        show_stats: showStats,
       })
       .eq("id", userId);
 
@@ -178,6 +181,26 @@ export function ProfileEditForm({
           onChange={(e) => setFocusSport(e.target.value)}
           maxLength={80}
         />
+
+        {/* Privacy */}
+        <div className="rounded-card border border-border bg-surface p-5">
+          <p className="text-caption font-medium uppercase tracking-wide text-text-dim">
+            {t("privacy_label")}
+          </p>
+          <div className="mt-3 flex items-start justify-between gap-4">
+            <label className="text-body text-text" htmlFor="show-stats">
+              {t("privacy_show_stats")}
+            </label>
+            <Toggle
+              checked={showStats}
+              onChange={setShowStats}
+              label={t("privacy_show_stats")}
+            />
+          </div>
+          <p className="mt-3 text-caption leading-relaxed text-text-muted">
+            {t("privacy_explainer")}
+          </p>
+        </div>
 
         {error && (
           <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
