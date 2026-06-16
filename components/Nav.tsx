@@ -119,19 +119,15 @@ export function Nav() {
 
   return (
     <nav
-      // translateZ(0) promotes the fixed bar to its own compositor layer so iOS
-      // WebKit repaints it continuously during momentum scroll instead of
-      // leaving it stranded mid-screen. Safe on the fixed element itself (the
-      // re-basing risk is only for transformed ANCESTORS, of which there are
-      // none).
-      style={{ transform: "translateZ(0)", WebkitTransform: "translateZ(0)" }}
       className={cn(
-        // Mobile: fixed to the bottom of the VIEWPORT. Solid so feed photos
-        // never bleed through; safe-area pad for the iOS home indicator.
-        "fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface",
-        "px-3 pb-[env(safe-area-inset-bottom)]",
-        // Desktop: fixed left side rail.
-        "lg:inset-y-0 lg:right-auto lg:left-0 lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
+        // A plain flex child of the app shell — NOT position:fixed (Fix #1), so
+        // it can't drift on iOS momentum scroll. Solid so content never bleeds
+        // through; safe-area pad for the iOS home indicator.
+        "shrink-0 bg-surface",
+        // Mobile: bottom bar.
+        "border-t border-border px-3 pb-[env(safe-area-inset-bottom)]",
+        // Desktop: left side rail.
+        "lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
         "flex items-center justify-between lg:justify-start lg:gap-8",
       )}
     >

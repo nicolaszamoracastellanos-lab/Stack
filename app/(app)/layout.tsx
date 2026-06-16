@@ -6,16 +6,17 @@ import { isProfileComplete } from "@/lib/profile";
 /**
  * Shell for the logged-in app (home, check-in, profile, groups).
  *
- * NAV STRATEGY (read before touching): the document scrolls NATIVELY (no inner
- * scroll container, no 100dvh+overflow-hidden shell — that combo breaks on iOS
- * Safari and leaves a black gap below the bar). The Nav is `position: fixed` and
- * anchored to the viewport. This container is a plain, NON-TRANSFORMED top-level
- * box, so the fixed nav resolves against the viewport (a transform/filter/
- * perspective/will-change/backdrop-filter here would re-base it and make it
- * drift — never add one to this element or any ancestor of the nav).
+ * NAV STRATEGY (Fix #1, recurring): the nav is NO LONGER `position: fixed`. A
+ * fixed bar drifts mid-screen on iOS during momentum scroll, and there is no
+ * transformed ancestor to blame — it's WebKit's fixed-element repaint behavior.
+ * Instead this is a flex shell pinned to the dynamic viewport (`h-[100dvh]`):
+ * the CONTENT scrolls in an inner `overflow-y-auto` pane and the Nav is a plain
+ * flex child that literally cannot drift (no fixed positioning involved). Using
+ * `dvh` (not `vh`) keeps the bar flush with the bottom as Safari's toolbar
+ * shows/hides, avoiding the black-gap that sank earlier inner-scroll attempts.
  *
- * The content gets bottom padding = nav height + the iOS home-indicator inset so
- * nothing hides behind the bar and there's no dead space.
+ * `flex-col-reverse` puts the Nav (first child) at the BOTTOM on mobile;
+ * `lg:flex-row` puts it on the LEFT as a rail on desktop.
  */
 export default async function AppLayout({
   children,
@@ -31,13 +32,11 @@ export default async function AppLayout({
   if (!isProfileComplete(profile)) redirect("/onboarding");
 
   return (
-    <div className="min-h-[100dvh] lg:pl-20">
-      {/* Bottom clearance for the fixed mobile tab bar + safe area. Desktop uses
-          the left side rail, so no bottom padding there. */}
-      <div className="pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0">
+    <div className="flex h-[100dvh] flex-col-reverse overflow-hidden lg:flex-row">
+      <Nav />
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         {children}
       </div>
-      <Nav />
     </div>
   );
 }
