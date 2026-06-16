@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
@@ -10,13 +10,24 @@ import {
   type CheckinDetails,
 } from "@/components/CheckinDetailsStep";
 import { CheckinPhotoStep } from "@/components/CheckinPhotoStep";
+import { CheckinCardStep } from "@/components/CheckinCardStep";
+import type { StoryCardData } from "@/components/StoryCard";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET, checkinPhotoPath } from "@/lib/storage";
 import { setActiveGroup } from "@/lib/active-group";
 import { SPORTS, GOALS, OTHER_KEY, iconFor, labelFor } from "@/lib/workout-options";
+import {
+  CARD_TEMPLATES,
+  DEFAULT_TOGGLES,
+  isMilestone,
+  type CardTemplateKey,
+  type CardToggles,
+} from "@/lib/card-templates";
 import { cn } from "@/lib/utils";
 import type { Group } from "@/lib/types";
+
+const TEMPLATE_KEYS = new Set(CARD_TEMPLATES.map((tpl) => tpl.key));
 
 type Order = "details" | "photo";
 type Step = "details" | "photo" | "review";
@@ -50,16 +61,29 @@ export function CheckinFlow({
   groups,
   activeId,
   initialOrder,
+  streakAfter,
+  initialTemplate,
 }: {
   userId: string;
   groups: Group[];
   activeId: string | null;
   initialOrder: Order;
+  /** Streak the user will have once this check-in posts (drives the card). */
+  streakAfter: number;
+  initialTemplate: string;
 }) {
   const { t, lang } = useLanguage();
   const router = useRouter();
 
   const [order, setOrder] = useState<Order>(initialOrder);
+  const [template, setTemplate] = useState<CardTemplateKey>(
+    TEMPLATE_KEYS.has(initialTemplate as CardTemplateKey)
+      ? (initialTemplate as CardTemplateKey)
+      : "minimal",
+  );
+  const [toggles, setToggles] = useState<CardToggles>(DEFAULT_TOGGLES);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const milestone = isMilestone(streakAfter);
   const [stepIdx, setStepIdx] = useState(0);
   const sequence: Step[] =
     order === "photo" ? ["photo", "details", "review"] : ["details", "photo", "review"];
@@ -85,6 +109,40 @@ export function CheckinFlow({
     // Remember the preference (best-effort; degrades if column missing).
     createClient().from("profiles").update({ checkin_order: next }).eq("id", userId);
   }
+
+  function changeTemplate(next: CardTemplateKey) {
+    setTemplate(next);
+    createClient().from("profiles").update({ card_template: next }).eq("id", userId);
+  }
+
+  const cardData: StoryCardData = useMemo(
+    () => ({
+      photoUrl: photo?.url ?? "",
+      sportLabel:
+        details.sport === OTHER_KEY
+          ? details.sportOther
+          : labelFor(SPORTS, details.sport, lang),
+      sportIcon: iconFor(SPORTS, details.sport),
+      envLabel: details.environment
+        ? t(details.environment === "indoor" ? "env_indoor" : "env_outdoor")
+        : "",
+      focusLabel:
+        details.goal === OTHER_KEY
+          ? details.goalOther
+          : labelFor(GOALS, details.goal, lang),
+      focusIcon: iconFor(GOALS, details.goal),
+      notes: details.notes.trim(),
+      streak: streakAfter,
+      dateStr: new Date().toLocaleDateString(lang, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      streakLabel: t("streak_label"),
+      milestoneCaption: t("card_milestone_caption", { n: streakAfter }),
+    }),
+    [photo, details, streakAfter, lang, t],
+  );
 
   function validateDetails(): string | null {
     if (details.groups.size === 0) return t("cd_err_groups");
@@ -228,30 +286,15 @@ export function CheckinFlow({
       )}
 
       {step === "review" && photo && (
-        <div className="flex flex-col gap-5">
-          <div className="mx-auto overflow-hidden rounded-card border border-border bg-surface-2">
-            {/* eslint-disable-next-line @next/next/no-img-element -- local object URL */}
-            <img src={photo.url} alt="" className="aspect-[9/16] max-h-[55dvh] w-auto object-cover" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-pill bg-surface-2 px-3 py-1.5 text-label font-semibold text-text">
-              <span aria-hidden>{iconFor(SPORTS, details.sport)}</span>
-              {details.sport === OTHER_KEY
-                ? details.sportOther
-                : labelFor(SPORTS, details.sport, lang)}
-            </span>
-            <span className="rounded-pill border border-border bg-bg px-2.5 py-1 text-caption text-text-muted">
-              {t(details.environment === "indoor" ? "env_indoor" : "env_outdoor")}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-pill border border-volt/30 bg-volt/10 px-2.5 py-1 text-caption font-medium text-volt">
-              <span aria-hidden>{iconFor(GOALS, details.goal)}</span>
-              {details.goal === OTHER_KEY ? details.goalOther : labelFor(GOALS, details.goal, lang)}
-            </span>
-          </div>
-          {details.notes.trim() && (
-            <p className="whitespace-pre-wrap text-body text-text-muted">{details.notes.trim()}</p>
-          )}
-        </div>
+        <CheckinCardStep
+          ref={cardRef}
+          data={cardData}
+          template={template}
+          onTemplate={changeTemplate}
+          toggles={toggles}
+          onToggles={setToggles}
+          milestone={milestone}
+        />
       )}
 
       {error && (
