@@ -129,6 +129,16 @@ create table if not exists messages (
 );
 create index if not exists messages_group_idx on messages (group_id, created_at);
 
+-- Rest days (Batch 2 §9): a planned day off that bridges the streak.
+create table if not exists rest_days (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references profiles(id) on delete cascade not null,
+  day date not null,
+  created_at timestamptz default now(),
+  unique (user_id, day)
+);
+create index if not exists rest_days_user_idx on rest_days (user_id, day);
+
 -- Helpful indexes for the feed / streak queries.
 create index if not exists checkins_group_created_idx on checkins (group_id, created_at desc);
 create index if not exists checkins_user_created_idx on checkins (user_id, created_at desc);
@@ -207,6 +217,35 @@ $$;
 
 grant execute on function public.member_checkin_dates(uuid) to authenticated;
 
+-- Gated rest days for member-profile heatmaps (Batch 2 §9), privacy-aware like
+-- member_checkin_dates.
+create or replace function public.member_rest_days(_user_id uuid)
+returns table (day date)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select r.day
+  from rest_days r
+  where r.user_id = _user_id
+    and (
+      _user_id = auth.uid()
+      or (
+        coalesce((select p.show_stats from profiles p where p.id = _user_id), true)
+        and exists (
+          select 1
+          from group_members me
+          join group_members them on them.group_id = me.group_id
+          where me.user_id = auth.uid()
+            and them.user_id = _user_id
+        )
+      )
+    );
+$$;
+
+grant execute on function public.member_rest_days(uuid) to authenticated;
+
 -- ----------------------------------------------------------------------------
 -- ROW LEVEL SECURITY
 -- ----------------------------------------------------------------------------
@@ -219,6 +258,7 @@ alter table reactions enable row level security;
 alter table comments enable row level security;
 alter table nudges enable row level security;
 alter table messages enable row level security;
+alter table rest_days enable row level security;
 
 -- Drop existing policies so this file can be re-run cleanly in dev.
 do $$
@@ -227,7 +267,7 @@ begin
   for r in
     select policyname, tablename from pg_policies
     where schemaname = 'public'
-      and tablename in ('profiles','groups','group_members','checkins','reactions','comments','nudges','messages')
+      and tablename in ('profiles','groups','group_members','checkins','reactions','comments','nudges','messages','rest_days')
   loop
     execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
   end loop;
@@ -322,6 +362,14 @@ create policy "members send messages" on messages
   );
 create policy "authors delete own messages" on messages
   for delete using (auth.uid() = user_id);
+
+-- REST DAYS: a user manages only their own.
+create policy "read own rest days" on rest_days
+  for select using (user_id = auth.uid());
+create policy "insert own rest days" on rest_days
+  for insert with check (user_id = auth.uid());
+create policy "delete own rest days" on rest_days
+  for delete using (user_id = auth.uid());
 
 -- ----------------------------------------------------------------------------
 -- REALTIME

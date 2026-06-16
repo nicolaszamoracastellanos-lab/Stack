@@ -42,6 +42,8 @@ export type HomeData = {
   comments: FeedComment[];
   /** The current user's check-in timestamps across ALL their groups (personal streak). */
   personalDates: string[];
+  /** The current user's rest days (day keys), which bridge the streak (§9). */
+  restDays: string[];
 };
 
 type ProfileLite = {
@@ -143,5 +145,11 @@ export async function getHomeData(
 
   const personalDates = (mineRes.data ?? []).map((r) => r.created_at as string);
 
-  return { feed, members, reactions, comments, personalDates };
+  const { data: restData } = await supabase
+    .from("rest_days")
+    .select("day")
+    .eq("user_id", userId);
+  const restDays = (restData ?? []).map((r) => r.day as string);
+
+  return { feed, members, reactions, comments, personalDates, restDays };
 }

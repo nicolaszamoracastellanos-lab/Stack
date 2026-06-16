@@ -7,12 +7,15 @@ import {
   computePersonalStreak,
   computeLongestStreak,
   computeGroupStreak,
+  localDateKey,
 } from "./streaks";
 
 // Fixed reference "now": Mon Jun 15 2026, local noon.
 const NOW = new Date(2026, 5, 15, 12, 0, 0);
 // n days before NOW, at 08:00 local (a plausible workout time).
 const ago = (n: number) => new Date(2026, 5, 15 - n, 8, 0, 0);
+// Day key n days before NOW (for rest days).
+const restKey = (n: number) => localDateKey(ago(n));
 
 let passed = 0;
 function check(name: string, fn: () => void) {
@@ -79,6 +82,41 @@ check("longest run is found across history", () => {
 
 check("longest of empty is 0", () => {
   assert.equal(computeLongestStreak([]), 0);
+});
+
+// ---- Rest days (Section 9) ----
+check("rest day today keeps the streak alive (protected)", () => {
+  // Checked in yesterday + 2 days ago, didn't today, but marked today a rest day.
+  assert.deepEqual(
+    computePersonalStreak([ago(1), ago(2)], NOW, [restKey(0)]),
+    { count: 2, state: "alive" },
+  );
+});
+
+check("rest day bridges a gap in the current run", () => {
+  // Today + 2 days ago checked in; yesterday was a rest day → 2, alive.
+  assert.deepEqual(
+    computePersonalStreak([ago(0), ago(2)], NOW, [restKey(1)]),
+    { count: 2, state: "alive" },
+  );
+});
+
+check("a real miss (no rest) still breaks the run", () => {
+  assert.deepEqual(computePersonalStreak([ago(0), ago(2)], NOW), {
+    count: 1,
+    state: "alive",
+  });
+});
+
+check("longest streak bridges rest days in history", () => {
+  // d5,d4,[d3 rest],d2,[d1 rest],d0 → one continuous run of 4 check-ins.
+  assert.equal(
+    computeLongestStreak(
+      [ago(5), ago(4), ago(2), ago(0)],
+      [restKey(3), restKey(1)],
+    ),
+    4,
+  );
 });
 
 // ---- Group streak ----

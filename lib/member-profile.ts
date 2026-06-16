@@ -12,6 +12,8 @@ export type MemberProfileData = {
   statsHidden: boolean;
   /** One timestamp per post, across all the member's groups (gated by RPC). */
   checkinDates: string[];
+  /** The member's rest days (day keys), gated like stats (§9). */
+  restDays: string[];
   totalPosts: number;
   recentPhotos: MemberPhoto[];
   sharedGroups: { id: string; name: string }[];
@@ -70,6 +72,15 @@ export async function getMemberProfile(
   }
   const totalPosts = checkinDates.length;
 
+  // Rest days (§9) — gated like stats; skipped entirely when stats are hidden.
+  let restDays: string[] = [];
+  if (!statsHidden) {
+    const { data: rd } = await supabase.rpc("member_rest_days", {
+      _user_id: targetId,
+    });
+    if (Array.isArray(rd)) restDays = (rd as { day: string }[]).map((r) => r.day);
+  }
+
   // Recent photos (RLS-limited to shared groups), deduped by post, newest first.
   const { data: photoRows } = await supabase
     .from("checkins")
@@ -121,6 +132,7 @@ export async function getMemberProfile(
     isOwner,
     statsHidden,
     checkinDates,
+    restDays,
     totalPosts,
     recentPhotos,
     sharedGroups,

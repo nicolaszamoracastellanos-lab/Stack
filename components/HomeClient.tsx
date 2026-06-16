@@ -39,6 +39,7 @@ export function HomeClient({
   initialReactions,
   initialComments,
   initialPersonalDates,
+  initialRestDays,
   initialPersonal,
   initialGroup,
   initialCheckedInToday,
@@ -50,6 +51,7 @@ export function HomeClient({
   initialReactions: FeedReaction[];
   initialComments: FeedComment[];
   initialPersonalDates: string[];
+  initialRestDays: string[];
   initialPersonal: Streak;
   initialGroup: Streak;
   initialCheckedInToday: boolean;
@@ -61,6 +63,7 @@ export function HomeClient({
   const [reactions, setReactions] = useState<FeedReaction[]>(initialReactions);
   const [comments, setComments] = useState<FeedComment[]>(initialComments);
   const [personalDates, setPersonalDates] = useState<string[]>(initialPersonalDates);
+  const [restDays, setRestDays] = useState<string[]>(initialRestDays);
 
   // Streak state. Seeded from server-computed values (so SSR and first client
   // render match), then recomputed client-side with the device's local "today".
@@ -86,13 +89,40 @@ export function HomeClient({
   // Recompute streaks whenever the underlying data changes, using local time.
   useEffect(() => {
     const now = new Date();
-    setPersonal(computePersonalStreak(personalDates, now));
+    setPersonal(computePersonalStreak(personalDates, now, restDays));
     const memberArrays = members.map((m) =>
       feed.filter((c) => c.user_id === m.user_id).map((c) => c.created_at),
     );
     setGroup(computeGroupStreak(memberArrays, now));
     setCheckedInToday(toDaySet(personalDates).has(localDateKey(now)));
-  }, [personalDates, feed, members]);
+  }, [personalDates, feed, members, restDays]);
+
+  // Rest day (§9): you can mark today off to protect the streak. Weekly
+  // allowance of one keeps it from feeling like cheating.
+  const todayKey = localDateKey(new Date());
+  const restedToday = restDays.includes(todayKey);
+  const restsThisWeek = useMemo(() => {
+    const set = new Set(restDays);
+    let n = 0;
+    const now = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      if (set.has(localDateKey(d))) n++;
+    }
+    return n;
+  }, [restDays]);
+
+  async function markRestDay() {
+    if (restedToday || restsThisWeek >= 1) return;
+    setRestDays((prev) => [...prev, todayKey]); // optimistic
+    const { error } = await supabase
+      .from("rest_days")
+      .insert({ user_id: userId, day: todayKey });
+    if (error && error.code !== "23505") {
+      setRestDays((prev) => prev.filter((d) => d !== todayKey)); // roll back
+    }
+  }
 
   const refetchReactions = useCallback(async () => {
     const ids = feedRef.current.map((c) => c.id);
@@ -362,12 +392,28 @@ export function HomeClient({
           <span aria-hidden className="text-xl">✓</span>
           <p className="text-body font-medium text-volt">{t("checkin_done")}</p>
         </div>
+      ) : restedToday ? (
+        <div className="flex items-center gap-3 rounded-card border border-border-strong bg-surface px-4 py-4">
+          <span aria-hidden className="text-xl">😌</span>
+          <p className="text-body font-medium text-text">{t("rest_day_done")}</p>
+        </div>
       ) : (
-        <Link href="/checkin">
-          <Button variant="primary" size="lg" fullWidth>
-            {t("checkin_button")}
-          </Button>
-        </Link>
+        <div className="flex flex-col items-center gap-3">
+          <Link href="/checkin" className="w-full">
+            <Button variant="primary" size="lg" fullWidth>
+              {t("checkin_button")}
+            </Button>
+          </Link>
+          {restsThisWeek < 1 && (
+            <button
+              type="button"
+              onClick={markRestDay}
+              className="text-caption text-text-dim underline-offset-4 hover:text-text hover:underline"
+            >
+              {t("rest_day_cta")}
+            </button>
+          )}
+        </div>
       )}
 
       {/* Live feed */}

@@ -32,7 +32,7 @@ export default async function HomePage() {
   // Seed streaks server-side so SSR matches the first client render; HomeClient
   // recomputes with the device's local "today" on mount.
   const now = new Date();
-  const personal = computePersonalStreak(data.personalDates, now);
+  const personal = computePersonalStreak(data.personalDates, now, data.restDays);
   const memberArrays = data.members.map((m) =>
     data.feed.filter((c) => c.user_id === m.user_id).map((c) => c.created_at),
   );
@@ -64,6 +64,7 @@ export default async function HomePage() {
         initialReactions={data.reactions}
         initialComments={data.comments}
         initialPersonalDates={data.personalDates}
+        initialRestDays={data.restDays}
         initialPersonal={personal}
         initialGroup={group}
         initialCheckedInToday={checkedInToday}

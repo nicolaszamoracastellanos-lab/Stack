@@ -47,8 +47,17 @@ export function toDaySet(dates: Array<string | number | Date>): Set<string> {
 /**
  * Core walk: from today (or yesterday if today is still open), count backward
  * while every day is present in `days`. Shared by personal and group streaks.
+ *
+ * Rest days (Batch 2 §9) act as BRIDGES: a day in `rest` neither breaks the
+ * streak nor adds to the count. Resting today keeps the streak alive (protected)
+ * rather than at-risk. Pass an empty `rest` (the default) for the original
+ * check-in-every-day behavior.
  */
-function streakFromDaySet(days: Set<string>, now: Date): Streak {
+function streakFromDaySet(
+  days: Set<string>,
+  now: Date,
+  rest: Set<string> = new Set(),
+): Streak {
   const todayKey = localDateKey(now);
   const yesterdayKey = shiftKey(todayKey, -1);
 
@@ -57,7 +66,11 @@ function streakFromDaySet(days: Set<string>, now: Date): Streak {
   if (days.has(todayKey)) {
     state = "alive";
     startKey = todayKey;
-  } else if (days.has(yesterdayKey)) {
+  } else if (rest.has(todayKey)) {
+    // Rested today on purpose — protected; count from yesterday back.
+    state = "alive";
+    startKey = yesterdayKey;
+  } else if (days.has(yesterdayKey) || rest.has(yesterdayKey)) {
     state = "at-risk";
     startKey = yesterdayKey;
   } else {
@@ -66,8 +79,8 @@ function streakFromDaySet(days: Set<string>, now: Date): Streak {
 
   let count = 0;
   let k = startKey;
-  while (days.has(k)) {
-    count++;
+  while (days.has(k) || rest.has(k)) {
+    if (days.has(k)) count++; // rest days bridge but don't add to the count
     k = shiftKey(k, -1);
   }
   return { count, state };
@@ -80,8 +93,9 @@ function streakFromDaySet(days: Set<string>, now: Date): Streak {
 export function computePersonalStreak(
   checkinDates: Array<string | number | Date>,
   now: Date = new Date(),
+  restDayKeys: string[] = [],
 ): Streak {
-  return streakFromDaySet(toDaySet(checkinDates), now);
+  return streakFromDaySet(toDaySet(checkinDates), now, new Set(restDayKeys));
 }
 
 /**
@@ -90,13 +104,30 @@ export function computePersonalStreak(
  */
 export function computeLongestStreak(
   checkinDates: Array<string | number | Date>,
+  restDayKeys: string[] = [],
 ): number {
+  const rest = new Set(restDayKeys);
   const keys = Array.from(toDaySet(checkinDates)).sort();
   let longest = 0;
   let run = 0;
   let prev: string | null = null;
   for (const k of keys) {
-    run = prev && shiftKey(prev, 1) === k ? run + 1 : 1;
+    if (prev) {
+      // The run continues if every calendar day strictly between prev and k is
+      // a rest day (rest days bridge historical gaps too).
+      let cur = shiftKey(prev, 1);
+      let bridged = true;
+      while (cur < k) {
+        if (!rest.has(cur)) {
+          bridged = false;
+          break;
+        }
+        cur = shiftKey(cur, 1);
+      }
+      run = bridged && cur === k ? run + 1 : 1;
+    } else {
+      run = 1;
+    }
     if (run > longest) longest = run;
     prev = k;
   }

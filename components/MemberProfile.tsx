@@ -72,23 +72,25 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
     isOwner,
     statsHidden,
     checkinDates,
+    restDays,
     totalPosts,
     recentPhotos,
     sharedGroups,
   } = data;
 
-  const { current, longest, counts } = useMemo(() => {
+  const { current, longest, counts, restSet } = useMemo(() => {
     const map: Record<string, number> = {};
     for (const d of checkinDates) {
       const k = localDateKey(new Date(d));
       map[k] = (map[k] ?? 0) + 1;
     }
     return {
-      current: computePersonalStreak(checkinDates, new Date()).count,
-      longest: computeLongestStreak(checkinDates),
+      current: computePersonalStreak(checkinDates, new Date(), restDays).count,
+      longest: computeLongestStreak(checkinDates, restDays),
       counts: map,
+      restSet: new Set(restDays),
     };
-  }, [checkinDates]);
+  }, [checkinDates, restDays]);
 
   const name = profile.display_name?.trim() || `@${profile.username}`;
 
@@ -188,7 +190,7 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
         <section className="mt-10">
           <SectionLabel>{t("profile_heatmap_title")}</SectionLabel>
           <div className="mt-3 rounded-card border border-border bg-surface p-5">
-            <Heatmap counts={counts} />
+            <Heatmap counts={counts} restDays={restSet} />
           </div>
         </section>
       )}
