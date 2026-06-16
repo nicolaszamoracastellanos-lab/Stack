@@ -153,6 +153,53 @@ export const translations = {
     ob_bio_title: "One line about you",
     ob_bio_sub: "Optional — make it count.",
 
+    // Welcome story (first-run, after signup, before profile setup)
+    welcome_skip: "Skip",
+    welcome_continue: "Continue",
+    ws2_title: "Getting in shape alone is hard. With your people, it sticks.",
+    ws2_sub:
+      "Stack isn't another solo tracker. It's a small circle that holds each other accountable — showing up becomes unavoidable when it's in front of the people who matter to you.",
+    ws3_title: "We're building the place small crews get strong together.",
+    ws3_sub:
+      "A private, no-excuses space for you and your friends, your brothers, your training partners, your coach and their clients. Real accountability, not a public highlight reel.",
+    ws4_title: "Take the photo. Build the streak. Don't break the chain.",
+    ws4_sub:
+      "Every workout is a check-in. Your group sees it. Your streak grows. Miss a day and everyone knows. That gentle pressure is the whole point.",
+    ws5_title: "Let's set you up.",
+    ws5_sub: "It takes a minute, then you're in.",
+    ws5_cta: "Let's go",
+
+    // Feature tour (first-run on Home)
+    tour_next: "Next",
+    tour_skip: "Skip tour",
+    tour_finish: "Take your first photo",
+    tour_replay: "Take the tour again",
+    tour1_title: "Welcome to Home",
+    tour1_body: "Your group, your streak, your feed — all in one place.",
+    tour2_title: "Check in",
+    tour2_body:
+      "Tap here after any workout, take a photo, and it posts to your group. This is the one thing you do every day.",
+    tour3_title: "Your consistency",
+    tour3_body:
+      "This ring shows how many of your days you've hit this week. Fill it up.",
+    tour4_title: "Your streaks",
+    tour4_body:
+      "Your day streak is consecutive days you showed up. The group streak only survives if everyone shows up — one miss breaks it for all of you.",
+    tour5_title: "The feed",
+    tour5_body:
+      "When anyone checks in, it shows up here. React, comment, cheer them on.",
+    tour6_title: "At-risk & nudges",
+    tour6_body:
+      "Inside a group, a red dot means someone hasn't checked in today. Tap Nudge to give them a friendly push.",
+    tour7_title: "Groups",
+    tour7_body:
+      "Create or join groups here. Tap any group for its stats, members, chat, and weekly recap.",
+    tour8_title: "Profile & The Stack",
+    tour8_body:
+      "Your profile shows your streaks, your totals, and The Stack — your full check-in history. Tap anyone's name to see theirs.",
+    tour9_title: "You're ready",
+    tour9_body: "That's it. Take your first photo and start your streak today.",
+
     // Home — empty state
     home_no_group_title: "No crew yet",
     home_no_group_subtitle:
@@ -469,6 +516,54 @@ export const translations = {
     ob_focus_sub: "¿Qué estás persiguiendo ahora?",
     ob_bio_title: "Una línea sobre ti",
     ob_bio_sub: "Opcional — que valga la pena.",
+
+    // Welcome story (primera vez, tras registrarse, antes de configurar el perfil)
+    welcome_skip: "Saltar",
+    welcome_continue: "Continuar",
+    ws2_title: "Ponerte en forma solo es difícil. Con tu gente, se vuelve constante.",
+    ws2_sub:
+      "Stack no es otro tracker para uno solo. Es un círculo pequeño que se hace responsable en grupo — presentarte se vuelve inevitable cuando está frente a la gente que te importa.",
+    ws3_title:
+      "Estamos construyendo el lugar donde los grupos pequeños se ponen fuertes juntos.",
+    ws3_sub:
+      "Un espacio privado y sin excusas para ti y tus amigos, tus hermanos, tus compañeros de entrenamiento, tu coach y sus clientes. Responsabilidad real, no una vitrina pública.",
+    ws4_title: "Toma la foto. Construye la racha. No rompas la cadena.",
+    ws4_sub:
+      "Cada entrenamiento es un registro. Tu grupo lo ve. Tu racha crece. Si faltas un día, todos se enteran. Esa presión amable es justo el punto.",
+    ws5_title: "Vamos a configurarte.",
+    ws5_sub: "Toma un minuto y ya estás dentro.",
+    ws5_cta: "Vamos",
+
+    // Feature tour (primera vez en Inicio)
+    tour_next: "Siguiente",
+    tour_skip: "Saltar tour",
+    tour_finish: "Toma tu primera foto",
+    tour_replay: "Ver el tour de nuevo",
+    tour1_title: "Bienvenido a tu inicio",
+    tour1_body: "Tu grupo, tu racha y tu feed — todo en un solo lugar.",
+    tour2_title: "Registra",
+    tour2_body:
+      "Toca aquí después de entrenar, toma una foto y se publica en tu grupo. Esto es lo único que haces cada día.",
+    tour3_title: "Tu constancia",
+    tour3_body:
+      "Este anillo muestra cuántos de tus días cumpliste esta semana. Llénalo.",
+    tour4_title: "Tus rachas",
+    tour4_body:
+      "Tu racha son los días seguidos que te presentaste. La racha del grupo solo sobrevive si todos se presentan — una falta la rompe para todos.",
+    tour5_title: "El feed",
+    tour5_body:
+      "Cuando alguien registra, aparece aquí. Reacciona, comenta y anímalos.",
+    tour6_title: "En riesgo y empujones",
+    tour6_body:
+      "Dentro de un grupo, un punto rojo significa que alguien no se ha registrado hoy. Toca Empújalo para darle un empujón amable.",
+    tour7_title: "Grupos",
+    tour7_body:
+      "Crea o únete a grupos aquí. Toca cualquier grupo para ver sus estadísticas, miembros, chat y resumen semanal.",
+    tour8_title: "Perfil y La Pila",
+    tour8_body:
+      "Tu perfil muestra tus rachas, tus totales y La Pila — tu historial completo de registros. Toca el nombre de cualquiera para ver el suyo.",
+    tour9_title: "Estás listo",
+    tour9_body: "Eso es todo. Toma tu primera foto y empieza tu racha hoy.",
 
     // Home — empty state
     home_no_group_title: "Todavía no tienes grupo",

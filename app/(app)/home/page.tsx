@@ -43,7 +43,7 @@ export default async function HomePage() {
     <main className="mx-auto w-full max-w-xl px-6 py-8">
       <BrandBar />
 
-      <header className="mb-8 min-w-0">
+      <header className="mb-8 min-w-0" data-tour="home-header">
         {groups.length > 1 ? (
           <GroupSwitcher groups={groups} activeId={active.id} />
         ) : (

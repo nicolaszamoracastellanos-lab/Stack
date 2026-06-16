@@ -12,6 +12,7 @@ type Item = {
   icon: (active: boolean) => React.ReactNode;
   primary?: boolean;
   match?: string; // active-state prefix override
+  tour?: string; // data-tour anchor for the feature tour
 };
 
 function HomeIcon({ active }: { active: boolean }) {
@@ -93,10 +94,10 @@ function ProfileIcon({ active }: { active: boolean }) {
 // action is balanced, not off to one side.
 const items: Item[] = [
   { href: "/home", key: "nav_home", icon: (a) => <HomeIcon active={a} /> },
-  { href: "/groups", key: "nav_groups", icon: (a) => <GroupsIcon active={a} /> },
-  { href: "/checkin", key: "nav_checkin", icon: () => <CheckinIcon />, primary: true },
+  { href: "/groups", key: "nav_groups", icon: (a) => <GroupsIcon active={a} />, tour: "nav-groups" },
+  { href: "/checkin", key: "nav_checkin", icon: () => <CheckinIcon />, primary: true, tour: "nav-checkin" },
   { href: "/activity", key: "nav_activity", icon: (a) => <ActivityIcon active={a} /> },
-  { href: "/profile", key: "nav_profile", icon: (a) => <ProfileIcon active={a} /> },
+  { href: "/profile", key: "nav_profile", icon: (a) => <ProfileIcon active={a} />, tour: "nav-profile" },
 ];
 
 /**
@@ -146,6 +147,7 @@ export function Nav() {
                 <Link
                   href={item.href}
                   aria-label={t(item.key)}
+                  data-tour={item.tour}
                   className={cn(
                     "flex h-14 w-14 items-center justify-center rounded-pill bg-volt text-bg",
                     "transition-colors duration-150 hover:bg-volt-dim",
@@ -160,6 +162,7 @@ export function Nav() {
             <li key={item.href}>
               <Link
                 href={item.href}
+                data-tour={item.tour}
                 className={cn(
                   "flex flex-col items-center gap-1 py-2.5 transition-colors duration-150",
                   active ? "text-volt" : "text-text-dim hover:text-text",

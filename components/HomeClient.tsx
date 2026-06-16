@@ -343,12 +343,14 @@ export function HomeClient({
 
       {/* Hero: weekly consistency ring */}
       <section className="flex flex-col items-center">
-        <ConsistencyRing
-          value={consistency.value}
-          percent={consistency.percent}
-          label={t("home_consistency")}
-          sublabel={`${consistency.days}/7`}
-        />
+        <div data-tour="ring">
+          <ConsistencyRing
+            value={consistency.value}
+            percent={consistency.percent}
+            label={t("home_consistency")}
+            sublabel={`${consistency.days}/7`}
+          />
+        </div>
         {statusLine && (
           <p className={`mt-4 text-label ${statusLine.tone}`}>
             {statusLine.text}
@@ -356,7 +358,7 @@ export function HomeClient({
         )}
 
         {/* Personal + group streak as supporting stats */}
-        <div className="mt-6 grid w-full grid-cols-2 gap-3">
+        <div className="mt-6 grid w-full grid-cols-2 gap-3" data-tour="streaks">
           <div className="rounded-card border border-border bg-surface p-5">
             <StreakBadge
               count={displayedStreak}
@@ -417,7 +419,7 @@ export function HomeClient({
       )}
 
       {/* Live feed */}
-      <section>
+      <section data-tour="feed">
         <h2 className="mb-3 text-caption font-medium uppercase tracking-wide text-text-dim">
           {t("feed_title")}
         </h2>
