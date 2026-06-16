@@ -3,9 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserGroups } from "@/lib/groups";
 import { nameOf } from "@/lib/feed";
 import {
+  computeGroupStreak,
   computePersonalStreak,
   localDateKey,
   toDaySet,
+  type StreakState,
 } from "@/lib/streaks";
 import { ACTIVE_GROUP_COOKIE } from "@/lib/active-group";
 import type { Group } from "@/lib/types";
@@ -29,6 +31,11 @@ export type DashboardGroup = {
   members: LeaderEntry[];
   /** Total check-ins in this group over the last 7 days. */
   weekTotal: number;
+  /** Collective streak: consecutive days every member checked in. */
+  collectiveStreak: number;
+  collectiveState: StreakState;
+  /** Whether YOU have checked in today for this group (drives the at-risk dot). */
+  youCheckedInToday: boolean;
 };
 
 type ProfileLite = {
@@ -118,7 +125,25 @@ export async function getGroupsDashboard(userId: string): Promise<{
         last7Set.has(localDateKey(new Date(c.created_at as string))),
       ).length;
 
-      return { group: g, members, weekTotal };
+      // Collective streak: feed one check-in array per member.
+      const memberArrays = (memberRes.data ?? []).map((row) => {
+        const uid = (row as { user_id: string }).user_id;
+        return checkins
+          .filter((c) => c.user_id === uid)
+          .map((c) => c.created_at as string);
+      });
+      const collective = computeGroupStreak(memberArrays, now);
+      const youCheckedInToday =
+        members.find((m) => m.isYou)?.checkedInToday ?? false;
+
+      return {
+        group: g,
+        members,
+        weekTotal,
+        collectiveStreak: collective.count,
+        collectiveState: collective.state,
+        youCheckedInToday,
+      };
     }),
   );
 

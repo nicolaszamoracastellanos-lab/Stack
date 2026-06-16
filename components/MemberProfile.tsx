@@ -221,8 +221,7 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
             {sharedGroups.map((g) => (
               <Link
                 key={g.id}
-                // Section 4 adds /groups/[id] detail pages; deep-link there then.
-                href="/groups"
+                href={`/groups/${g.id}`}
                 className="flex items-center gap-2 rounded-pill border border-border bg-surface py-1.5 pl-1.5 pr-3.5 transition-colors hover:border-border-strong"
               >
                 <Avatar name={g.name} size="sm" />

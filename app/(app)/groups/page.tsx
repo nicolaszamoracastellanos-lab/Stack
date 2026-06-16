@@ -10,15 +10,6 @@ export default async function GroupsPage() {
   if (!userId) redirect("/login");
 
   const { groups, activeId } = await getGroupsDashboard(userId);
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? "";
 
-  return (
-    <GroupsDashboard
-      groups={groups}
-      activeId={activeId}
-      userId={userId}
-      baseUrl={baseUrl}
-    />
-  );
+  return <GroupsDashboard groups={groups} activeId={activeId} />;
 }
