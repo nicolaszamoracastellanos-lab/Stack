@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { Leaderboard } from "@/components/Leaderboard";
 import { NudgeButton } from "@/components/NudgeButton";
 import { RecapCard } from "@/components/RecapCard";
+import { GroupChat } from "@/components/GroupChat";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -219,6 +220,14 @@ export function GroupDetail({
             }
           />
         </div>
+      </section>
+
+      {/* SECTION — group chat (Section 8) */}
+      <section className="mt-10">
+        <h2 className="mb-2 text-caption font-medium uppercase tracking-wide text-text-dim">
+          {t("chat_title")}
+        </h2>
+        <GroupChat groupId={data.group.id} userId={userId} members={data.members} />
       </section>
 
       {/* Open in Home */}

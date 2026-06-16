@@ -119,6 +119,16 @@ create table if not exists nudges (
 );
 create index if not exists nudges_to_idx on nudges (to_user, created_at desc);
 
+-- Group chat messages (Batch 2 §8).
+create table if not exists messages (
+  id uuid default gen_random_uuid() primary key,
+  group_id uuid references groups(id) on delete cascade not null,
+  user_id uuid references profiles(id) on delete cascade not null,
+  body text not null,
+  created_at timestamptz default now()
+);
+create index if not exists messages_group_idx on messages (group_id, created_at);
+
 -- Helpful indexes for the feed / streak queries.
 create index if not exists checkins_group_created_idx on checkins (group_id, created_at desc);
 create index if not exists checkins_user_created_idx on checkins (user_id, created_at desc);
@@ -208,6 +218,7 @@ alter table checkins enable row level security;
 alter table reactions enable row level security;
 alter table comments enable row level security;
 alter table nudges enable row level security;
+alter table messages enable row level security;
 
 -- Drop existing policies so this file can be re-run cleanly in dev.
 do $$
@@ -216,7 +227,7 @@ begin
   for r in
     select policyname, tablename from pg_policies
     where schemaname = 'public'
-      and tablename in ('profiles','groups','group_members','checkins','reactions','comments','nudges')
+      and tablename in ('profiles','groups','group_members','checkins','reactions','comments','nudges','messages')
   loop
     execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
   end loop;
@@ -302,6 +313,16 @@ create policy "send nudges" on nudges
     )
   );
 
+-- MESSAGES (group chat): members read/send in their group; authors delete own.
+create policy "members read messages" on messages
+  for select using (public.is_group_member(group_id));
+create policy "members send messages" on messages
+  for insert with check (
+    auth.uid() = user_id and public.is_group_member(group_id)
+  );
+create policy "authors delete own messages" on messages
+  for delete using (auth.uid() = user_id);
+
 -- ----------------------------------------------------------------------------
 -- REALTIME
 -- Add the feed tables to the realtime publication so the home feed updates
@@ -319,6 +340,10 @@ begin
   end;
   begin
     alter publication supabase_realtime add table comments;
+  exception when duplicate_object then null;
+  end;
+  begin
+    alter publication supabase_realtime add table messages;
   exception when duplicate_object then null;
   end;
 end $$;

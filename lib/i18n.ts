@@ -85,6 +85,11 @@ export const translations = {
     recap_subtitle: "How the group is showing up",
     recap_checkins: "Check-ins",
     recap_perfect: "Perfect week",
+    // Group chat
+    chat_title: "Chat",
+    chat_placeholder: "Message your group…",
+    chat_send: "Send",
+    chat_empty: "No messages yet. Say something.",
     milestone_title: "{n}-day streak",
     milestone_sub: "You're on fire. Keep it alive.",
 
@@ -395,6 +400,11 @@ export const translations = {
     recap_subtitle: "Cómo se está presentando el grupo",
     recap_checkins: "Registros",
     recap_perfect: "Semana perfecta",
+    // Group chat
+    chat_title: "Chat",
+    chat_placeholder: "Escríbele a tu grupo…",
+    chat_send: "Enviar",
+    chat_empty: "Aún no hay mensajes. Di algo.",
     milestone_title: "racha de {n} días",
     milestone_sub: "Estás encendido. Mantenla viva.",
 
