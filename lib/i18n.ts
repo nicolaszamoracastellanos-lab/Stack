@@ -239,6 +239,11 @@ export const translations = {
     profile_saved: "Saved",
     profile_about: "About",
 
+    // Member profile
+    u_recent: "Recent",
+    u_no_posts: "No check-ins yet.",
+    u_shared_groups: "Shared groups",
+
     // Install / Add to Home Screen guide
     install_cta: "Install as an app",
     install_title: "Add Stack to your iPhone",
@@ -508,6 +513,11 @@ export const translations = {
     profile_save: "Guardar perfil",
     profile_saved: "Guardado",
     profile_about: "Sobre ti",
+
+    // Member profile
+    u_recent: "Recientes",
+    u_no_posts: "Aún no hay registros.",
+    u_shared_groups: "Grupos en común",
 
     // Install / Add to Home Screen guide
     install_cta: "Instalar como app",

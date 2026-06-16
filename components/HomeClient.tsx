@@ -297,6 +297,7 @@ export function HomeClient({
             {feed.map((c) => {
               const data: FeedItemData = {
                 id: c.id,
+                userId: c.user_id,
                 name: c.name,
                 avatarUrl: c.avatarUrl,
                 photoUrl: c.photoUrl,

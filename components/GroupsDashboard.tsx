@@ -25,29 +25,34 @@ function Leaderboard({ members }: { members: LeaderEntry[] }) {
           <span className="w-4 shrink-0 text-center font-mono text-caption text-text-dim">
             {i + 1}
           </span>
-          {/* Avatar with an at-risk red dot when they haven't checked in today. */}
-          <span className="relative shrink-0">
-            <Avatar name={m.name} src={m.avatarUrl} size="md" />
-            {!m.checkedInToday && (
-              <span
-                className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
-                title="hasn't checked in today"
-              />
-            )}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-body font-medium text-text">
-              {m.name}
-              {m.isYou && (
-                <span className="ml-1.5 text-caption text-text-dim">
-                  ({t("groups_you_tag")})
-                </span>
+          <Link
+            href={`/u/${m.userId}`}
+            className="flex min-w-0 flex-1 items-center gap-3"
+          >
+            {/* Avatar with an at-risk red dot when they haven't checked in today. */}
+            <span className="relative shrink-0">
+              <Avatar name={m.name} src={m.avatarUrl} size="md" />
+              {!m.checkedInToday && (
+                <span
+                  className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
+                  title="hasn't checked in today"
+                />
               )}
-            </p>
-            <p className="text-caption text-text-dim">
-              {t("leaderboard_days", { n: m.daysThisWeek })}
-            </p>
-          </div>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-body font-medium text-text">
+                {m.name}
+                {m.isYou && (
+                  <span className="ml-1.5 text-caption text-text-dim">
+                    ({t("groups_you_tag")})
+                  </span>
+                )}
+              </p>
+              <p className="text-caption text-text-dim">
+                {t("leaderboard_days", { n: m.daysThisWeek })}
+              </p>
+            </div>
+          </Link>
           <span className="font-mono text-h1 nums leading-none text-volt">
             {m.streak}
           </span>

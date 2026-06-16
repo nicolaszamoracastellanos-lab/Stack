@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { SharePhotoButton } from "@/components/SharePhotoButton";
 import { useLanguage } from "@/lib/language-context";
@@ -9,6 +10,7 @@ import { SPORTS, GOALS, labelFor, iconFor } from "@/lib/workout-options";
 
 export type FeedItemData = {
   id: string;
+  userId: string;
   name: string;
   avatarUrl?: string | null;
   photoUrl: string;
@@ -54,10 +56,13 @@ export function FeedItem({ item, isNew, onToggleReaction }: FeedItemProps) {
       )}
     >
       <header className="flex items-center gap-3 p-4">
-        <Avatar name={item.name} src={item.avatarUrl} size="md" />
-        <div className="min-w-0 flex-1">
+        <Link
+          href={`/u/${item.userId}`}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-pill"
+        >
+          <Avatar name={item.name} src={item.avatarUrl} size="md" />
           <p className="truncate text-body font-medium text-text">{item.name}</p>
-        </div>
+        </Link>
         <time className="font-mono text-caption text-text-dim nums">{time}</time>
       </header>
 

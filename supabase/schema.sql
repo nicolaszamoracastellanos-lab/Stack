@@ -139,6 +139,37 @@ $$;
 grant execute on function public.is_group_member(uuid) to authenticated;
 grant execute on function public.group_by_invite_code(text) to authenticated;
 
+-- Member hero stats across ALL of a member's groups (Batch 2 · Section 1).
+-- Returns one timestamp per POST (deduped by post_id) for computing a member's
+-- streaks/heatmap/total, but only to a caller who shares a group with them (or
+-- the member themselves). No photos/notes are exposed — just dates — so this is
+-- safe to read cross-group. SECURITY DEFINER bypasses RLS; the explicit
+-- shares-a-group gate is the access control.
+create or replace function public.member_checkin_dates(_user_id uuid)
+returns table (created_at timestamptz)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select distinct on (coalesce(c.post_id, c.id)) c.created_at
+  from checkins c
+  where c.user_id = _user_id
+    and (
+      _user_id = auth.uid()
+      or exists (
+        select 1
+        from group_members me
+        join group_members them on them.group_id = me.group_id
+        where me.user_id = auth.uid()
+          and them.user_id = _user_id
+      )
+    )
+  order by coalesce(c.post_id, c.id), c.created_at desc;
+$$;
+
+grant execute on function public.member_checkin_dates(uuid) to authenticated;
+
 -- ----------------------------------------------------------------------------
 -- ROW LEVEL SECURITY
 -- ----------------------------------------------------------------------------
