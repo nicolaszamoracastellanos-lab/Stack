@@ -76,6 +76,10 @@ export const translations = {
     gd_all_time: "All-time",
     gd_open_home: "Open in Home",
     gd_nobody_yet: "No check-ins in this window yet.",
+    // Nudge
+    nudge_cta: "Nudge",
+    nudge_sent: "Nudged",
+    nudge_banner: "{who} nudged you 👀 Your group is waiting.",
     milestone_title: "{n}-day streak",
     milestone_sub: "You're on fire. Keep it alive.",
 
@@ -377,6 +381,10 @@ export const translations = {
     gd_all_time: "Histórico",
     gd_open_home: "Abrir en Inicio",
     gd_nobody_yet: "Aún no hay registros en este periodo.",
+    // Nudge
+    nudge_cta: "Empújalo",
+    nudge_sent: "Enviado",
+    nudge_banner: "{who} te dio un empujón 👀 Tu grupo te está esperando.",
     milestone_title: "racha de {n} días",
     milestone_sub: "Estás encendido. Mantenla viva.",
 

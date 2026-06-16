@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ConsistencyRing } from "@/components/ConsistencyRing";
 import { FeedItem, type FeedItemData } from "@/components/FeedItem";
+import { NudgeBanner } from "@/components/NudgeBanner";
 import { useLanguage } from "@/lib/language-context";
 import { useCountUp } from "@/lib/use-count-up";
 import { createClient } from "@/lib/supabase/client";
@@ -307,6 +308,9 @@ export function HomeClient({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Someone nudged you today (Section 6). */}
+      <NudgeBanner userId={userId} />
+
       {/* Hero: weekly consistency ring */}
       <section className="flex flex-col items-center">
         <ConsistencyRing

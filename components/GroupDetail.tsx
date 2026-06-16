@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Leaderboard } from "@/components/Leaderboard";
+import { NudgeButton } from "@/components/NudgeButton";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -199,7 +200,18 @@ export function GroupDetail({
           {t("gd_breakdown")}
         </h2>
         <div className="rounded-card border border-border bg-surface px-5 py-1">
-          <Leaderboard members={data.members} />
+          <Leaderboard
+            members={data.members}
+            trailing={(m) =>
+              !m.isYou && !m.checkedInToday ? (
+                <NudgeButton
+                  groupId={data.group.id}
+                  fromUserId={userId}
+                  toUserId={m.userId}
+                />
+              ) : null
+            }
+          />
         </div>
       </section>
 

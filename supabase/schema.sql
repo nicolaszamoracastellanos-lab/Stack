@@ -106,6 +106,19 @@ create table if not exists comments (
 );
 create index if not exists comments_checkin_idx on comments (checkin_id, created_at);
 
+-- Nudges (Batch 2 §6): one-tap "your group is waiting" pokes, rate-limited to
+-- one per (from,to) per day.
+create table if not exists nudges (
+  id uuid default gen_random_uuid() primary key,
+  group_id uuid references groups(id) on delete cascade not null,
+  from_user uuid references profiles(id) on delete cascade not null,
+  to_user uuid references profiles(id) on delete cascade not null,
+  day date not null default (now() at time zone 'utc')::date,
+  created_at timestamptz default now(),
+  unique (from_user, to_user, day)
+);
+create index if not exists nudges_to_idx on nudges (to_user, created_at desc);
+
 -- Helpful indexes for the feed / streak queries.
 create index if not exists checkins_group_created_idx on checkins (group_id, created_at desc);
 create index if not exists checkins_user_created_idx on checkins (user_id, created_at desc);
@@ -194,6 +207,7 @@ alter table group_members enable row level security;
 alter table checkins enable row level security;
 alter table reactions enable row level security;
 alter table comments enable row level security;
+alter table nudges enable row level security;
 
 -- Drop existing policies so this file can be re-run cleanly in dev.
 do $$
@@ -202,7 +216,7 @@ begin
   for r in
     select policyname, tablename from pg_policies
     where schemaname = 'public'
-      and tablename in ('profiles','groups','group_members','checkins','reactions','comments')
+      and tablename in ('profiles','groups','group_members','checkins','reactions','comments','nudges')
   loop
     execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
   end loop;
@@ -272,6 +286,21 @@ create policy "members create own comments" on comments
   );
 create policy "authors delete own comments" on comments
   for delete using (auth.uid() = user_id);
+
+-- NUDGES: read ones you sent or received; send as yourself to another member of
+-- a shared group.
+create policy "read own nudges" on nudges
+  for select using (to_user = auth.uid() or from_user = auth.uid());
+create policy "send nudges" on nudges
+  for insert with check (
+    from_user = auth.uid()
+    and from_user <> to_user
+    and public.is_group_member(group_id)
+    and exists (
+      select 1 from group_members gm
+      where gm.group_id = nudges.group_id and gm.user_id = to_user
+    )
+  );
 
 -- ----------------------------------------------------------------------------
 -- REALTIME
