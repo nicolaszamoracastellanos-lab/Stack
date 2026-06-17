@@ -75,6 +75,11 @@ export function getWeekEndKey(key: DayKey): DayKey {
   return addDaysKey(getWeekStartKey(key), 6);
 }
 
+/** The Monday that STARTS the week after `date`'s week (quota activation, etc). */
+export function nextWeekStartKey(date: Date, tz?: string): DayKey {
+  return addDaysKey(getWeekStartKey(dayKey(date, tz)), 7);
+}
+
 /** The 7 day-keys (Mon→Sun) of the week containing `key`. */
 export function weekDayKeys(key: DayKey): DayKey[] {
   const start = getWeekStartKey(key);

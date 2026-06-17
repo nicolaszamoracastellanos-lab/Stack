@@ -4,12 +4,13 @@ import { getUserGroups } from "@/lib/groups";
 import { nameOf } from "@/lib/feed";
 import {
   computeGroupStreak,
-  computePersonalStreak,
   localDateKey,
   toDaySet,
   type StreakState,
 } from "@/lib/streaks";
+import { computeQuotaStreak } from "@/lib/streak-quota";
 import { weekDayKeys } from "@/lib/week";
+import type { TierKey } from "@/lib/tiers";
 import { ACTIVE_GROUP_COOKIE } from "@/lib/active-group";
 import type { Group } from "@/lib/types";
 
@@ -25,6 +26,8 @@ export type LeaderEntry = {
   isYou: boolean;
   /** Section 2: false → hide streak/ranking, keep name/avatar/at-risk. */
   showStats: boolean;
+  /** Confirmed-or-provisional tier key for the colour legend (Batch 5 C). */
+  tier: TierKey | null;
 };
 
 export type DashboardGroup = {
@@ -44,6 +47,10 @@ type ProfileLite = {
   display_name: string | null;
   avatar_url: string | null;
   show_stats: boolean | null;
+  weekly_goal: number | null;
+  quota_active_from: string | null;
+  tier_confirmed: string | null;
+  tier_provisional: string | null;
 } | null;
 
 /**
@@ -65,7 +72,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
         supabase
           .from("group_members")
           .select(
-            "user_id, profile:profiles(username, display_name, avatar_url, show_stats)",
+            "user_id, profile:profiles(username, display_name, avatar_url, show_stats, weekly_goal, quota_active_from, tier_confirmed, tier_provisional)",
           )
           .eq("group_id", g.id),
         supabase
@@ -93,17 +100,28 @@ export async function getGroupsDashboard(userId: string): Promise<{
         // Privacy floor: hidden-stat members keep name/avatar/at-risk, but their
         // streak/consistency are zeroed in the payload so nothing leaks.
         const showStats = isYou || profile?.show_stats !== false;
+        const streak = showStats
+          ? computeQuotaStreak(dates, {
+              weeklyGoal: profile?.weekly_goal ?? null,
+              quotaActiveFromKey: profile?.quota_active_from ?? null,
+              now,
+            }).count
+          : 0;
+        const tier = (showStats
+          ? profile?.tier_confirmed ?? profile?.tier_provisional ?? null
+          : null) as TierKey | null;
         return {
           userId: uid,
           name: nameOf(profile),
           avatarUrl: profile?.avatar_url ?? null,
-          streak: showStats ? computePersonalStreak(dates, now).count : 0,
+          streak,
           checkedInToday: daySet.has(todayKey),
           daysThisWeek: showStats
             ? week.filter((k) => daySet.has(k)).length
             : 0,
           isYou,
           showStats,
+          tier,
         };
       });
 

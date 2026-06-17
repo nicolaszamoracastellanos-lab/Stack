@@ -310,6 +310,57 @@ export const translations = {
     leaderboard_days: "{n} of last 7 days",
     action_failed: "Couldn't do that. Please try again.",
 
+    // Streak v2 + tiers (Batch 5 C)
+    tier_gold: "Gold",
+    tier_silver: "Silver",
+    tier_volt: "Volt",
+    tier_bronze: "Bronze",
+    tier_purple: "Purple",
+    tier_amber: "Amber",
+    tier_slate: "Slate",
+    tier_provisional: "Provisional",
+    tier_unranked: "Unranked",
+    tier_level_label: "Tier",
+    streak_atrisk_title: "About to lose your streak",
+    streak_atrisk_explain:
+      "You've used all your rest days this week. Train every remaining day to keep your streak alive.",
+    streak_atrisk_dismiss: "Got it",
+    week_progress: "{done}/{goal} this week",
+    goal_title: "Set your weekly goal",
+    goal_sub: "How many workouts a week are you committing to? This is your streak goal.",
+    goal_per_week: "{n}× / week",
+    goal_rest_hint_one: "1 banked rest day a week. Miss more and your streak is at risk.",
+    goal_rest_hint: "{n} banked rest days a week. Miss more and your streak is at risk.",
+    goal_rest_hint_none: "Every day. No banked rest — a single miss puts your streak at risk.",
+    goal_save: "Set my goal",
+    goal_skip: "Not now",
+    goal_intro_title: "Streaks, leveled up",
+    goal_intro_body:
+      "Your streak is built on a weekly goal. Hit it and your streak grows; your tier colour shows how hard you go.",
+    goal_grace_note: "Your current streak is safe — new rules start next Monday.",
+    rest_prompt_q: "You didn't log {days}. Were those your rest days?",
+    rest_prompt_yes: "Yes, rest days",
+    rest_prompt_no: "No, I'll log",
+    tierguide_link: "How tiers & streaks work",
+    tierguide_title: "Tiers & streaks",
+    tierguide_intro:
+      "Your streak counts every day you keep your weekly goal. Two people can share a streak length — the tier colour shows how hard each is going.",
+    tierguide_tiers_title: "The tiers",
+    tierguide_tiers_body: "Earned by how many days a week you train:",
+    tierguide_streak_title: "When your streak breaks",
+    tierguide_streak_body:
+      "It breaks only when hitting your weekly goal becomes impossible — when the days left in the week are fewer than the workouts you still need. Not on a rest day. Not on a single skip with room to spare.",
+    tierguide_red_title: "The red alert",
+    tierguide_red_body:
+      "Red means at-risk: you've used every rest day this week and must train each remaining day to keep your streak. Red is only ever this — no tier uses it.",
+    tierguide_rest_title: "Do rest days break my streak?",
+    tierguide_rest_body:
+      "No. Preferred rest days are personal cues — they never change the streak math. Only your weekly goal does.",
+    tierguide_climb_title: "Climbing & dropping",
+    tierguide_climb_body:
+      "Your confirmed tier moves on a monthly cadence (a full month's average), so one bad week never drops it. Train more for a month to climb; one light month to step down.",
+    tierguide_per_week: "{n}×/week",
+
     // Create group
     creategroup_title: "Create a group",
     creategroup_subtitle: "Small and serious. 2 to 8 people.",
@@ -447,6 +498,9 @@ export const translations = {
     stats_hidden: "Stats hidden",
 
     // Privacy
+    settings_goal_label: "Weekly goal",
+    settings_rest_label: "Preferred rest days",
+    settings_rest_hint: "Personal cues only — they never change your streak math.",
     privacy_label: "Privacy",
     privacy_show_stats: "Show my stats to group members",
     privacy_explainer:
@@ -794,6 +848,57 @@ export const translations = {
     leaderboard_days: "{n} de los últimos 7 días",
     action_failed: "No se pudo. Inténtalo de nuevo.",
 
+    // Streak v2 + tiers (Batch 5 C)
+    tier_gold: "Oro",
+    tier_silver: "Plata",
+    tier_volt: "Volt",
+    tier_bronze: "Bronce",
+    tier_purple: "Púrpura",
+    tier_amber: "Ámbar",
+    tier_slate: "Pizarra",
+    tier_provisional: "Provisional",
+    tier_unranked: "Sin nivel",
+    tier_level_label: "Nivel",
+    streak_atrisk_title: "A punto de perder tu racha",
+    streak_atrisk_explain:
+      "Ya usaste todos tus días de descanso esta semana. Entrena cada día que queda para mantener tu racha viva.",
+    streak_atrisk_dismiss: "Entendido",
+    week_progress: "{done}/{goal} esta semana",
+    goal_title: "Fija tu meta semanal",
+    goal_sub: "¿Cuántos entrenamientos por semana te comprometes a hacer? Es tu meta de racha.",
+    goal_per_week: "{n}× / semana",
+    goal_rest_hint_one: "1 día de descanso por semana. Falla más y tu racha está en riesgo.",
+    goal_rest_hint: "{n} días de descanso por semana. Falla más y tu racha está en riesgo.",
+    goal_rest_hint_none: "Todos los días. Sin descanso — una sola falla pone tu racha en riesgo.",
+    goal_save: "Fijar mi meta",
+    goal_skip: "Ahora no",
+    goal_intro_title: "Rachas, a otro nivel",
+    goal_intro_body:
+      "Tu racha se construye sobre una meta semanal. Cúmplela y tu racha crece; el color de tu nivel muestra qué tan fuerte vas.",
+    goal_grace_note: "Tu racha actual está a salvo — las nuevas reglas empiezan el próximo lunes.",
+    rest_prompt_q: "No registraste {days}. ¿Eran tus días de descanso?",
+    rest_prompt_yes: "Sí, descanso",
+    rest_prompt_no: "No, voy a registrar",
+    tierguide_link: "Cómo funcionan niveles y rachas",
+    tierguide_title: "Niveles y rachas",
+    tierguide_intro:
+      "Tu racha cuenta cada día que cumples tu meta semanal. Dos personas pueden tener la misma racha — el color del nivel muestra qué tan fuerte va cada quien.",
+    tierguide_tiers_title: "Los niveles",
+    tierguide_tiers_body: "Se ganan según cuántos días por semana entrenas:",
+    tierguide_streak_title: "Cuándo se rompe tu racha",
+    tierguide_streak_body:
+      "Se rompe solo cuando alcanzar tu meta semanal se vuelve imposible — cuando los días que quedan en la semana son menos que los entrenamientos que aún necesitas. No en un día de descanso. No por una sola falla con margen.",
+    tierguide_red_title: "La alerta roja",
+    tierguide_red_body:
+      "Rojo significa en riesgo: usaste todos tus días de descanso de la semana y debes entrenar cada día restante para conservar tu racha. El rojo es solo esto — ningún nivel lo usa.",
+    tierguide_rest_title: "¿Los días de descanso rompen mi racha?",
+    tierguide_rest_body:
+      "No. Los días de descanso preferidos son señales personales — nunca cambian el cálculo de la racha. Solo tu meta semanal lo hace.",
+    tierguide_climb_title: "Subir y bajar",
+    tierguide_climb_body:
+      "Tu nivel confirmado se mueve cada mes (el promedio de un mes completo), así una sola mala semana nunca lo baja. Entrena más un mes para subir; un mes flojo para bajar.",
+    tierguide_per_week: "{n}×/semana",
+
     // Create group
     creategroup_title: "Crear un grupo",
     creategroup_subtitle: "Pequeño y en serio. De 2 a 8 personas.",
@@ -932,6 +1037,9 @@ export const translations = {
     stats_hidden: "Estadísticas ocultas",
 
     // Privacy
+    settings_goal_label: "Meta semanal",
+    settings_rest_label: "Días de descanso preferidos",
+    settings_rest_hint: "Solo señales personales — nunca cambian el cálculo de tu racha.",
     privacy_label: "Privacidad",
     privacy_show_stats: "Mostrar mis estadísticas a los miembros del grupo",
     privacy_explainer:

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
 import { getActiveGroup } from "@/lib/groups";
 import { createClient } from "@/lib/supabase/server";
-import { computePersonalStreak, toDaySet, localDateKey } from "@/lib/streaks";
+import { computeQuotaStreak } from "@/lib/streak-quota";
 import { CheckinFlow } from "@/components/CheckinFlow";
 
 export default async function CheckinPage() {
@@ -28,9 +28,14 @@ export default async function CheckinPage() {
   const personalDates = (mineRes.data ?? []).map((r) => r.created_at as string);
   const restDays = (restRes.data ?? []).map((r) => r.day as string);
   const now = new Date();
-  const current = computePersonalStreak(personalDates, now, restDays);
-  const checkedToday = toDaySet(personalDates).has(localDateKey(now));
-  const streakAfter = checkedToday ? current.count : current.count + 1;
+  const current = computeQuotaStreak(personalDates, {
+    weeklyGoal: profile?.weekly_goal ?? null,
+    quotaActiveFromKey: profile?.quota_active_from ?? null,
+    restDayKeys: restDays,
+    now,
+  });
+  // If today isn't logged yet, this post extends the streak by one.
+  const streakAfter = current.workedToday ? current.count : current.count + 1;
 
   // Default destination = the group(s) the last post went to, else "Just me".
   const groupIdSet = new Set(groups.map((g) => g.id));

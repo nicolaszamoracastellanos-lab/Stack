@@ -22,6 +22,17 @@ export type Profile = {
   timezone: string | null;
   /** When true, check-in selfies post mirrored; default false = true orientation (Batch 5 A1). */
   selfie_mirror_default: boolean;
+  // Streak Engine v2 + tiers (Batch 5 C). All nullable until the goal is set.
+  /** Weekly goal Q (1–7): target workouts/week, the streak source of truth. */
+  weekly_goal: number | null;
+  /** Monday (YYYY-MM-DD) from which quota rules apply; grace before it. */
+  quota_active_from: string | null;
+  /** Preferred rest days, cosmetic: 0=Mon … 6=Sun (Batch 5 C3). */
+  preferred_rest_days: number[];
+  /** Confirmed tier key (moves monthly); null = level zero. */
+  tier_confirmed: string | null;
+  /** Provisional tier key shown in the first weeks before confirmation. */
+  tier_provisional: string | null;
   created_at: string;
 };
 

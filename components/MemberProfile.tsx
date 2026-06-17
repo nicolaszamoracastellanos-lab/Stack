@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { Heatmap } from "@/components/Heatmap";
+import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/Button";
 import { SignOutButton } from "@/components/SignOutButton";
 import { BrandBar } from "@/components/BrandBar";
@@ -158,6 +159,23 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
 
       {profile.bio && (
         <p className="mt-4 text-body text-text-muted">{profile.bio}</p>
+      )}
+
+      {/* Tier legend (Batch 5 C6): the badge + a tap-through explaining what it
+          means, so a 20-day Gold reads differently from a 20-day Purple. */}
+      {!statsHidden && (profile.tier_confirmed || profile.tier_provisional) && (
+        <Link href="/tiers" className="mt-4 inline-flex items-center gap-2">
+          <TierBadge
+            tierKey={
+              (profile.tier_confirmed ??
+                profile.tier_provisional) as import("@/lib/tiers").TierKey
+            }
+            provisional={!profile.tier_confirmed}
+          />
+          <span className="text-caption text-text-dim underline-offset-2 hover:underline">
+            {t("tierguide_link")}
+          </span>
+        </Link>
       )}
 
       {/* 2. Hero stats — hidden if this member turned stats off (Section 2). */}

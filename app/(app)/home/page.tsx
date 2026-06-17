@@ -3,12 +3,9 @@ import { getUserAndProfile } from "@/lib/auth";
 import { getActiveGroup } from "@/lib/groups";
 import { getHomeData } from "@/lib/feed";
 import { createClient } from "@/lib/supabase/server";
-import {
-  computePersonalStreak,
-  computeGroupStreak,
-  localDateKey,
-  toDaySet,
-} from "@/lib/streaks";
+import { computeGroupStreak, localDateKey, toDaySet } from "@/lib/streaks";
+import { loadStreakContext } from "@/lib/streak-context";
+import { suggestGoal } from "@/lib/tier-eval";
 import { HomeClient } from "@/components/HomeClient";
 import { SoloHome } from "@/components/SoloHome";
 import { GroupSwitcher } from "@/components/GroupSwitcher";
@@ -19,15 +16,14 @@ import { BrandBar } from "@/components/BrandBar";
 export default async function HomePage() {
   const { userId, profile } = await getUserAndProfile();
   const { active, groups } = await getActiveGroup();
-  // First-run feature tour: starts once when a user with a group lands on Home.
   const showTour = profile?.has_completed_tour === false;
 
   if (!userId) redirect("/login");
+  const supabase = createClient();
+  const now = new Date();
 
-  // Solo mode (Batch 5 B1): no group yet, but full personal value — streak,
-  // ring, heatmap — plus an obvious path into a group.
+  // Solo mode (Batch 5 B1): no group yet, but full personal value.
   if (!active) {
-    const supabase = createClient();
     const [mineRes, restRes] = await Promise.all([
       supabase
         .from("checkins")
@@ -37,7 +33,6 @@ export default async function HomePage() {
         .limit(400),
       supabase.from("rest_days").select("day").eq("user_id", userId),
     ]);
-    // Dedupe multi-group posts by post_id so a day isn't double-counted.
     const seen = new Set<string>();
     const personalDates: string[] = [];
     for (const c of mineRes.data ?? []) {
@@ -47,21 +42,40 @@ export default async function HomePage() {
       personalDates.push(c.created_at as string);
     }
     const restDays = (restRes.data ?? []).map((r) => r.day as string);
+    const ctx = await loadStreakContext(
+      supabase,
+      userId,
+      profile,
+      personalDates,
+      restDays,
+      now,
+    );
 
     return (
       <main className="mx-auto w-full max-w-xl px-6 py-8">
         <BrandBar className="mb-8" />
-        <SoloHome personalDates={personalDates} restDays={restDays} />
+        <SoloHome
+          userId={userId}
+          personalDates={personalDates}
+          restDays={restDays}
+          ctx={ctx}
+          suggestedGoal={suggestGoal(personalDates, now)}
+        />
       </main>
     );
   }
 
   const data = await getHomeData(active.id, userId);
+  const ctx = await loadStreakContext(
+    supabase,
+    userId,
+    profile,
+    data.personalDates,
+    data.restDays,
+    now,
+  );
 
-  // Seed streaks server-side so SSR matches the first client render; HomeClient
-  // recomputes with the device's local "today" on mount.
-  const now = new Date();
-  const personal = computePersonalStreak(data.personalDates, now, data.restDays);
+  // Group collective streak still uses the everyone-checked-in-today model.
   const memberArrays = data.members.map((m) =>
     data.feed.filter((c) => c.user_id === m.user_id).map((c) => c.created_at),
   );
@@ -94,7 +108,8 @@ export default async function HomePage() {
         initialComments={data.comments}
         initialPersonalDates={data.personalDates}
         initialRestDays={data.restDays}
-        initialPersonal={personal}
+        ctx={ctx}
+        suggestedGoal={suggestGoal(data.personalDates, now)}
         initialGroup={group}
         initialCheckedInToday={checkedInToday}
         showTour={showTour}

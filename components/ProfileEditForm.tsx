@@ -9,7 +9,12 @@ import { ImageCropper } from "@/components/ImageCropper";
 import { Toggle } from "@/components/Toggle";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
+import { nextWeekStartKey } from "@/lib/week";
+import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
+
+// 0 = Monday … 6 = Sunday. Localized label via a known-Monday base date.
+const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6];
 
 export function ProfileEditForm({
   userId,
@@ -18,7 +23,7 @@ export function ProfileEditForm({
   userId: string;
   profile: Profile;
 }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const router = useRouter();
   const supabase = createClient();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -30,6 +35,18 @@ export function ProfileEditForm({
   const [focusSport, setFocusSport] = useState(profile.focus_sport ?? "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
   const [showStats, setShowStats] = useState(profile.show_stats ?? true);
+  const [weeklyGoal, setWeeklyGoal] = useState<number | null>(
+    profile.weekly_goal ?? null,
+  );
+  const [restDays, setRestDays] = useState<number[]>(
+    profile.preferred_rest_days ?? [],
+  );
+
+  function toggleRestDay(d: number) {
+    setRestDays((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort(),
+    );
+  }
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -88,6 +105,16 @@ export function ProfileEditForm({
     setError(null);
     setSaving(true);
 
+    // Setting a goal for the first time activates quota rules next Monday so a
+    // current streak is never broken mid-week (Batch 5 C5).
+    const goalPatch: Record<string, unknown> = {};
+    if (weeklyGoal != null) {
+      goalPatch.weekly_goal = weeklyGoal;
+      if (!profile.quota_active_from) {
+        goalPatch.quota_active_from = nextWeekStartKey(new Date());
+      }
+    }
+
     const { error: updErr } = await supabase
       .from("profiles")
       .update({
@@ -98,6 +125,8 @@ export function ProfileEditForm({
         focus_sport: focusSport.trim() || null,
         avatar_url: avatarUrl,
         show_stats: showStats,
+        preferred_rest_days: restDays,
+        ...goalPatch,
       })
       .eq("id", userId);
 
@@ -190,6 +219,67 @@ export function ProfileEditForm({
           onChange={(e) => setFocusSport(e.target.value)}
           maxLength={80}
         />
+
+        {/* Streak goal + preferred rest days (Batch 5 C) */}
+        <div className="rounded-card border border-border bg-surface p-5">
+          <p className="text-caption font-medium uppercase tracking-wide text-text-dim">
+            {t("settings_goal_label")}
+          </p>
+          <div className="mt-3 grid grid-cols-7 gap-1.5">
+            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setWeeklyGoal(n)}
+                aria-pressed={weeklyGoal === n}
+                className={cn(
+                  "flex h-10 items-center justify-center rounded-input border text-body font-bold transition-colors",
+                  weeklyGoal === n
+                    ? "border-volt bg-volt/15 text-volt"
+                    : "border-border bg-bg text-text-muted hover:border-border-strong",
+                )}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          {weeklyGoal != null && (
+            <p className="mt-2 text-caption text-text-dim">
+              {t("goal_per_week", { n: weeklyGoal })}
+            </p>
+          )}
+
+          <p className="mt-5 text-caption font-medium uppercase tracking-wide text-text-dim">
+            {t("settings_rest_label")}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {WEEKDAYS.map((d) => {
+              const label = new Date(2026, 5, 15 + d).toLocaleString(lang, {
+                weekday: "short",
+              });
+              const on = restDays.includes(d);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleRestDay(d)}
+                  aria-pressed={on}
+                  className={cn(
+                    "rounded-pill border px-3 py-1.5 text-caption transition-colors",
+                    on
+                      ? "border-volt bg-volt/15 text-volt"
+                      : "border-border bg-bg text-text-muted hover:border-border-strong",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-caption leading-relaxed text-text-muted">
+            {t("settings_rest_hint")}
+          </p>
+        </div>
 
         {/* Privacy */}
         <div className="rounded-card border border-border bg-surface p-5">

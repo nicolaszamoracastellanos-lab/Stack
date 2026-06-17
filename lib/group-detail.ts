@@ -2,12 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { nameOf } from "@/lib/feed";
 import {
   computeGroupStreak,
-  computePersonalStreak,
   localDateKey,
   toDaySet,
   type StreakState,
 } from "@/lib/streaks";
+import { computeQuotaStreak } from "@/lib/streak-quota";
 import type { LeaderEntry } from "@/lib/groups-dashboard";
+import type { TierKey } from "@/lib/tiers";
 import type { Group } from "@/lib/types";
 
 export type WindowStat = {
@@ -58,6 +59,10 @@ type ProfileLite = {
   display_name: string | null;
   avatar_url: string | null;
   show_stats: boolean | null;
+  weekly_goal: number | null;
+  quota_active_from: string | null;
+  tier_confirmed: string | null;
+  tier_provisional: string | null;
 } | null;
 
 function daySetBack(now: Date, n: number): Set<string> {
@@ -90,7 +95,7 @@ export async function getGroupDetail(
     supabase
       .from("group_members")
       .select(
-        "user_id, profile:profiles(username, display_name, avatar_url, show_stats)",
+        "user_id, profile:profiles(username, display_name, avatar_url, show_stats, weekly_goal, quota_active_from, tier_confirmed, tier_provisional)",
       )
       .eq("group_id", groupId),
     supabase
@@ -139,8 +144,16 @@ export async function getGroupDetail(
         const restDays = Array.isArray(restRes.data)
           ? (restRes.data as { day: string }[]).map((r) => r.day)
           : [];
-        streak = computePersonalStreak(globalDates, now, restDays).count;
+        streak = computeQuotaStreak(globalDates, {
+          weeklyGoal: profile?.weekly_goal ?? null,
+          quotaActiveFromKey: profile?.quota_active_from ?? null,
+          restDayKeys: restDays,
+          now,
+        }).count;
       }
+      const tier = (showStats
+        ? profile?.tier_confirmed ?? profile?.tier_provisional ?? null
+        : null) as TierKey | null;
 
       return {
         userId: uid,
@@ -153,6 +166,7 @@ export async function getGroupDetail(
           : 0,
         isYou,
         showStats,
+        tier,
       };
     }),
   );

@@ -5,51 +5,68 @@ import Link from "next/link";
 import { Button } from "@/components/Button";
 import { ConsistencyRing } from "@/components/ConsistencyRing";
 import { StreakBadge } from "@/components/StreakBadge";
+import { TierBadge } from "@/components/TierBadge";
+import { AtRiskAlert } from "@/components/AtRiskAlert";
+import { GoalSetup } from "@/components/GoalSetup";
+import { RestPrompt } from "@/components/RestPrompt";
 import { Heatmap } from "@/components/Heatmap";
 import { JoinByCode } from "@/components/JoinByCode";
 import { useLanguage } from "@/lib/language-context";
 import { useCountUp } from "@/lib/use-count-up";
-import { computePersonalStreak, localDateKey, toDaySet } from "@/lib/streaks";
+import { localDateKey, toDaySet } from "@/lib/streaks";
+import { computeQuotaStreak } from "@/lib/streak-quota";
+import type { StreakContext } from "@/lib/streak-context";
 import { weekDayKeys } from "@/lib/week";
 
 const PROMPT_SESSION_KEY = "stack_solo_prompt_seen";
 
 /**
- * Home for a user with zero groups (Batch 5 B1/B3). They still get full personal
- * value — streak, consistency ring, heatmap ("The Stack") — all from their solo
- * check-ins, plus two large primary actions into a group and a gentle, once-per
- * -session nudge. The app never feels dead, and the path into a group is obvious
- * without being forced.
+ * Home for a user with zero groups (Batch 5 B1/B3 + C). Full personal value —
+ * quota streak, consistency ring, heatmap, tier — plus two large primary
+ * actions into a group and a gentle once-per-session nudge.
  */
 export function SoloHome({
+  userId,
   personalDates,
   restDays,
+  ctx,
+  suggestedGoal,
 }: {
+  userId: string;
   personalDates: string[];
   restDays: string[];
+  ctx: StreakContext;
+  suggestedGoal: number;
 }) {
   const { t } = useLanguage();
 
   const streak = useMemo(
-    () => computePersonalStreak(personalDates, new Date(), restDays),
-    [personalDates, restDays],
+    () =>
+      computeQuotaStreak(personalDates, {
+        weeklyGoal: ctx.weeklyGoal,
+        quotaActiveFromKey: ctx.quotaActiveFromKey,
+        restDayKeys: restDays,
+        now: new Date(),
+      }),
+    [personalDates, restDays, ctx.weeklyGoal, ctx.quotaActiveFromKey],
   );
   const displayedStreak = useCountUp(streak.count);
 
+  const goalDenom = ctx.weeklyGoal && ctx.weeklyGoal > 0 ? ctx.weeklyGoal : 7;
   const consistency = useMemo(() => {
     const set = toDaySet(personalDates);
     const days = weekDayKeys(localDateKey(new Date())).filter((k) =>
       set.has(k),
     ).length;
-    return { days, value: days / 7, percent: Math.round((days / 7) * 100) };
-  }, [personalDates]);
+    const value = Math.min(1, days / goalDenom);
+    return { days, value, percent: Math.round(value * 100) };
+  }, [personalDates, goalDenom]);
 
   const checkedInToday = useMemo(
     () => toDaySet(personalDates).has(localDateKey(new Date())),
     [personalDates],
   );
 
-  // Heatmap counts: posts per local day (solo dates are already deduped by post).
   const counts = useMemo(() => {
     const out: Record<string, number> = {};
     for (const d of personalDates) {
@@ -60,7 +77,6 @@ export function SoloHome({
   }, [personalDates]);
   const restSet = useMemo(() => new Set(restDays), [restDays]);
 
-  // Recurring-but-gentle prompt: shown at most once per browser session.
   const [showPrompt, setShowPrompt] = useState(false);
   useEffect(() => {
     try {
@@ -69,21 +85,31 @@ export function SoloHome({
         sessionStorage.setItem(PROMPT_SESSION_KEY, "1");
       }
     } catch {
-      /* sessionStorage unavailable (private mode) — just skip the prompt */
+      /* sessionStorage unavailable — skip the prompt */
     }
   }, []);
 
+  const tierKey = (ctx.confirmedTier ?? ctx.provisionalTier) ?? null;
+
   return (
     <div className="flex flex-col gap-8">
+      {ctx.needsGoal && <GoalSetup userId={userId} suggested={suggestedGoal} />}
+
+      {streak.state === "at-risk" && <AtRiskAlert />}
+
+      <RestPrompt
+        userId={userId}
+        preferredRestDays={ctx.preferredRestDays}
+        loggedDayKeys={personalDates}
+      />
+
       {showPrompt && (
         <Link
           href="/groups/new"
           className="flex items-center gap-3 rounded-card border border-volt/30 bg-volt/10 px-4 py-3 transition-colors hover:bg-volt/15"
         >
           <span aria-hidden className="text-xl">🤝</span>
-          <p className="text-label font-medium text-volt">
-            {t("solo_prompt")}
-          </p>
+          <p className="text-label font-medium text-volt">{t("solo_prompt")}</p>
         </Link>
       )}
 
@@ -93,7 +119,7 @@ export function SoloHome({
           value={consistency.value}
           percent={consistency.percent}
           label={t("home_consistency")}
-          sublabel={`${consistency.days}/7`}
+          sublabel={`${consistency.days}/${goalDenom}`}
         />
         <div className="mt-6 w-full">
           <div className="rounded-card border border-border bg-surface p-5">
@@ -103,6 +129,9 @@ export function SoloHome({
               state={streak.state}
               size="md"
             />
+            <div className="mt-3">
+              <TierBadge tierKey={tierKey} provisional={!ctx.confirmedTier} size="sm" />
+            </div>
           </div>
         </div>
       </section>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { useLanguage } from "@/lib/language-context";
+import { tierByKey } from "@/lib/tiers";
 import type { LeaderEntry } from "@/lib/groups-dashboard";
 
 /** Small 7-day consistency ring (value 0–1). */
@@ -75,10 +76,23 @@ export function Leaderboard({
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-body font-medium text-text">
-                {m.name}
+              <p className="flex items-center gap-1.5 truncate text-body font-medium text-text">
+                {/* Tier colour dot — disambiguates equal streak lengths (C4). */}
+                {m.tier && (
+                  <span
+                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-pill"
+                    title={m.tier}
+                    style={{
+                      backgroundColor: tierByKey(m.tier)?.hex,
+                      boxShadow: tierByKey(m.tier)?.outline
+                        ? `0 0 0 1px ${tierByKey(m.tier)!.outline}`
+                        : undefined,
+                    }}
+                  />
+                )}
+                <span className="truncate">{m.name}</span>
                 {m.isYou && (
-                  <span className="ml-1.5 text-caption text-text-dim">
+                  <span className="shrink-0 text-caption text-text-dim">
                     ({t("groups_you_tag")})
                   </span>
                 )}

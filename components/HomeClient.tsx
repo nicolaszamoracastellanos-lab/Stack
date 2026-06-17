@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { StreakBadge } from "@/components/StreakBadge";
 import { ConsistencyRing } from "@/components/ConsistencyRing";
+import { TierBadge } from "@/components/TierBadge";
+import { AtRiskAlert } from "@/components/AtRiskAlert";
+import { GoalSetup } from "@/components/GoalSetup";
+import { RestPrompt } from "@/components/RestPrompt";
 import { FeedItem, type FeedItemData } from "@/components/FeedItem";
 import { NudgeBanner } from "@/components/NudgeBanner";
 import { Tour } from "@/components/Tour";
@@ -15,12 +19,13 @@ import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET } from "@/lib/storage";
 import { deleteCheckinPost } from "@/lib/checkins";
 import {
-  computePersonalStreak,
   computeGroupStreak,
   localDateKey,
   toDaySet,
   type Streak,
 } from "@/lib/streaks";
+import { computeQuotaStreak, type QuotaStreak } from "@/lib/streak-quota";
+import type { StreakContext } from "@/lib/streak-context";
 import { weekDayKeys } from "@/lib/week";
 import type {
   FeedCheckin,
@@ -44,7 +49,8 @@ export function HomeClient({
   initialComments,
   initialPersonalDates,
   initialRestDays,
-  initialPersonal,
+  ctx,
+  suggestedGoal,
   initialGroup,
   initialCheckedInToday,
   showTour = false,
@@ -57,7 +63,8 @@ export function HomeClient({
   initialComments: FeedComment[];
   initialPersonalDates: string[];
   initialRestDays: string[];
-  initialPersonal: Streak;
+  ctx: StreakContext;
+  suggestedGoal: number;
   initialGroup: Streak;
   initialCheckedInToday: boolean;
   showTour?: boolean;
@@ -83,7 +90,8 @@ export function HomeClient({
 
   // Streak state. Seeded from server-computed values (so SSR and first client
   // render match), then recomputed client-side with the device's local "today".
-  const [personal, setPersonal] = useState<Streak>(initialPersonal);
+  // Personal streak is now the weekly-quota streak (Batch 5 C).
+  const [personal, setPersonal] = useState<QuotaStreak>(ctx.streak);
   const [group, setGroup] = useState<Streak>(initialGroup);
   const [checkedInToday, setCheckedInToday] = useState(initialCheckedInToday);
 
@@ -105,13 +113,20 @@ export function HomeClient({
   // Recompute streaks whenever the underlying data changes, using local time.
   useEffect(() => {
     const now = new Date();
-    setPersonal(computePersonalStreak(personalDates, now, restDays));
+    setPersonal(
+      computeQuotaStreak(personalDates, {
+        weeklyGoal: ctx.weeklyGoal,
+        quotaActiveFromKey: ctx.quotaActiveFromKey,
+        restDayKeys: restDays,
+        now,
+      }),
+    );
     const memberArrays = members.map((m) =>
       feed.filter((c) => c.user_id === m.user_id).map((c) => c.created_at),
     );
     setGroup(computeGroupStreak(memberArrays, now));
     setCheckedInToday(toDaySet(personalDates).has(localDateKey(now)));
-  }, [personalDates, feed, members, restDays]);
+  }, [personalDates, feed, members, restDays, ctx.weeklyGoal, ctx.quotaActiveFromKey]);
 
   // Rest day (§9): you can mark today off to protect the streak. Weekly
   // allowance of one keeps it from feeling like cheating.
@@ -357,19 +372,19 @@ export function HomeClient({
 
   const displayedStreak = useCountUp(personal.count);
 
-  // Weekly consistency: share of the current Mon–Sun week the user checked in
-  // (any group). Resets Monday local midnight (Batch 5 A2). Stage C will make
-  // the denominator the user's weekly goal Q rather than a flat 7.
+  // Weekly consistency: progress toward the weekly goal Q (days logged this
+  // Mon–Sun week / Q). Falls back to /7 if no goal is set. Resets Monday.
+  const goalDenom = ctx.weeklyGoal && ctx.weeklyGoal > 0 ? ctx.weeklyGoal : 7;
   const consistency = useMemo(() => {
     const set = toDaySet(personalDates);
     const days = weekDayKeys(localDateKey(new Date())).filter((k) =>
       set.has(k),
     ).length;
-    return { days, value: days / 7, percent: Math.round((days / 7) * 100) };
-  }, [personalDates]);
+    const value = Math.min(1, days / goalDenom);
+    return { days, value, percent: Math.round(value * 100) };
+  }, [personalDates, goalDenom]);
 
-  // Status line under the streak. Only surfaced for the costly states — when
-  // the streak is alive the green confirmation CTA already says "you showed up".
+  // Status line under the streak. Only surfaced for the costly states.
   const statusLine =
     personal.state === "broken"
       ? { text: t("streak_broken"), tone: "text-danger" }
@@ -377,13 +392,28 @@ export function HomeClient({
         ? { text: t("streak_at_risk"), tone: "text-danger" }
         : null;
 
+  const tierKey = (ctx.confirmedTier ?? ctx.provisionalTier) ?? null;
+
   return (
     <div className="flex flex-col gap-8">
       {/* First-run feature tour (Onboarding Part 2). */}
       {tourActive && <Tour onComplete={completeTour} />}
 
+      {/* Set-your-goal (migration / new user) — one screen, skippable. */}
+      {ctx.needsGoal && <GoalSetup userId={userId} suggested={suggestedGoal} />}
+
       {/* Someone nudged you today (Section 6). */}
       <NudgeBanner userId={userId} />
+
+      {/* At-risk: about to lose your streak (Batch 5 C2). */}
+      {personal.state === "at-risk" && <AtRiskAlert />}
+
+      {/* Smart return prompt for preferred rest days (Batch 5 C3). */}
+      <RestPrompt
+        userId={userId}
+        preferredRestDays={ctx.preferredRestDays}
+        loggedDayKeys={personalDates}
+      />
 
       {/* Hero: weekly consistency ring */}
       <section className="flex flex-col items-center">
@@ -392,7 +422,7 @@ export function HomeClient({
             value={consistency.value}
             percent={consistency.percent}
             label={t("home_consistency")}
-            sublabel={`${consistency.days}/7`}
+            sublabel={`${consistency.days}/${goalDenom}`}
           />
         </div>
         {statusLine && (
@@ -410,6 +440,9 @@ export function HomeClient({
               state={personal.state}
               size="md"
             />
+            <div className="mt-3">
+              <TierBadge tierKey={tierKey} provisional={!ctx.confirmedTier} size="sm" />
+            </div>
           </div>
           <div className="rounded-card border border-border bg-surface p-5">
             <StreakBadge
