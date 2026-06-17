@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { FounderEnv } from "@/lib/founder-env";
+import { NotificationsSection } from "@/components/founder/NotificationsSection";
 
 /**
  * Founder/QA harness panel (STACK_FOUNDER_MODE). Internal tool — styled with a
@@ -13,10 +14,12 @@ export function FounderPanel({
   userId,
   isFounder,
   env,
+  subCount,
 }: {
   userId: string;
   isFounder: boolean;
   env: FounderEnv | null;
+  subCount: number;
 }) {
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
@@ -81,6 +84,9 @@ export function FounderPanel({
             </p>
           </section>
         )}
+
+        {/* §3 — notifications test (founder's own device only) */}
+        <NotificationsSection subCount={subCount} />
       </div>
     </main>
   );

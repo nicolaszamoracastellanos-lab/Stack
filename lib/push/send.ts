@@ -57,7 +57,7 @@ export async function sendPushToUser(
   type: NotificationType,
   vars: CopyVars = {},
   url = "/home",
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; lang?: Lang } = {},
 ): Promise<number> {
   if (!ensureVapid()) return 0;
 
@@ -85,9 +85,41 @@ export async function sendPushToUser(
     .eq("user_id", userId);
   if (!subs || subs.length === 0) return 0;
 
-  const lang: Lang = prefs.language === "es" ? "es" : "en";
+  const lang: Lang =
+    opts.lang ?? (prefs.language === "es" ? "es" : "en");
   const payload = JSON.stringify(buildNotification(type, lang, vars, url));
+  return deliver(admin, subs, payload);
+}
 
+/**
+ * Deliver a RAW payload (arbitrary title/body) to a user's own subscriptions —
+ * used by the founder "raw test push" tool, scoped to the founder's own id.
+ */
+export async function sendRawToUser(
+  admin: SupabaseClient,
+  userId: string,
+  payload: { title: string; body: string; url?: string },
+): Promise<number> {
+  if (!ensureVapid()) return 0;
+  const { data: subs } = await admin
+    .from("push_subscriptions")
+    .select("endpoint, p256dh, auth")
+    .eq("user_id", userId);
+  if (!subs || subs.length === 0) return 0;
+  return deliver(
+    admin,
+    subs,
+    JSON.stringify({ ...payload, url: payload.url ?? "/home", tag: "raw" }),
+  );
+}
+
+type SubRow = { endpoint: string; p256dh: string; auth: string };
+
+async function deliver(
+  admin: SupabaseClient,
+  subs: SubRow[],
+  payload: string,
+): Promise<number> {
   let sent = 0;
   const dead: string[] = [];
   await Promise.all(
@@ -95,10 +127,7 @@ export async function sendPushToUser(
       const endpoint = s.endpoint as string;
       try {
         await webpush.sendNotification(
-          {
-            endpoint,
-            keys: { p256dh: s.p256dh as string, auth: s.auth as string },
-          },
+          { endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           payload,
         );
         sent++;
@@ -108,7 +137,6 @@ export async function sendPushToUser(
       }
     }),
   );
-
   if (dead.length) {
     await admin.from("push_subscriptions").delete().in("endpoint", dead);
   }

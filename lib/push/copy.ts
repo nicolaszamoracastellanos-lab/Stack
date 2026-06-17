@@ -8,8 +8,29 @@ import type { NotificationType, PushPayload, Lang } from "@/lib/push/types";
 export type CopyVars = {
   name?: string;
   group?: string;
+  /** Tier display NAME (already localized), used by tier_projection copy. */
   tier?: string;
+  /** Projection direction for tier_projection. */
+  direction?: "up" | "down";
+  /** True for a confirmed tier change ("You earned X"). */
+  confirmed?: boolean;
 };
+
+const TIER_NAMES: Record<string, { en: string; es: string }> = {
+  gold: { en: "Gold", es: "Oro" },
+  silver: { en: "Silver", es: "Plata" },
+  volt: { en: "Volt", es: "Volt" },
+  bronze: { en: "Bronze", es: "Bronce" },
+  purple: { en: "Purple", es: "Púrpura" },
+  amber: { en: "Amber", es: "Ámbar" },
+  slate: { en: "Slate", es: "Pizarra" },
+};
+
+/** Localized tier display name (server-side; mirrors the in-app i18n names). */
+export function localizedTierName(key: string, lang: Lang): string {
+  const t = TIER_NAMES[key];
+  return t ? (lang === "es" ? t.es : t.en) : key;
+}
 
 type Builder = (lang: Lang, v: CopyVars) => { title: string; body: string };
 
@@ -64,20 +85,42 @@ const BUILDERS: Record<NotificationType, Builder> = {
       `${v.name ?? "Alguien"} te dio un empujón para entrenar.`,
     ),
   }),
-  tier_projection: (lang, v) => ({
-    title: "Stack",
-    body: v.tier
-      ? pick(
+  tier_projection: (lang, v) => {
+    if (v.confirmed && v.tier) {
+      return {
+        title: "Stack",
+        body: pick(lang, `You earned ${v.tier} 🟢`, `Alcanzaste ${v.tier} 🟢`),
+      };
+    }
+    if (v.direction === "up") {
+      return {
+        title: "Stack",
+        body: pick(
           lang,
-          `You earned ${v.tier}. Keep it up.`,
-          `Alcanzaste ${v.tier}. Sigue así.`,
-        )
-      : pick(
-          lang,
-          "Your pace is shifting your tier — check your progress.",
-          "Tu ritmo está moviendo tu nivel — revisa tu progreso.",
+          `You're going harder than your goal — keep it up and you'll reach ${v.tier ?? "the next tier"}.`,
+          `Vas más fuerte que tu meta — sigue así y llegarás a ${v.tier ?? "el siguiente nivel"}.`,
         ),
-  }),
+      };
+    }
+    if (v.direction === "down") {
+      return {
+        title: "Stack",
+        body: pick(
+          lang,
+          `This week was lighter. If it continues, your tier steps down to ${v.tier ?? "a lower tier"}.`,
+          `Esta semana fue más floja. Si sigue así, tu nivel baja a ${v.tier ?? "uno menor"}.`,
+        ),
+      };
+    }
+    return {
+      title: "Stack",
+      body: pick(
+        lang,
+        "Your pace is shifting your tier — check your progress.",
+        "Tu ritmo está moviendo tu nivel — revisa tu progreso.",
+      ),
+    };
+  },
 };
 
 export function buildNotification(
