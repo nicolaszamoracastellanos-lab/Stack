@@ -42,7 +42,7 @@ function localHour(tz: string | null): number {
   }
 }
 
-export async function POST(req: Request) {
+async function handle(req: Request) {
   if (!authorized(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
@@ -130,3 +130,8 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true, candidates: userIds.length, fired });
 }
+
+// Vercel Cron invokes endpoints with GET (and auto-attaches the CRON_SECRET as
+// a Bearer token when set). POST is kept for external schedulers / manual runs.
+export const GET = handle;
+export const POST = handle;
