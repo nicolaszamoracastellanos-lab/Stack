@@ -102,9 +102,51 @@ create policy "members update proposals" on rule_change_proposals
   for update using (public.is_group_member(group_id))
   with check (public.is_group_member(group_id));
 
--- Rule changes apply to the groups row only on unanimous approval; the existing
--- groups UPDATE path is the creator. // FUTURE: a SECURITY DEFINER apply-fn so
--- any member can commit an approved change. For now the admin applies it.
+-- Apply an approved rule-change proposal to the group (Batch 4 §5). SECURITY
+-- DEFINER so any member can commit it once unanimous (the groups UPDATE policy
+-- is creator-only). Guards: pending, caller is a member, and every member has
+-- approved. proposed_changes carries the full pact spec.
+create or replace function public.apply_rule_proposal(_proposal_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  p public.rule_change_proposals;
+  c jsonb;
+  mc int;
+begin
+  select * into p from rule_change_proposals where id = _proposal_id;
+  if p.id is null or p.status <> 'pending' then return; end if;
+  if not exists (
+    select 1 from group_members where group_id = p.group_id and user_id = auth.uid()
+  ) then return; end if;
+  select count(*) into mc from group_members where group_id = p.group_id;
+  if coalesce(array_length(p.approvals, 1), 0) < mc then return; end if;
+
+  c := p.proposed_changes;
+  update groups set
+    intention = c->>'intention',
+    motivation = c->>'motivation',
+    end_goal = c->>'end_goal',
+    meaning = c->>'meaning',
+    workouts_per_week = (c->>'workouts_per_week')::int,
+    allowed_disciplines = (select array(select jsonb_array_elements_text(c->'allowed_disciplines'))),
+    duration_type = c->>'duration_type',
+    duration_weeks = nullif(c->>'duration_weeks', '')::int,
+    pact_end_date = nullif(c->>'pact_end_date', '')::date,
+    stake_type = nullif(c->>'stake_type', ''),
+    stake_value = nullif(c->>'stake_value', ''),
+    who_pays = nullif(c->>'who_pays', '')
+  where id = p.group_id;
+
+  update rule_change_proposals set status = 'approved', resolved_at = now()
+  where id = _proposal_id;
+end;
+$$;
+
+grant execute on function public.apply_rule_proposal(uuid) to authenticated;
 
 -- Live updates for the ledger + proposals (same realtime pattern as the feed).
 do $$

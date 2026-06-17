@@ -7,7 +7,7 @@ import { Input } from "@/components/Input";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
-import { SPORTS, type Option } from "@/lib/workout-options";
+import { SPORTS, labelFor, type Option } from "@/lib/workout-options";
 import { DURATION_PRESETS, WHO_PAYS, type WhoPays } from "@/lib/pacts";
 import { localDateKey } from "@/lib/streaks";
 import { cn } from "@/lib/utils";
@@ -51,7 +51,15 @@ const inputCls =
  * (workouts/week, allowed disciplines, duration, stake, who pays). Admin-only;
  * saves onto the group row.
  */
-export function PactEditor({ group, isEdit }: { group: Group; isEdit: boolean }) {
+export function PactEditor({
+  group,
+  isEdit,
+  memberCount,
+}: {
+  group: Group;
+  isEdit: boolean;
+  memberCount: number;
+}) {
   const { t, lang } = useLanguage();
   const router = useRouter();
 
@@ -122,29 +130,57 @@ export function PactEditor({ group, isEdit }: { group: Group; isEdit: boolean })
       endKey = localDateKey(end);
     }
 
-    const { error: upErr } = await supabase
-      .from("groups")
-      .update({
-        intention: intention.trim() || null,
-        motivation: motivation.trim() || null,
-        end_goal: endGoal.trim() || null,
-        meaning: meaning.trim() || null,
-        workouts_per_week: workouts,
-        allowed_disciplines: allowAll ? [] : Array.from(disciplines),
-        duration_type: durationType,
-        duration_weeks: durationType === "fixed" ? weeks : null,
-        pact_start_date: startKey,
-        pact_end_date: endKey,
-        stake_type: hasStake ? stake : null,
-        stake_value: hasStake ? stakeValue.trim() : null,
-        who_pays: hasStake ? whoPays : null,
-      })
-      .eq("id", group.id);
+    const allowedList = allowAll ? [] : Array.from(disciplines);
+    const payload = {
+      intention: intention.trim() || null,
+      motivation: motivation.trim() || null,
+      end_goal: endGoal.trim() || null,
+      meaning: meaning.trim() || null,
+      workouts_per_week: workouts,
+      allowed_disciplines: allowedList,
+      duration_type: durationType,
+      duration_weeks: durationType === "fixed" ? weeks : null,
+      pact_start_date: startKey,
+      pact_end_date: endKey,
+      stake_type: hasStake ? stake : null,
+      stake_value: hasStake ? stakeValue.trim() : null,
+      who_pays: hasStake ? whoPays : null,
+    };
 
-    if (upErr) {
-      setError(`${upErr.code ?? "ERR"}: ${upErr.message}`);
-      setSaving(false);
-      return;
+    // Changing an EXISTING pact with >1 member can't be unilateral — it becomes
+    // a proposal that every member must approve (§5). First-time setup, or a
+    // solo group, applies directly.
+    const needsVote = isEdit && memberCount > 1;
+    if (needsVote) {
+      const summary = [
+        t("pact_per_week", { n: workouts }),
+        allowAll
+          ? t("pact_all_disciplines")
+          : allowedList.map((k) => labelFor(SPORTS, k, lang)).join(", "),
+        durationType === "ongoing" ? t("pact_duration_ongoing") : t("pact_weeks", { n: weeks }),
+        ...(hasStake ? [stakeValue.trim()] : []),
+      ].join(" · ");
+      const { error: pErr } = await supabase.from("rule_change_proposals").insert({
+        group_id: group.id,
+        proposed_by: group.created_by,
+        // Keep the original start date; everything else is the proposed spec.
+        proposed_changes: { ...payload, pact_start_date: group.pact_start_date ?? startKey },
+        summary,
+        approvals: [group.created_by],
+        status: "pending",
+      });
+      if (pErr) {
+        setError(`${pErr.code ?? "ERR"}: ${pErr.message}`);
+        setSaving(false);
+        return;
+      }
+    } else {
+      const { error: upErr } = await supabase.from("groups").update(payload).eq("id", group.id);
+      if (upErr) {
+        setError(`${upErr.code ?? "ERR"}: ${upErr.message}`);
+        setSaving(false);
+        return;
+      }
     }
     router.push(`/groups/${group.id}`);
     router.refresh();

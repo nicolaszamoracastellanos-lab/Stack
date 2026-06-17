@@ -9,6 +9,7 @@ import { RecapCard } from "@/components/RecapCard";
 import { GroupChat } from "@/components/GroupChat";
 import { PactSection } from "@/components/PactSection";
 import { StakesLedger } from "@/components/StakesLedger";
+import { ProposalCard } from "@/components/ProposalCard";
 import { isPact } from "@/lib/pacts";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
@@ -164,6 +165,13 @@ export function GroupDetail({
       <div className="mb-8">
         <RecapCard data={data} />
       </div>
+
+      {/* Pending rule-change proposal — prominent (Batch 4 §5) */}
+      {data.proposal && (
+        <div className="mb-8">
+          <ProposalCard proposal={data.proposal} />
+        </div>
+      )}
 
       {/* The pact: summary + about + admin setup/edit (Batch 4) */}
       <div className="mb-8">

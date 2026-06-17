@@ -27,6 +27,16 @@ export type DebtEntry = {
   settledAt: string | null;
 };
 
+export type ProposalView = {
+  id: string;
+  summary: string | null;
+  proposerName: string;
+  approvedCount: number;
+  memberCount: number;
+  hasApproved: boolean;
+  waitingNames: string[];
+};
+
 export type GroupDetailData = {
   group: Group;
   isCreator: boolean;
@@ -39,6 +49,8 @@ export type GroupDetailData = {
   windows: { week: WindowStat; month: WindowStat; all: WindowStat };
   /** Stakes ledger (Batch 4): outstanding debts up top, settled history below. */
   debts: { outstanding: DebtEntry[]; settled: DebtEntry[] };
+  /** A pending rule-change proposal awaiting unanimous approval (§5). */
+  proposal: ProposalView | null;
 };
 
 type ProfileLite = {
@@ -228,10 +240,51 @@ export async function getGroupDetail(
     };
   });
 
+  // Pending rule-change proposal (§5).
+  const { data: propRows } = await supabase
+    .from("rule_change_proposals")
+    .select(
+      "id, proposed_by, summary, approvals, proposer:profiles!rule_change_proposals_proposed_by_fkey(username, display_name)",
+    )
+    .eq("group_id", groupId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  let proposal: ProposalView | null = null;
+  const pr = (propRows ?? [])[0] as unknown as
+    | {
+        id: string;
+        summary: string | null;
+        approvals: string[] | null;
+        proposer: { username: string; display_name: string | null } | null;
+      }
+    | undefined;
+  if (pr) {
+    const approvals = pr.approvals ?? [];
+    const waiting = rows
+      .map((row) => ({
+        uid: (row as { user_id: string }).user_id,
+        name: nameOf((row as unknown as { profile: ProfileLite }).profile),
+      }))
+      .filter((m) => !approvals.includes(m.uid))
+      .map((m) => m.name);
+    proposal = {
+      id: pr.id,
+      summary: pr.summary,
+      proposerName: nameOf(pr.proposer),
+      approvedCount: approvals.length,
+      memberCount: rows.length,
+      hasApproved: approvals.includes(userId),
+      waitingNames: waiting,
+    };
+  }
+
   return {
     group,
     isCreator: group.created_by === userId,
     inviteLink: `${baseUrl}/join/${group.invite_code}`,
+    proposal,
     debts: {
       outstanding: allDebts.filter((d) => d.status === "outstanding"),
       settled: allDebts.filter((d) => d.status === "settled"),

@@ -24,5 +24,16 @@ export default async function PactPage({
   if (!group) redirect("/groups");
   if (group.created_by !== userId) redirect(`/groups/${params.id}`);
 
-  return <PactEditor group={group as Group} isEdit={isPact(group as Group)} />;
+  const { count } = await supabase
+    .from("group_members")
+    .select("user_id", { count: "exact", head: true })
+    .eq("group_id", params.id);
+
+  return (
+    <PactEditor
+      group={group as Group}
+      isEdit={isPact(group as Group)}
+      memberCount={count ?? 1}
+    />
+  );
 }
