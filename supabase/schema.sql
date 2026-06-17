@@ -63,6 +63,21 @@ create table if not exists groups (
   created_at timestamptz default now()
 );
 
+-- Pact: identity + rules (Batch 4), all optional. Pact = workouts_per_week set.
+alter table groups add column if not exists intention text;
+alter table groups add column if not exists motivation text;
+alter table groups add column if not exists end_goal text;
+alter table groups add column if not exists meaning text;
+alter table groups add column if not exists workouts_per_week int;
+alter table groups add column if not exists allowed_disciplines text[] not null default '{}';
+alter table groups add column if not exists duration_type text;
+alter table groups add column if not exists duration_weeks int;
+alter table groups add column if not exists pact_start_date date;
+alter table groups add column if not exists pact_end_date date;
+alter table groups add column if not exists stake_type text;
+alter table groups add column if not exists stake_value text;
+alter table groups add column if not exists who_pays text;
+
 create table if not exists group_members (
   id uuid default gen_random_uuid() primary key,
   group_id uuid references groups(id) on delete cascade not null,
@@ -145,6 +160,36 @@ create table if not exists rest_days (
   unique (user_id, day)
 );
 create index if not exists rest_days_user_idx on rest_days (user_id, day);
+
+-- Stakes ledger + rule-change proposals (Batch 4, honor system).
+create table if not exists stakes_ledger (
+  id uuid default gen_random_uuid() primary key,
+  group_id uuid references groups(id) on delete cascade not null,
+  debtor_user uuid references profiles(id) on delete cascade not null,
+  owed_to uuid references profiles(id) on delete set null,
+  reason text not null,
+  stake_description text not null,
+  status text not null default 'outstanding',
+  period_key text,
+  created_at timestamptz default now(),
+  settled_at timestamptz,
+  settled_by uuid references profiles(id) on delete set null,
+  unique (group_id, debtor_user, period_key)
+);
+create index if not exists stakes_ledger_group_idx on stakes_ledger (group_id, status, created_at desc);
+
+create table if not exists rule_change_proposals (
+  id uuid default gen_random_uuid() primary key,
+  group_id uuid references groups(id) on delete cascade not null,
+  proposed_by uuid references profiles(id) on delete cascade not null,
+  proposed_changes jsonb not null,
+  summary text,
+  approvals uuid[] not null default '{}',
+  status text not null default 'pending',
+  created_at timestamptz default now(),
+  resolved_at timestamptz
+);
+create index if not exists proposals_group_idx on rule_change_proposals (group_id, status, created_at desc);
 
 -- Helpful indexes for the feed / streak queries.
 create index if not exists checkins_group_created_idx on checkins (group_id, created_at desc);
@@ -266,6 +311,8 @@ alter table comments enable row level security;
 alter table nudges enable row level security;
 alter table messages enable row level security;
 alter table rest_days enable row level security;
+alter table stakes_ledger enable row level security;
+alter table rule_change_proposals enable row level security;
 
 -- Drop existing policies so this file can be re-run cleanly in dev.
 do $$
@@ -274,7 +321,7 @@ begin
   for r in
     select policyname, tablename from pg_policies
     where schemaname = 'public'
-      and tablename in ('profiles','groups','group_members','checkins','reactions','comments','nudges','messages','rest_days')
+      and tablename in ('profiles','groups','group_members','checkins','reactions','comments','nudges','messages','rest_days','stakes_ledger','rule_change_proposals')
   loop
     execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
   end loop;
@@ -295,6 +342,10 @@ create policy "members read their groups" on groups
   );
 create policy "authenticated create groups" on groups
   for insert with check (auth.uid() = created_by);
+-- Creator (admin) edits the group's pact rules/identity (Batch 4).
+create policy "creator updates group" on groups
+  for update using (created_by = auth.uid())
+  with check (created_by = auth.uid());
 -- Only the creator can delete a group (cascades to members/checkins/reactions).
 create policy "creator deletes group" on groups
   for delete using (auth.uid() = created_by);
@@ -383,6 +434,24 @@ create policy "insert own rest days" on rest_days
 create policy "delete own rest days" on rest_days
   for delete using (user_id = auth.uid());
 
+-- STAKES LEDGER + PROPOSALS (Batch 4): group members only.
+create policy "members read ledger" on stakes_ledger
+  for select using (public.is_group_member(group_id));
+create policy "members write ledger" on stakes_ledger
+  for insert with check (public.is_group_member(group_id));
+create policy "members update ledger" on stakes_ledger
+  for update using (public.is_group_member(group_id))
+  with check (public.is_group_member(group_id));
+create policy "members read proposals" on rule_change_proposals
+  for select using (public.is_group_member(group_id));
+create policy "members create proposals" on rule_change_proposals
+  for insert with check (
+    proposed_by = auth.uid() and public.is_group_member(group_id)
+  );
+create policy "members update proposals" on rule_change_proposals
+  for update using (public.is_group_member(group_id))
+  with check (public.is_group_member(group_id));
+
 -- ----------------------------------------------------------------------------
 -- REALTIME
 -- Add the feed tables to the realtime publication so the home feed updates
@@ -404,6 +473,14 @@ begin
   end;
   begin
     alter publication supabase_realtime add table messages;
+  exception when duplicate_object then null;
+  end;
+  begin
+    alter publication supabase_realtime add table stakes_ledger;
+  exception when duplicate_object then null;
+  end;
+  begin
+    alter publication supabase_realtime add table rule_change_proposals;
   exception when duplicate_object then null;
   end;
 end $$;

@@ -28,6 +28,21 @@ export type Group = {
   invite_code: string;
   created_by: string;
   created_at: string;
+  // Pact identity (Batch 4) — all optional.
+  intention: string | null;
+  motivation: string | null;
+  end_goal: string | null;
+  meaning: string | null;
+  // Pact rules — workouts_per_week set ⇒ the group is a pact.
+  workouts_per_week: number | null;
+  allowed_disciplines: string[];
+  duration_type: "fixed" | "ongoing" | null;
+  duration_weeks: number | null;
+  pact_start_date: string | null;
+  pact_end_date: string | null;
+  stake_type: "money" | "favor" | "custom" | null;
+  stake_value: string | null;
+  who_pays: "breaker" | "any_misser" | "last_place" | null;
 };
 
 export type GroupMember = {

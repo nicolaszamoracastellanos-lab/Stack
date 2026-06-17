@@ -7,6 +7,7 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { NudgeButton } from "@/components/NudgeButton";
 import { RecapCard } from "@/components/RecapCard";
 import { GroupChat } from "@/components/GroupChat";
+import { PactSection } from "@/components/PactSection";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -160,6 +161,11 @@ export function GroupDetail({
       {/* Weekly recap (Section 7) */}
       <div className="mb-8">
         <RecapCard data={data} />
+      </div>
+
+      {/* The pact: summary + about + admin setup/edit (Batch 4) */}
+      <div className="mb-8">
+        <PactSection group={data.group} isCreator={data.isCreator} />
       </div>
 
       {/* SECTION A — group stats */}
