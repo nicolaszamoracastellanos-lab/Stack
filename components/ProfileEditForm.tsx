@@ -311,6 +311,20 @@ export function ProfileEditForm({
           <span aria-hidden className="text-text-dim">→</span>
         </Link>
 
+        {/* Founder/QA entry — shown only to founders (real gate is server-side
+            on /founder; this is just tidy UI hiding). */}
+        {profile.is_founder && (
+          <Link
+            href="/founder"
+            className="flex items-center justify-between rounded-card border border-volt/40 bg-volt/5 px-4 py-3 text-body text-volt hover:border-volt/70"
+          >
+            <span className="font-mono text-label uppercase tracking-wide">
+              ⚙ Founder / QA
+            </span>
+            <span aria-hidden>→</span>
+          </Link>
+        )}
+
         {/* Replay the feature tour */}
         <button
           type="button"

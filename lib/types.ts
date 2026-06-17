@@ -42,6 +42,8 @@ export type Profile = {
   quiet_end: number;
   /** Language for localized push copy. */
   language: string | null;
+  /** Founder/QA harness access flag — server-enforced gate (STACK_FOUNDER_MODE). */
+  is_founder: boolean;
   created_at: string;
 };
 
