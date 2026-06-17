@@ -58,7 +58,8 @@ export type GroupMember = {
 
 export type Checkin = {
   id: string;
-  group_id: string;
+  /** null = a "Just me" personal log (Batch 5 B2), shown to no group. */
+  group_id: string | null;
   user_id: string;
   photo_url: string;
   note: string | null;

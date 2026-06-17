@@ -281,6 +281,9 @@ export const translations = {
       "Stack works with people. Start a group or join one with an invite link.",
     home_create_group: "Create a group",
     home_join_group: "Join a group",
+    solo_prompt: "Stack is better with your people. Start a group →",
+    solo_group_title: "Bring in your people",
+    solo_group_sub: "Solo keeps you honest. A crew keeps you going.",
     join_code_placeholder: "Invite code or link",
     join_code_submit: "Join",
     join_code_invalid: "Enter a valid invite code or link.",
@@ -352,6 +355,10 @@ export const translations = {
 
     // Check-in detail screen
     cd_groups: "Post to",
+    cd_destination: "Where does this go?",
+    cd_all_groups: "All my groups",
+    cd_just_me: "Just me",
+    cd_just_me_only: "Posts to your personal log. Start a group to share with people.",
     cd_sport: "Sport",
     cd_environment: "Environment",
     cd_goal: "Focus",
@@ -758,6 +765,9 @@ export const translations = {
       "Stack funciona con gente. Crea un grupo o únete con un enlace de invitación.",
     home_create_group: "Crear un grupo",
     home_join_group: "Unirme a un grupo",
+    solo_prompt: "Stack es mejor con tu gente. Crea un grupo →",
+    solo_group_title: "Suma a tu gente",
+    solo_group_sub: "Solo te mantiene honesto. Un equipo te mantiene en marcha.",
     join_code_placeholder: "Código o enlace de invitación",
     join_code_submit: "Unirme",
     join_code_invalid: "Ingresa un código o enlace de invitación válido.",
@@ -830,6 +840,10 @@ export const translations = {
 
     // Check-in detail screen
     cd_groups: "Publicar en",
+    cd_destination: "¿A dónde va esto?",
+    cd_all_groups: "Todos mis grupos",
+    cd_just_me: "Solo yo",
+    cd_just_me_only: "Va a tu registro personal. Crea un grupo para compartir con tu gente.",
     cd_sport: "Deporte",
     cd_environment: "Entorno",
     cd_goal: "Enfoque",

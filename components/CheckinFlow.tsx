@@ -61,7 +61,7 @@ export function CheckinNoGroup() {
 export function CheckinFlow({
   userId,
   groups,
-  activeId,
+  initialDestination,
   initialOrder,
   streakAfter,
   initialTemplate,
@@ -69,7 +69,8 @@ export function CheckinFlow({
 }: {
   userId: string;
   groups: Group[];
-  activeId: string | null;
+  /** Seeds the destination selector: last-posted groups, or Just me (Batch 5 B2). */
+  initialDestination: { justMe: boolean; groupIds: string[] };
   initialOrder: Order;
   /** Streak the user will have once this check-in posts (drives the card). */
   streakAfter: number;
@@ -95,7 +96,8 @@ export function CheckinFlow({
   const step = sequence[stepIdx];
 
   const [details, setDetails] = useState<CheckinDetails>(() => ({
-    groups: new Set(activeId ? [activeId] : []),
+    groups: new Set(initialDestination.justMe ? [] : initialDestination.groupIds),
+    justMe: initialDestination.justMe,
     sport: "",
     sportOther: "",
     environment: "",
@@ -281,7 +283,7 @@ export function CheckinFlow({
   );
 
   function validateDetails(): string | null {
-    if (details.groups.size === 0) return t("cd_err_groups");
+    if (!details.justMe && details.groups.size === 0) return t("cd_err_groups");
     if (!details.sport) return t("cd_err_sport");
     if (details.sport === OTHER_KEY && !details.sportOther.trim()) return t("cd_err_other");
     if (!details.environment) return t("cd_err_environment");
@@ -326,7 +328,11 @@ export function CheckinFlow({
     const sportVal = details.sport === OTHER_KEY ? details.sportOther.trim() : details.sport;
     const goalVal = details.goal === OTHER_KEY ? details.goalOther.trim() : details.goal;
     const postId = crypto.randomUUID();
-    const rows = Array.from(details.groups).map((group_id) => ({
+    // "Just me" → a single personal-log row with no group (Batch 5 B2).
+    const targets: (string | null)[] = details.justMe
+      ? [null]
+      : Array.from(details.groups);
+    const rows = targets.map((group_id) => ({
       group_id,
       user_id: userId,
       photo_url: path,
@@ -342,7 +348,9 @@ export function CheckinFlow({
       setPosting(false);
       return;
     }
-    setActiveGroup(Array.from(details.groups)[0]);
+    // Switch the home view to the first group posted to; solo posts leave the
+    // active group untouched (the user lands on their solo home).
+    if (!details.justMe) setActiveGroup(Array.from(details.groups)[0]);
     router.push("/home");
     router.refresh();
   }

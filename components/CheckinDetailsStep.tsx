@@ -10,6 +10,8 @@ import type { Group } from "@/lib/types";
 
 export type CheckinDetails = {
   groups: Set<string>;
+  /** "Just me" personal log — posts to no group (Batch 5 B2). */
+  justMe: boolean;
   sport: string;
   sportOther: string;
   environment: string;
@@ -85,58 +87,92 @@ export function CheckinDetailsStep({
     );
   }, [value.sportQuery]);
 
-  const allSelected = groups.length > 0 && value.groups.size === groups.length;
+  const allSelected =
+    !value.justMe && groups.length > 0 && value.groups.size === groups.length;
 
   function toggleGroup(id: string) {
     const next = new Set(value.groups);
     if (next.has(id)) next.delete(id);
     else next.add(id);
-    set({ groups: next });
+    // Picking a specific group leaves "Just me".
+    set({ groups: next, justMe: false });
   }
-  function toggleAll() {
-    set({ groups: allSelected ? new Set() : new Set(groups.map((g) => g.id)) });
+  function selectAll() {
+    set({ groups: new Set(groups.map((g) => g.id)), justMe: false });
+  }
+  function selectJustMe() {
+    set({ groups: new Set(), justMe: true });
   }
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Groups */}
+      {/* Destination (Batch 5 B2): all my groups / specific group(s) / just me.
+          No public option by design — "Just me" is a private personal log. */}
       <section>
         <div className="mb-2 flex items-center justify-between">
-          <Label>{t("cd_groups")}</Label>
+          <Label>{t("cd_destination")}</Label>
           {groups.length > 1 && (
             <button
               type="button"
-              onClick={toggleAll}
+              onClick={allSelected ? selectJustMe : selectAll}
               className="text-caption font-medium text-volt hover:text-volt-dim"
             >
-              {allSelected ? t("cd_clear_all") : t("cd_select_all")}
+              {allSelected ? t("cd_clear_all") : t("cd_all_groups")}
             </button>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {groups.map((g) => {
-            const on = value.groups.has(g.id);
-            return (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => toggleGroup(g.id)}
-                aria-pressed={on}
+        {groups.length === 0 ? (
+          <p className="rounded-card border border-border bg-surface px-3.5 py-3 text-label text-text-muted">
+            {t("cd_just_me_only")}
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {groups.map((g) => {
+              const on = !value.justMe && value.groups.has(g.id);
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => toggleGroup(g.id)}
+                  aria-pressed={on}
+                  className={cn(
+                    "flex items-center gap-2 rounded-pill border py-1.5 pl-1.5 pr-3 transition-colors duration-150",
+                    on
+                      ? "border-volt bg-volt/15"
+                      : "border-border bg-surface hover:border-border-strong",
+                  )}
+                >
+                  <Avatar name={g.name} size="sm" />
+                  <span className={cn("text-label", on ? "text-volt" : "text-text-muted")}>
+                    {g.name}
+                  </span>
+                </button>
+              );
+            })}
+            {/* Just me — private personal log. */}
+            <button
+              type="button"
+              onClick={selectJustMe}
+              aria-pressed={value.justMe}
+              className={cn(
+                "flex items-center gap-2 rounded-pill border py-1.5 pl-3 pr-3 transition-colors duration-150",
+                value.justMe
+                  ? "border-volt bg-volt/15"
+                  : "border-border bg-surface hover:border-border-strong",
+              )}
+            >
+              <span aria-hidden>🔒</span>
+              <span
                 className={cn(
-                  "flex items-center gap-2 rounded-pill border py-1.5 pl-1.5 pr-3 transition-colors duration-150",
-                  on
-                    ? "border-volt bg-volt/15"
-                    : "border-border bg-surface hover:border-border-strong",
+                  "text-label",
+                  value.justMe ? "text-volt" : "text-text-muted",
                 )}
               >
-                <Avatar name={g.name} size="sm" />
-                <span className={cn("text-label", on ? "text-volt" : "text-text-muted")}>
-                  {g.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                {t("cd_just_me")}
+              </span>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Sport */}

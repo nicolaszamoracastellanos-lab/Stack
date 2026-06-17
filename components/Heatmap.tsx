@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { localDateKey } from "@/lib/streaks";
+import { getWeekStart } from "@/lib/week";
 import { cn } from "@/lib/utils";
 
 type Range = "3m" | "1y";
@@ -51,8 +52,9 @@ export function Heatmap({
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const thisSunday = addDays(today, -today.getDay());
-  const start = addDays(thisSunday, -(WEEKS[range] - 1) * 7);
+  // Columns are Monday-anchored weeks (Batch 5 A2): each column runs Mon→Sun.
+  const thisMonday = getWeekStart(today);
+  const start = addDays(thisMonday, -(WEEKS[range] - 1) * 7);
 
   const weeks: Cell[][] = [];
   let cursor = start;
@@ -94,7 +96,7 @@ export function Heatmap({
     return `${date} · ${state}`;
   };
 
-  const weekdayRows = [1, 3, 5]; // Mon, Wed, Fri
+  const weekdayRows = [0, 2, 4]; // Mon, Wed, Fri (rows run Mon→Sun)
   const cellSize = range === "3m" ? "h-3.5 w-3.5" : "h-3 w-3";
 
   return (
@@ -149,7 +151,8 @@ export function Heatmap({
                   )}
                 >
                   {weekdayRows.includes(row)
-                    ? new Date(2026, 5, 1 + row).toLocaleString(lang, {
+                    ? // 2026-06-15 is a Monday → row 0 = Mon, 2 = Wed, 4 = Fri.
+                      new Date(2026, 5, 15 + row).toLocaleString(lang, {
                         weekday: "short",
                       })[0]
                     : ""}
