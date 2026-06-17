@@ -12,6 +12,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { useLanguage } from "@/lib/language-context";
 import { type TranslationKey } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
+import { deviceTimezone } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 
@@ -165,6 +166,8 @@ export function OnboardingFlow({
         focus_sport: focusSport.trim(),
         bio: bio.trim() || null,
         avatar_url: avatarUrl,
+        // Anchor weeks/quiet-hours to the user's frame (Batch 5 A2).
+        timezone: deviceTimezone() || null,
         // They saw the welcome story before reaching profile setup.
         has_seen_welcome: true,
       },

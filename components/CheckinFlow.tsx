@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { Toggle } from "@/components/Toggle";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import {
   CheckinDetailsStep,
@@ -16,6 +17,7 @@ import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET, checkinPhotoPath } from "@/lib/storage";
 import { setActiveGroup } from "@/lib/active-group";
+import { composeCheckinPhoto } from "@/lib/photo";
 import { SPORTS, GOALS, OTHER_KEY, iconFor, labelFor } from "@/lib/workout-options";
 import {
   CARD_TEMPLATES,
@@ -63,6 +65,7 @@ export function CheckinFlow({
   initialOrder,
   streakAfter,
   initialTemplate,
+  initialSelfieMirror,
 }: {
   userId: string;
   groups: Group[];
@@ -71,6 +74,8 @@ export function CheckinFlow({
   /** Streak the user will have once this check-in posts (drives the card). */
   streakAfter: number;
   initialTemplate: string;
+  /** Per-user selfie-mirror preference; seeds the review-step Mirror toggle. */
+  initialSelfieMirror: boolean;
 }) {
   const { t, lang } = useLanguage();
   const router = useRouter();
@@ -103,14 +108,56 @@ export function CheckinFlow({
     { blob: Blob; url: string; dataUrl: string } | null
   >(null);
 
-  // The card uses a data-URL copy of the photo so html-to-image has nothing to
-  // fetch (blob: URLs break with cacheBust and can taint the export on iOS).
-  function handlePhoto(blob: Blob, url: string) {
-    if (photo) URL.revokeObjectURL(photo.url);
-    const reader = new FileReader();
-    reader.onload = () =>
-      setPhoto({ blob, url, dataUrl: reader.result as string });
-    reader.readAsDataURL(blob);
+  // The un-watermarked cropped capture (1080×1920). The posted photo is composed
+  // from this on demand so the Mirror toggle can flip without re-cropping and
+  // without ever mirroring the watermark (Batch 5 A1).
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
+  const [mirror, setMirror] = useState(initialSelfieMirror);
+  const photoUrlRef = useRef<string | null>(null);
+
+  function handlePhoto(blob: Blob) {
+    setCroppedBlob(blob);
+  }
+
+  // Compose the final photo whenever the capture or the mirror choice changes.
+  // The card uses a data-URL copy so html-to-image has nothing to fetch
+  // (blob: URLs break with cacheBust and can taint the export on iOS).
+  useEffect(() => {
+    if (!croppedBlob) return;
+    let cancelled = false;
+    (async () => {
+      const blob = await composeCheckinPhoto({
+        srcBlob: croppedBlob,
+        mirror,
+        outputW: 1080,
+        outputH: 1920,
+      });
+      if (cancelled) return;
+      const url = URL.createObjectURL(blob);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
+        photoUrlRef.current = url;
+        setPhoto({ blob, url, dataUrl: reader.result as string });
+      };
+      reader.readAsDataURL(blob);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [croppedBlob, mirror]);
+
+  function toggleMirror(next: boolean) {
+    setMirror(next);
+    // Remember the choice (best-effort; degrades if column missing).
+    createClient()
+      .from("profiles")
+      .update({ selfie_mirror_default: next })
+      .eq("id", userId);
   }
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
@@ -378,6 +425,23 @@ export function CheckinFlow({
             onToggles={setToggles}
             milestone={milestone}
           />
+          {/* Mirror toggle (Batch 5 A1): flips the stored photo for selfies that
+              read backwards. Default off = true orientation; choice persists. */}
+          <div className="mt-4 flex items-center justify-between rounded-card border border-border bg-surface px-4 py-3">
+            <div className="min-w-0 pr-3">
+              <p className="text-label font-medium text-text">
+                {t("checkin_mirror_label")}
+              </p>
+              <p className="mt-0.5 text-caption text-text-dim">
+                {t("checkin_mirror_hint")}
+              </p>
+            </div>
+            <Toggle
+              checked={mirror}
+              onChange={toggleMirror}
+              label={t("checkin_mirror_label")}
+            />
+          </div>
           {/* Dedicated off-screen full-size node captured for export — kept out
               of the scaled preview so transforms can't interfere. */}
           <div

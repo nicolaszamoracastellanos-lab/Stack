@@ -9,6 +9,7 @@ import {
   toDaySet,
   type StreakState,
 } from "@/lib/streaks";
+import { weekDayKeys } from "@/lib/week";
 import { ACTIVE_GROUP_COOKIE } from "@/lib/active-group";
 import type { Group } from "@/lib/types";
 
@@ -19,7 +20,7 @@ export type LeaderEntry = {
   streak: number;
   /** Has this member checked in today? (drives the at-risk flag) */
   checkedInToday: boolean;
-  /** Distinct days checked in over the last 7 (0–7). */
+  /** Distinct days checked in this Mon–Sun week (0–7). */
   daysThisWeek: number;
   isYou: boolean;
   /** Section 2: false → hide streak/ranking, keep name/avatar/at-risk. */
@@ -29,7 +30,7 @@ export type LeaderEntry = {
 export type DashboardGroup = {
   group: Group;
   members: LeaderEntry[];
-  /** Total check-ins in this group over the last 7 days. */
+  /** Total check-ins in this group this Mon–Sun week. */
   weekTotal: number;
   /** Collective streak: consecutive days every member checked in. */
   collectiveStreak: number;
@@ -76,15 +77,10 @@ export async function getGroupsDashboard(userId: string): Promise<{
 
       const checkins = checkinRes.data ?? [];
 
-      // Day keys for "today" and the last 7 days (local time).
+      // Day keys for "today" and the current Mon–Sun week (Batch 5 A2).
       const todayKey = localDateKey(now);
-      const last7: string[] = [];
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(now);
-        d.setDate(now.getDate() - i);
-        last7.push(localDateKey(d));
-      }
-      const last7Set = new Set(last7);
+      const week = weekDayKeys(todayKey);
+      const weekSet = new Set(week);
 
       const members: LeaderEntry[] = (memberRes.data ?? []).map((row) => {
         const uid = (row as { user_id: string }).user_id;
@@ -104,7 +100,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
           streak: showStats ? computePersonalStreak(dates, now).count : 0,
           checkedInToday: daySet.has(todayKey),
           daysThisWeek: showStats
-            ? last7.filter((k) => daySet.has(k)).length
+            ? week.filter((k) => daySet.has(k)).length
             : 0,
           isYou,
           showStats,
@@ -122,7 +118,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
       );
 
       const weekTotal = checkins.filter((c) =>
-        last7Set.has(localDateKey(new Date(c.created_at as string))),
+        weekSet.has(localDateKey(new Date(c.created_at as string))),
       ).length;
 
       // Collective streak: feed one check-in array per member.

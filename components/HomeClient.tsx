@@ -21,6 +21,7 @@ import {
   toDaySet,
   type Streak,
 } from "@/lib/streaks";
+import { weekDayKeys } from "@/lib/week";
 import type {
   FeedCheckin,
   FeedComment,
@@ -118,14 +119,8 @@ export function HomeClient({
   const restedToday = restDays.includes(todayKey);
   const restsThisWeek = useMemo(() => {
     const set = new Set(restDays);
-    let n = 0;
-    const now = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
-      if (set.has(localDateKey(d))) n++;
-    }
-    return n;
+    // Rests taken within the current Mon–Sun week (Batch 5 A2).
+    return weekDayKeys(localDateKey(new Date())).filter((k) => set.has(k)).length;
   }, [restDays]);
 
   async function markRestDay() {
@@ -362,16 +357,14 @@ export function HomeClient({
 
   const displayedStreak = useCountUp(personal.count);
 
-  // Weekly consistency: share of the last 7 days the user checked in (any group).
+  // Weekly consistency: share of the current Mon–Sun week the user checked in
+  // (any group). Resets Monday local midnight (Batch 5 A2). Stage C will make
+  // the denominator the user's weekly goal Q rather than a flat 7.
   const consistency = useMemo(() => {
-    const now = new Date();
     const set = toDaySet(personalDates);
-    let days = 0;
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
-      if (set.has(localDateKey(d))) days++;
-    }
+    const days = weekDayKeys(localDateKey(new Date())).filter((k) =>
+      set.has(k),
+    ).length;
     return { days, value: days / 7, percent: Math.round((days / 7) * 100) };
   }, [personalDates]);
 

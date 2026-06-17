@@ -18,6 +18,10 @@ export type Profile = {
   /** Check-in prefs (Batch 3): flow order + chosen card template. */
   checkin_order: "details" | "photo";
   card_template: string;
+  /** IANA timezone, captured at onboarding, backfilled on load (Batch 5 A2). */
+  timezone: string | null;
+  /** When true, check-in selfies post mirrored; default false = true orientation (Batch 5 A1). */
+  selfie_mirror_default: boolean;
   created_at: string;
 };
 

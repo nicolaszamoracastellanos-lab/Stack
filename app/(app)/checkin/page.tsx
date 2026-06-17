@@ -39,6 +39,7 @@ export default async function CheckinPage() {
       initialOrder={order}
       streakAfter={streakAfter}
       initialTemplate={initialTemplate}
+      initialSelfieMirror={profile?.selfie_mirror_default ?? false}
     />
   );
 }

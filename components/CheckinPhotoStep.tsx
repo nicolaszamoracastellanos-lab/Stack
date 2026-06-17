@@ -12,14 +12,15 @@ import { useLanguage } from "@/lib/language-context";
  * lose the custom in-app shutter/flip UI, but gain reliably crisp, full-res
  * images on iOS Safari (where frame-grabs are downscaled and soft). Falls back
  * to the photo library on devices without a camera. The result is framed to
- * 9:16 with the Stack watermark burned in (single encode in the cropper).
+ * 9:16; the watermark (and any selfie mirror) is burned in later by the review
+ * step's compose pass (Batch 5 A1), so the cropper here exports un-watermarked.
  */
 export function CheckinPhotoStep({
   photoUrl,
   onCapture,
 }: {
   photoUrl: string | null;
-  onCapture: (blob: Blob, url: string) => void;
+  onCapture: (blob: Blob) => void;
 }) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -93,7 +94,6 @@ export function CheckinPhotoStep({
           aspectH={16}
           outputW={1080}
           outputH={1920}
-          watermark
           onCancel={() => {
             URL.revokeObjectURL(rawSrc);
             setRawSrc(null);
@@ -101,7 +101,7 @@ export function CheckinPhotoStep({
           onCropped={(blob) => {
             URL.revokeObjectURL(rawSrc);
             setRawSrc(null);
-            onCapture(blob, URL.createObjectURL(blob));
+            onCapture(blob);
           }}
         />
       )}

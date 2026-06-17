@@ -3,23 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/Button";
 import { useLanguage } from "@/lib/language-context";
-
-// Burned-in watermark asset (Stack wordmark, transparent). Drawn in the SAME
-// pass as the crop so the photo is encoded only once (no double compression).
-const WATERMARK_SRC = "/wordmark-watermark.png";
-let cachedMark: Promise<HTMLImageElement> | null = null;
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-function loadWatermark() {
-  if (!cachedMark) cachedMark = loadImage(WATERMARK_SRC);
-  return cachedMark;
-}
+import { drawWatermark } from "@/lib/photo";
 
 /**
  * Drag-to-pan, zoom-slider image cropper. Exports a single high-quality JPEG at
@@ -136,23 +120,7 @@ export function ImageCropper({
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, outputW, outputH);
 
-    if (watermark) {
-      try {
-        const mark = await loadWatermark();
-        const markW = Math.round(outputW * 0.3);
-        const markH = Math.round((mark.naturalHeight / mark.naturalWidth) * markW);
-        const pad = Math.round(outputW * 0.045);
-        ctx.save();
-        ctx.globalAlpha = 0.95;
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur = Math.round(outputW * 0.012);
-        ctx.shadowOffsetY = Math.round(outputW * 0.003);
-        ctx.drawImage(mark, pad, outputH - pad - markH, markW, markH);
-        ctx.restore();
-      } catch {
-        /* asset failed to load — ship the photo without the burn-in */
-      }
-    }
+    if (watermark) await drawWatermark(ctx, outputW, outputH);
 
     canvas.toBlob(
       (blob) => {
