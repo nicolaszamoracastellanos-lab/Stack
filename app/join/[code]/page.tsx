@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { setActiveGroup } from "@/lib/active-group";
+import { emitPush } from "@/lib/push/emit";
 
 type GroupPreview = { id: string; name: string; goal: string | null };
 type Status =
@@ -88,6 +89,10 @@ export default function JoinPage() {
       setJoining(false);
       return;
     }
+
+    // Notify the group that someone joined (Batch 5 D3 #2) — only on a fresh
+    // join, not when re-confirming an existing membership.
+    if (!joinError) emitPush({ event: "join", groupId: group.id });
 
     setActiveGroup(group.id);
     router.push("/home");

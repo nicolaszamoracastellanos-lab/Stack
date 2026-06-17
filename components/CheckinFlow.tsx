@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET, checkinPhotoPath } from "@/lib/storage";
 import { setActiveGroup } from "@/lib/active-group";
 import { composeCheckinPhoto } from "@/lib/photo";
+import { emitPush } from "@/lib/push/emit";
 import { SPORTS, GOALS, OTHER_KEY, iconFor, labelFor } from "@/lib/workout-options";
 import {
   CARD_TEMPLATES,
@@ -348,9 +349,12 @@ export function CheckinFlow({
       setPosting(false);
       return;
     }
-    // Switch the home view to the first group posted to; solo posts leave the
-    // active group untouched (the user lands on their solo home).
-    if (!details.justMe) setActiveGroup(Array.from(details.groups)[0]);
+    // Notify groupmates (Batch 5 D3 #1/#3). Solo posts notify no one.
+    if (!details.justMe) {
+      const targetIds = Array.from(details.groups);
+      emitPush({ event: "checkin", groupIds: targetIds });
+      setActiveGroup(targetIds[0]);
+    }
     router.push("/home");
     router.refresh();
   }

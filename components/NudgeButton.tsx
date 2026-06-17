@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
+import { emitPush } from "@/lib/push/emit";
 import { cn } from "@/lib/utils";
 
 /**
@@ -36,6 +37,8 @@ export function NudgeButton({
       setState("idle");
       return;
     }
+    // Push the nudge (Batch 5 D3 #6). Only on a fresh nudge, not a dup.
+    if (!error) emitPush({ event: "nudge", targetUserId: toUserId });
     setState("done");
   }
 

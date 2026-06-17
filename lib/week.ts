@@ -37,7 +37,7 @@ function fmt(tz: string): Intl.DateTimeFormat {
  * else the device-local frame. Matches lib/streaks.localDateKey for the no-tz
  * case so the two interoperate.
  */
-export function dayKey(date: Date, tz?: string): DayKey {
+export function dayKey(date: Date, tz?: string | null): DayKey {
   if (tz) return fmt(tz).format(date); // en-CA formats as YYYY-MM-DD
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");

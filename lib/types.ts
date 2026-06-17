@@ -33,6 +33,15 @@ export type Profile = {
   tier_confirmed: string | null;
   /** Provisional tier key shown in the first weeks before confirmation. */
   tier_provisional: string | null;
+  // Notifications (Batch 5 D).
+  notif_master: boolean;
+  /** Per-type on/off; absent key = on. */
+  notif_types: Record<string, boolean>;
+  /** Quiet hours in local time (24h); default 22→8. */
+  quiet_start: number;
+  quiet_end: number;
+  /** Language for localized push copy. */
+  language: string | null;
   created_at: string;
 };
 

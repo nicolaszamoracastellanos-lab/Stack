@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -300,6 +301,15 @@ export function ProfileEditForm({
             {t("privacy_explainer")}
           </p>
         </div>
+
+        {/* Notifications settings */}
+        <Link
+          href="/settings/notifications"
+          className="flex items-center justify-between rounded-card border border-border bg-surface px-4 py-3 text-body text-text hover:border-border-strong"
+        >
+          {t("notif_link")}
+          <span aria-hidden className="text-text-dim">→</span>
+        </Link>
 
         {/* Replay the feature tour */}
         <button

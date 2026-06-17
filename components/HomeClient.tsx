@@ -10,6 +10,7 @@ import { TierBadge } from "@/components/TierBadge";
 import { AtRiskAlert } from "@/components/AtRiskAlert";
 import { GoalSetup } from "@/components/GoalSetup";
 import { RestPrompt } from "@/components/RestPrompt";
+import { PushPrompt } from "@/components/PushPrompt";
 import { FeedItem, type FeedItemData } from "@/components/FeedItem";
 import { NudgeBanner } from "@/components/NudgeBanner";
 import { Tour } from "@/components/Tour";
@@ -467,9 +468,12 @@ export function HomeClient({
 
       {/* Check-in CTA */}
       {checkedInToday ? (
-        <div className="flex items-center gap-3 rounded-card border border-volt/30 bg-volt/10 px-4 py-4">
-          <span aria-hidden className="text-xl">✓</span>
-          <p className="text-body font-medium text-volt">{t("checkin_done")}</p>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 rounded-card border border-volt/30 bg-volt/10 px-4 py-4">
+            <span aria-hidden className="text-xl">✓</span>
+            <p className="text-body font-medium text-volt">{t("checkin_done")}</p>
+          </div>
+          <PushPrompt userId={userId} />
         </div>
       ) : restedToday ? (
         <div className="flex items-center gap-3 rounded-card border border-border-strong bg-surface px-4 py-4">
