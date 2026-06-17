@@ -1,0 +1,16 @@
+name: push-cron
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping cron endpoint
+        run: |
+          curl -fsS -X POST \
+            "https://stack-one-tawny.vercel.app/api/push/cron" \
+            -H "authorization: Bearer ${CRON_SECRET}"
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
