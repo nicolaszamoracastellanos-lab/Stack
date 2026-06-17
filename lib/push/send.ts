@@ -57,6 +57,7 @@ export async function sendPushToUser(
   type: NotificationType,
   vars: CopyVars = {},
   url = "/home",
+  opts: { force?: boolean } = {},
 ): Promise<number> {
   if (!ensureVapid()) return 0;
 
@@ -68,10 +69,14 @@ export async function sendPushToUser(
   if (!prof) return 0;
   const prefs = prof as Prefs;
 
-  if (!prefs.notif_master) return 0;
-  if (prefs.notif_types && prefs.notif_types[type] === false) return 0;
-  if (inQuietHours(localHour(prefs.timezone), prefs.quiet_start, prefs.quiet_end)) {
-    return 0;
+  // `force` (manual test only) bypasses prefs + quiet hours so a notification
+  // fires on demand regardless of the time of day.
+  if (!opts.force) {
+    if (!prefs.notif_master) return 0;
+    if (prefs.notif_types && prefs.notif_types[type] === false) return 0;
+    if (inQuietHours(localHour(prefs.timezone), prefs.quiet_start, prefs.quiet_end)) {
+      return 0;
+    }
   }
 
   const { data: subs } = await admin

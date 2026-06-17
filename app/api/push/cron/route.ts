@@ -58,6 +58,21 @@ async function handle(req: Request) {
     .limit(5000);
   const userIds = Array.from(new Set((subRows ?? []).map((r) => r.user_id as string)));
 
+  // Manual test mode (?test=<type>): fire one notification to every current
+  // subscriber immediately, bypassing the hour gate + quiet hours. Secret-gated;
+  // intended for verifying setup while you're the only subscriber.
+  const testType = new URL(req.url).searchParams.get("test");
+  if (testType) {
+    const type = (testType === "1" ? "at_risk" : testType) as never;
+    let tested = 0;
+    for (const userId of userIds) {
+      tested += await sendPushToUser(admin, userId, type, {}, "/home", {
+        force: true,
+      });
+    }
+    return NextResponse.json({ ok: true, mode: "test", subscribers: userIds.length, tested });
+  }
+
   let fired = 0;
   for (const userId of userIds) {
     const { data: prof } = await admin
