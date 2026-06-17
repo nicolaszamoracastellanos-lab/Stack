@@ -143,6 +143,19 @@ async function handle(req: Request) {
     }
   }
 
+  // Record the run for the founder env readout (§4.6). Best-effort.
+  await admin
+    .from("kv_meta")
+    .upsert(
+      {
+        key: "cron_last_run",
+        value: { at: now.toISOString(), candidates: userIds.length, fired },
+        updated_at: now.toISOString(),
+      },
+      { onConflict: "key" },
+    )
+    .then(() => {});
+
   return NextResponse.json({ ok: true, candidates: userIds.length, fired });
 }
 
