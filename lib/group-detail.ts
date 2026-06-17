@@ -15,6 +15,18 @@ export type WindowStat = {
   mostConsistent: { name: string; days: number } | null;
 };
 
+export type DebtEntry = {
+  id: string;
+  debtorName: string;
+  debtorUserId: string;
+  isYou: boolean;
+  stakeDescription: string;
+  periodKey: string;
+  status: "outstanding" | "settled";
+  createdAt: string;
+  settledAt: string | null;
+};
+
 export type GroupDetailData = {
   group: Group;
   isCreator: boolean;
@@ -25,6 +37,8 @@ export type GroupDetailData = {
   consistencyPct: number;
   members: LeaderEntry[];
   windows: { week: WindowStat; month: WindowStat; all: WindowStat };
+  /** Stakes ledger (Batch 4): outstanding debts up top, settled history below. */
+  debts: { outstanding: DebtEntry[]; settled: DebtEntry[] };
 };
 
 type ProfileLite = {
@@ -181,10 +195,47 @@ export async function getGroupDetail(
     return best;
   };
 
+  // Stakes ledger (Batch 4 §3) — debts with the debtor's name.
+  const { data: ledgerRows } = await supabase
+    .from("stakes_ledger")
+    .select(
+      "id, debtor_user, stake_description, period_key, status, created_at, settled_at, debtor:profiles!stakes_ledger_debtor_user_fkey(username, display_name)",
+    )
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false });
+
+  const allDebts: DebtEntry[] = (ledgerRows ?? []).map((r) => {
+    const row = r as unknown as {
+      id: string;
+      debtor_user: string;
+      stake_description: string;
+      period_key: string;
+      status: "outstanding" | "settled";
+      created_at: string;
+      settled_at: string | null;
+      debtor: { username: string; display_name: string | null } | null;
+    };
+    return {
+      id: row.id,
+      debtorName: nameOf(row.debtor),
+      debtorUserId: row.debtor_user,
+      isYou: row.debtor_user === userId,
+      stakeDescription: row.stake_description,
+      periodKey: row.period_key,
+      status: row.status,
+      createdAt: row.created_at,
+      settledAt: row.settled_at,
+    };
+  });
+
   return {
     group,
     isCreator: group.created_by === userId,
     inviteLink: `${baseUrl}/join/${group.invite_code}`,
+    debts: {
+      outstanding: allDebts.filter((d) => d.status === "outstanding"),
+      settled: allDebts.filter((d) => d.status === "settled"),
+    },
     collectiveStreak: collective.count,
     collectiveState: collective.state,
     consistencyPct,

@@ -8,6 +8,8 @@ import { NudgeButton } from "@/components/NudgeButton";
 import { RecapCard } from "@/components/RecapCard";
 import { GroupChat } from "@/components/GroupChat";
 import { PactSection } from "@/components/PactSection";
+import { StakesLedger } from "@/components/StakesLedger";
+import { isPact } from "@/lib/pacts";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -167,6 +169,18 @@ export function GroupDetail({
       <div className="mb-8">
         <PactSection group={data.group} isCreator={data.isCreator} />
       </div>
+
+      {/* Stakes ledger + broken-pact roasts (Batch 4 §3/§4) */}
+      {isPact(data.group) && (
+        <div className="mb-8">
+          <StakesLedger
+            groupId={data.group.id}
+            outstanding={data.debts.outstanding}
+            settled={data.debts.settled}
+            hasStake={Boolean(data.group.stake_value && data.group.who_pays)}
+          />
+        </div>
+      )}
 
       {/* SECTION A — group stats */}
       <section>

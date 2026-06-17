@@ -135,6 +135,11 @@ export const translations = {
     pact_broke_you: "You broke the pact this week. Time to pay up — own it. 😅",
     pact_owes: "Owes {stake}",
     pact_see_owe: "See what you owe",
+    ledger_label: "The tab",
+    ledger_all_clear: "Everyone's square. 🤝",
+    ledger_mark_settled: "Mark settled",
+    ledger_settled: "Settled up",
+    ledger_settled_on: "settled {date}",
     // Nudge
     nudge_cta: "Nudge",
     nudge_sent: "Nudged",
@@ -597,6 +602,11 @@ export const translations = {
     pact_broke_you: "Rompiste el pacto esta semana. Toca pagar — asúmelo. 😅",
     pact_owes: "Debe {stake}",
     pact_see_owe: "Ver lo que debes",
+    ledger_label: "La cuenta",
+    ledger_all_clear: "Todos a mano. 🤝",
+    ledger_mark_settled: "Marcar saldada",
+    ledger_settled: "Saldadas",
+    ledger_settled_on: "saldada {date}",
     // Nudge
     nudge_cta: "Empújalo",
     nudge_sent: "Enviado",
