@@ -41,16 +41,18 @@ export function SoloHome({
 }) {
   const { t } = useLanguage();
 
-  const streak = useMemo(
-    () =>
-      computeQuotaStreak(personalDates, {
-        weeklyGoal: ctx.weeklyGoal,
-        quotaActiveFromKey: ctx.quotaActiveFromKey,
-        restDayKeys: restDays,
-        now: new Date(),
-      }),
-    [personalDates, restDays, ctx.weeklyGoal, ctx.quotaActiveFromKey],
-  );
+  const streak = useMemo(() => {
+    const computed = computeQuotaStreak(personalDates, {
+      weeklyGoal: ctx.weeklyGoal,
+      quotaActiveFromKey: ctx.quotaActiveFromKey,
+      restDayKeys: restDays,
+      now: new Date(),
+    });
+    // Founder simulator override (founder-only); never set for normal users.
+    return ctx.streakOverride
+      ? { ...computed, count: ctx.streakOverride.count, state: ctx.streakOverride.state }
+      : computed;
+  }, [personalDates, restDays, ctx.weeklyGoal, ctx.quotaActiveFromKey, ctx.streakOverride]);
   const displayedStreak = useCountUp(streak.count);
 
   const goalDenom = ctx.weeklyGoal && ctx.weeklyGoal > 0 ? ctx.weeklyGoal : 7;

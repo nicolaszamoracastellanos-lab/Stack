@@ -112,22 +112,39 @@ export function HomeClient({
   }, [feed]);
 
   // Recompute streaks whenever the underlying data changes, using local time.
+  // Founder simulator override (founder-only): use it verbatim, skip recompute.
   useEffect(() => {
     const now = new Date();
-    setPersonal(
-      computeQuotaStreak(personalDates, {
-        weeklyGoal: ctx.weeklyGoal,
-        quotaActiveFromKey: ctx.quotaActiveFromKey,
-        restDayKeys: restDays,
-        now,
-      }),
-    );
+    if (ctx.streakOverride) {
+      setPersonal((p) => ({
+        ...p,
+        count: ctx.streakOverride!.count,
+        state: ctx.streakOverride!.state,
+      }));
+    } else {
+      setPersonal(
+        computeQuotaStreak(personalDates, {
+          weeklyGoal: ctx.weeklyGoal,
+          quotaActiveFromKey: ctx.quotaActiveFromKey,
+          restDayKeys: restDays,
+          now,
+        }),
+      );
+    }
     const memberArrays = members.map((m) =>
       feed.filter((c) => c.user_id === m.user_id).map((c) => c.created_at),
     );
     setGroup(computeGroupStreak(memberArrays, now));
     setCheckedInToday(toDaySet(personalDates).has(localDateKey(now)));
-  }, [personalDates, feed, members, restDays, ctx.weeklyGoal, ctx.quotaActiveFromKey]);
+  }, [
+    personalDates,
+    feed,
+    members,
+    restDays,
+    ctx.weeklyGoal,
+    ctx.quotaActiveFromKey,
+    ctx.streakOverride,
+  ]);
 
   // Rest day (§9): you can mark today off to protect the streak. Weekly
   // allowance of one keeps it from feeling like cheating.

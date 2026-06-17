@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import type { FounderEnv } from "@/lib/founder-env";
+import type { TierKey } from "@/lib/tiers";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { NotificationsSection } from "@/components/founder/NotificationsSection";
+import { OnboardingSection } from "@/components/founder/OnboardingSection";
+import { SimulatorSection, type FounderEngine } from "@/components/founder/SimulatorSection";
+import { DemoSection } from "@/components/founder/DemoSection";
 
 /**
  * Founder/QA harness panel (STACK_FOUNDER_MODE). Internal tool — styled with a
@@ -15,11 +20,21 @@ export function FounderPanel({
   isFounder,
   env,
   subCount,
+  engine,
+  tierConfirmed,
+  tierProvisional,
+  simActive,
+  snapshotTakenAt,
 }: {
   userId: string;
   isFounder: boolean;
   env: FounderEnv | null;
   subCount: number;
+  engine: FounderEngine;
+  tierConfirmed: TierKey | null;
+  tierProvisional: TierKey | null;
+  simActive: boolean;
+  snapshotTakenAt: string | null;
 }) {
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
@@ -34,11 +49,15 @@ export function FounderPanel({
         </p>
       </div>
 
-      <header className="mb-6 flex items-center justify-between">
+      <header className="mb-6 flex items-center justify-between gap-3">
         <h1 className="text-h2">Founder tools</h1>
-        <Link href="/home" className="text-label text-text-muted hover:text-text">
-          ← Home
-        </Link>
+        <div className="flex items-center gap-3">
+          {/* §7 — instant EN/ES toggle (also localizes test notifications). */}
+          <LanguageToggle />
+          <Link href="/home" className="text-label text-text-muted hover:text-text">
+            ← Home
+          </Link>
+        </div>
       </header>
 
       <div className="flex flex-col gap-4">
@@ -87,6 +106,21 @@ export function FounderPanel({
 
         {/* §3 — notifications test (founder's own device only) */}
         <NotificationsSection subCount={subCount} />
+
+        {/* §4 — onboarding/tour preview + replay + guarded reset */}
+        <OnboardingSection />
+
+        {/* §5 — streak/tier simulator (snapshot-protected, own account only) */}
+        <SimulatorSection
+          engine={engine}
+          tierConfirmed={tierConfirmed}
+          tierProvisional={tierProvisional}
+          simActive={simActive}
+          snapshotTakenAt={snapshotTakenAt}
+        />
+
+        {/* §6 — seed/wipe demo data (founder-scoped, tagged) */}
+        <DemoSection />
       </div>
     </main>
   );

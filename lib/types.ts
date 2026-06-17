@@ -44,6 +44,12 @@ export type Profile = {
   language: string | null;
   /** Founder/QA harness access flag — server-enforced gate (STACK_FOUNDER_MODE). */
   is_founder: boolean;
+  /** Founder-only streak display override (simulator); null for normal users. */
+  founder_sim: {
+    active?: boolean;
+    count?: number;
+    state?: "alive" | "at-risk" | "broken";
+  } | null;
   created_at: string;
 };
 

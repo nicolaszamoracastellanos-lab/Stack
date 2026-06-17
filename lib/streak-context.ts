@@ -17,6 +17,12 @@ export type StreakContext = {
   provisionalTier: TierKey | null;
   currentWeekFreq: number;
   projection: TierProjection;
+  /**
+   * Founder simulator override (STACK_FOUNDER_MODE). Set ONLY for is_founder
+   * rows; when present the client uses it verbatim and skips recomputation, so
+   * the badge/at-risk UI reflects a forced state. Always null for normal users.
+   */
+  streakOverride: { count: number; state: QuotaStreak["state"] } | null;
 };
 
 /**
@@ -110,16 +116,26 @@ export async function loadStreakContext(
     }
   }
 
+  // Founder simulator override — founder rows only; never set for normal users.
+  let streakOverride: StreakContext["streakOverride"] = null;
+  const sim = profile?.is_founder ? profile.founder_sim : null;
+  if (sim?.active && typeof sim.count === "number" && sim.state) {
+    streakOverride = { count: sim.count, state: sim.state };
+  }
+
   return {
     needsGoal: weeklyGoal == null,
     weeklyGoal,
     quotaActiveFromKey,
     preferredRestDays,
-    streak,
+    streak: streakOverride
+      ? { ...streak, count: streakOverride.count, state: streakOverride.state }
+      : streak,
     confirmedTier,
     provisionalTier,
     currentWeekFreq: weekFreqNow,
     projection: tierProjection(weekFreqNow, confirmedTier),
+    streakOverride,
   };
 }
 
