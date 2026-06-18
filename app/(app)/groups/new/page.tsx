@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/language-context";
 import { type TranslationKey } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { generateInviteCode } from "@/lib/utils";
+import { inviteLink as buildInviteLink } from "@/lib/site";
 import { setActiveGroup } from "@/lib/active-group";
 
 type Created = { id: string; code: string };
@@ -87,10 +88,8 @@ export default function NewGroupPage() {
     setLoading(false);
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    (typeof window !== "undefined" ? window.location.origin : "");
-  const inviteLink = created ? `${baseUrl}/join/${created.code}` : "";
+  // Always build the invite link on the canonical domain (stack-app.online).
+  const inviteLink = created ? buildInviteLink(created.code) : "";
 
   async function copy() {
     if (!inviteLink) return;

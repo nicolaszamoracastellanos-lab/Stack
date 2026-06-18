@@ -18,8 +18,7 @@ export default async function GroupDetailPage({
   const { userId, profile } = await getUserAndProfile();
   if (!userId) redirect("/login");
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") ?? "";
-  const data = await getGroupDetail(params.id, userId, baseUrl);
+  const data = await getGroupDetail(params.id, userId);
   if (!data) redirect("/groups");
 
   const [home, chatUnread] = await Promise.all([

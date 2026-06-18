@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { nameOf } from "@/lib/feed";
+import { inviteLink as buildInviteLink } from "@/lib/site";
 import {
   computeGroupStreak,
   localDateKey,
@@ -86,7 +87,6 @@ function daySetBack(now: Date, n: number): Set<string> {
 export async function getGroupDetail(
   groupId: string,
   userId: string,
-  baseUrl: string,
 ): Promise<GroupDetailData | null> {
   const supabase = createClient();
   const now = new Date();
@@ -300,7 +300,7 @@ export async function getGroupDetail(
     group,
     // Owner is the authority for admin actions (backfilled to the creator).
     isCreator: (group.owner_id ?? group.created_by) === userId,
-    inviteLink: `${baseUrl}/join/${group.invite_code}`,
+    inviteLink: buildInviteLink(group.invite_code),
     proposal,
     debts: {
       outstanding: allDebts.filter((d) => d.status === "outstanding"),
