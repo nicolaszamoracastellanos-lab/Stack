@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/Button";
+import { Toggle } from "@/components/Toggle";
 import { ImageCropper } from "@/components/ImageCropper";
 import { useLanguage } from "@/lib/language-context";
 
@@ -18,9 +19,14 @@ import { useLanguage } from "@/lib/language-context";
 export function CheckinPhotoStep({
   photoUrl,
   onCapture,
+  mirror,
+  onToggleMirror,
 }: {
   photoUrl: string | null;
   onCapture: (blob: Blob) => void;
+  /** Mirror the photo right here, on the preview after taking it (Batch 5 A1). */
+  mirror: boolean;
+  onToggleMirror: (next: boolean) => void;
 }) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -58,6 +64,25 @@ export function CheckinPhotoStep({
               className="aspect-[9/16] max-h-[60dvh] w-auto object-cover"
             />
           </div>
+
+          {/* Mirror toggle, right here after taking the photo (Batch 5 A1). The
+              preview above updates instantly when flipped; the choice persists. */}
+          <div className="flex w-full items-center justify-between rounded-card border border-border bg-surface px-4 py-3">
+            <div className="min-w-0 pr-3">
+              <p className="text-label font-medium text-text">
+                {t("checkin_mirror_label")}
+              </p>
+              <p className="mt-0.5 text-caption text-text-dim">
+                {t("checkin_mirror_hint")}
+              </p>
+            </div>
+            <Toggle
+              checked={mirror}
+              onChange={onToggleMirror}
+              label={t("checkin_mirror_label")}
+            />
+          </div>
+
           <Button variant="secondary" onClick={pick}>
             {t("checkin_retake")}
           </Button>

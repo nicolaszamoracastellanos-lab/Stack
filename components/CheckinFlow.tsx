@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
-import { Toggle } from "@/components/Toggle";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import {
   CheckinDetailsStep,
@@ -316,10 +315,18 @@ export function CheckinFlow({
     setError(null);
     setPosting(true);
     const supabase = createClient();
-    const path = checkinPhotoPath(userId, `${crypto.randomUUID()}.jpg`);
+    // Post the FINAL edited image: the rendered story card (photo + streak,
+    // session details, template and toggles the user set on the review screen),
+    // so the feed shows exactly what they edited, not the bare photo. Falls back
+    // to the plain composed photo if card rendering fails, so a post never dies.
+    const cardBlob = await generateCardBlob();
+    const blob = cardBlob ?? photo.blob;
+    const ext = cardBlob ? "png" : "jpg";
+    const contentType = cardBlob ? "image/png" : "image/jpeg";
+    const path = checkinPhotoPath(userId, `${crypto.randomUUID()}.${ext}`);
     const { error: upErr } = await supabase.storage
       .from(CHECKINS_BUCKET)
-      .upload(path, photo.blob, { contentType: "image/jpeg", upsert: false });
+      .upload(path, blob, { contentType, upsert: false });
     if (upErr) {
       setError(`Photo upload failed: ${upErr.message}`);
       setPosting(false);
@@ -425,7 +432,12 @@ export function CheckinFlow({
       )}
 
       {step === "photo" && (
-        <CheckinPhotoStep photoUrl={photo?.url ?? null} onCapture={handlePhoto} />
+        <CheckinPhotoStep
+          photoUrl={photo?.url ?? null}
+          onCapture={handlePhoto}
+          mirror={mirror}
+          onToggleMirror={toggleMirror}
+        />
       )}
 
       {step === "review" && photo && (
@@ -438,23 +450,6 @@ export function CheckinFlow({
             onToggles={setToggles}
             milestone={milestone}
           />
-          {/* Mirror toggle (Batch 5 A1): flips the stored photo for selfies that
-              read backwards. Default off = true orientation; choice persists. */}
-          <div className="mt-4 flex items-center justify-between rounded-card border border-border bg-surface px-4 py-3">
-            <div className="min-w-0 pr-3">
-              <p className="text-label font-medium text-text">
-                {t("checkin_mirror_label")}
-              </p>
-              <p className="mt-0.5 text-caption text-text-dim">
-                {t("checkin_mirror_hint")}
-              </p>
-            </div>
-            <Toggle
-              checked={mirror}
-              onChange={toggleMirror}
-              label={t("checkin_mirror_label")}
-            />
-          </div>
           {/* Dedicated off-screen full-size node captured for export — kept out
               of the scaled preview so transforms can't interfere. */}
           <div
