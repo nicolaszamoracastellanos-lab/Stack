@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { Leaderboard } from "@/components/Leaderboard";
 import { NudgeButton } from "@/components/NudgeButton";
 import { RemoveMemberButton } from "@/components/RemoveMemberButton";
+import { PostFeed } from "@/components/PostFeed";
 import { RecapCard } from "@/components/RecapCard";
 import { GroupChat } from "@/components/GroupChat";
 import { PactSection } from "@/components/PactSection";
@@ -40,10 +41,18 @@ export function GroupDetail({
   data,
   userId,
   isActive,
+  feed,
 }: {
   data: GroupDetailData;
   userId: string;
   isActive: boolean;
+  feed: {
+    items: import("@/components/PostFeed").PostFeedItem[];
+    reactions: import("@/lib/feed").FeedReaction[];
+    comments: import("@/lib/feed").FeedComment[];
+    userName: string;
+    userAvatar: string | null;
+  };
 }) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -273,6 +282,23 @@ export function GroupDetail({
           />
         </div>
       </section>
+
+      {/* SECTION — this group's full check-in history (Batch 6 Stage 2). */}
+      {feed.items.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-caption font-medium uppercase tracking-wide text-text-dim">
+            {t("feed_title")}
+          </h2>
+          <PostFeed
+            userId={userId}
+            userName={feed.userName}
+            userAvatar={feed.userAvatar}
+            posts={feed.items}
+            initialReactions={feed.reactions}
+            initialComments={feed.comments}
+          />
+        </section>
+      )}
 
       {/* SECTION — group chat (Section 8) */}
       <section className="mt-10">

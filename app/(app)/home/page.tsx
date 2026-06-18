@@ -1,70 +1,65 @@
 import { redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
-import { getActiveGroup } from "@/lib/groups";
-import { getHomeData } from "@/lib/feed";
+import { getUserGroups } from "@/lib/groups";
+import { getCombinedFeed } from "@/lib/combined-feed";
+import { getGroupsDashboard } from "@/lib/groups-dashboard";
 import { createClient } from "@/lib/supabase/server";
-import { computeGroupStreak, localDateKey, toDaySet } from "@/lib/streaks";
 import { loadStreakContext } from "@/lib/streak-context";
 import { suggestGoal } from "@/lib/tier-eval";
-import { HomeClient } from "@/components/HomeClient";
+import { CombinedHome, type GroupCard } from "@/components/CombinedHome";
 import { SoloHome } from "@/components/SoloHome";
-import { GroupSwitcher } from "@/components/GroupSwitcher";
 import { BrandBar } from "@/components/BrandBar";
 import { NotificationBell } from "@/components/NotificationBell";
 
-// The heart of the app. Server-fetches the group's feed + the data needed to
-// seed the streaks, then hands off to HomeClient for the live, interactive UI.
+// Home (STACK_BATCH6 Stage 2): personal snapshot + pinned groups + a combined
+// "All Activity" feed across all the user's groups. Solo users get the snapshot
+// plus a path into a group.
 export default async function HomePage() {
   const { userId, profile } = await getUserAndProfile();
-  const { active, groups } = await getActiveGroup();
-  const showTour = profile?.has_completed_tour === false;
-
   if (!userId) redirect("/login");
   const supabase = createClient();
   const now = new Date();
+  const groups = await getUserGroups();
 
-  // Unread notification count for the bell (RLS: own rows only).
   const { count: unread } = await supabase
     .from("notifications")
     .select("id", { count: "exact", head: true })
     .eq("recipient_id", userId)
     .is("read_at", null);
 
-  // Solo mode (Batch 5 B1): no group yet, but full personal value.
-  if (!active) {
-    const [mineRes, restRes] = await Promise.all([
-      supabase
-        .from("checkins")
-        .select("id, post_id, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(400),
-      supabase.from("rest_days").select("day").eq("user_id", userId),
-    ]);
-    const seen = new Set<string>();
-    const personalDates: string[] = [];
-    for (const c of mineRes.data ?? []) {
-      const key = (c.post_id as string | null) ?? (c.id as string);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      personalDates.push(c.created_at as string);
-    }
-    const restDays = (restRes.data ?? []).map((r) => r.day as string);
-    const ctx = await loadStreakContext(
-      supabase,
-      userId,
-      profile,
-      personalDates,
-      restDays,
-      now,
-    );
+  // Personal post dates (deduped by post) + rest days for the snapshot streak.
+  const [mineRes, restRes] = await Promise.all([
+    supabase
+      .from("checkins")
+      .select("id, post_id, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(400),
+    supabase.from("rest_days").select("day").eq("user_id", userId),
+  ]);
+  const seen = new Set<string>();
+  const personalDates: string[] = [];
+  for (const c of mineRes.data ?? []) {
+    const key = (c.post_id as string | null) ?? (c.id as string);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    personalDates.push(c.created_at as string);
+  }
+  const restDays = (restRes.data ?? []).map((r) => r.day as string);
+  const ctx = await loadStreakContext(supabase, userId, profile, personalDates, restDays, now);
 
+  const TopBar = (
+    <div className="mb-8 flex items-center justify-between">
+      <BrandBar />
+      <NotificationBell userId={userId} initialUnread={unread ?? 0} />
+    </div>
+  );
+
+  // Solo: snapshot + invite path (no fabricated feed content).
+  if (groups.length === 0) {
     return (
       <main className="mx-auto w-full max-w-xl px-6 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <BrandBar />
-          <NotificationBell userId={userId} initialUnread={unread ?? 0} />
-        </div>
+        {TopBar}
         <SoloHome
           userId={userId}
           personalDates={personalDates}
@@ -76,57 +71,38 @@ export default async function HomePage() {
     );
   }
 
-  const data = await getHomeData(active.id, userId);
-  const ctx = await loadStreakContext(
-    supabase,
-    userId,
-    profile,
-    data.personalDates,
-    data.restDays,
-    now,
+  const [feed, dash] = await Promise.all([
+    getCombinedFeed(),
+    getGroupsDashboard(userId),
+  ]);
+  const groupCards: GroupCard[] = dash.groups.map((d) => ({
+    id: d.group.id,
+    name: d.group.name,
+    checkedInToday: d.members.filter((m) => m.checkedInToday).length,
+    memberCount: d.members.length,
+    collectiveStreak: d.collectiveStreak,
+  }));
+  const pinnedIds = (profile?.pinned_groups ?? []).filter((id) =>
+    groupCards.some((g) => g.id === id),
   );
-
-  // Group collective streak still uses the everyone-checked-in-today model.
-  const memberArrays = data.members.map((m) =>
-    data.feed.filter((c) => c.user_id === m.user_id).map((c) => c.created_at),
-  );
-  const group = computeGroupStreak(memberArrays, now);
-  const checkedInToday = toDaySet(data.personalDates).has(localDateKey(now));
+  const userName = profile?.display_name?.trim() || `@${profile?.username ?? "you"}`;
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
-      <div className="mb-2 flex items-center justify-between">
-        <BrandBar />
-        <NotificationBell userId={userId} initialUnread={unread ?? 0} />
-      </div>
-
-      <header className="mb-8 min-w-0" data-tour="home-header">
-        {groups.length > 1 ? (
-          <GroupSwitcher groups={groups} activeId={active.id} />
-        ) : (
-          <h1 className="truncate text-h2">{active.name}</h1>
-        )}
-        {active.goal && (
-          <p className="mt-1 truncate text-caption text-text-dim">
-            {active.goal}
-          </p>
-        )}
-      </header>
-
-      <HomeClient
-        groupId={active.id}
+      {TopBar}
+      <CombinedHome
         userId={userId}
-        initialFeed={data.feed}
-        members={data.members}
-        initialReactions={data.reactions}
-        initialComments={data.comments}
-        initialPersonalDates={data.personalDates}
-        initialRestDays={data.restDays}
+        userName={userName}
+        userAvatar={profile?.avatar_url ?? null}
+        personalDates={personalDates}
+        restDays={restDays}
         ctx={ctx}
-        suggestedGoal={suggestGoal(data.personalDates, now)}
-        initialGroup={group}
-        initialCheckedInToday={checkedInToday}
-        showTour={showTour}
+        suggestedGoal={suggestGoal(personalDates, now)}
+        items={feed.items}
+        reactions={feed.reactions}
+        comments={feed.comments}
+        groupCards={groupCards}
+        pinnedIds={pinnedIds}
       />
     </main>
   );

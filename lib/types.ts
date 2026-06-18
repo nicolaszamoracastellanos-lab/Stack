@@ -42,6 +42,8 @@ export type Profile = {
   quiet_end: number;
   /** Language for localized push copy. */
   language: string | null;
+  /** Up to 3 pinned group ids, ordered (Batch 6 Stage 2). */
+  pinned_groups: string[];
   /** Founder/QA harness access flag — server-enforced gate (STACK_FOUNDER_MODE). */
   is_founder: boolean;
   /** Founder-only streak display override (simulator); null for normal users. */

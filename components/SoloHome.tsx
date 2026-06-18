@@ -53,7 +53,7 @@ export function SoloHome({
     return ctx.streakOverride
       ? { ...computed, count: ctx.streakOverride.count, state: ctx.streakOverride.state }
       : computed;
-  }, [personalDates, restDays, ctx.weeklyGoal, ctx.quotaActiveFromKey, ctx.streakOverride]);
+  }, [personalDates, restDays, ctx.weeklyGoal, ctx.quotaActiveFromKey, ctx.tz, ctx.streakOverride]);
   const displayedStreak = useCountUp(streak.count);
 
   const goalDenom = ctx.weeklyGoal && ctx.weeklyGoal > 0 ? ctx.weeklyGoal : 7;

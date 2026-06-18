@@ -19,6 +19,8 @@ export type FeedItemData = {
   avatarUrl?: string | null;
   /** Poster's tier (confirmed or provisional) for the badge (STACK_FIXES2 B). */
   tier?: import("@/lib/tiers").TierKey | null;
+  /** "posted in X" label for the combined feed (Batch 6 Stage 2). */
+  groupLabel?: string | null;
   photoUrl: string;
   note?: string | null;
   sport?: string | null;
@@ -107,9 +109,16 @@ export function FeedItem({
         <Link href={`/u/${item.userId}`} className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar name={item.name} src={item.avatarUrl} size="md" />
           <span className="flex min-w-0 flex-col gap-1">
-            <span className="truncate text-body font-medium text-text">{item.name}</span>
-            {/* Poster tier badge (STACK_FIXES2 B). */}
-            {item.tier && <TierBadge tierKey={item.tier} size="sm" />}
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="truncate text-body font-medium text-text">{item.name}</span>
+              {/* Poster tier badge (STACK_FIXES2 B). */}
+              {item.tier && <TierBadge tierKey={item.tier} size="sm" />}
+            </span>
+            {item.groupLabel && (
+              <span className="truncate text-caption text-text-dim">
+                {item.groupLabel}
+              </span>
+            )}
           </span>
         </Link>
         <time className="font-mono text-caption text-text-dim nums">{time}</time>
