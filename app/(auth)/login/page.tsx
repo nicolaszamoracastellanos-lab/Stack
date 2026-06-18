@@ -96,6 +96,13 @@ function LoginForm() {
           required
         />
 
+        <Link
+          href="/forgot-password"
+          className="-mt-1 self-end text-label text-text-muted hover:text-text"
+        >
+          {t("login_forgot")}
+        </Link>
+
         {error && <p className="text-label text-danger">{t(error)}</p>}
 
         <Button
