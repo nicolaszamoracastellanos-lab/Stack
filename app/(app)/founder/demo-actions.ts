@@ -39,6 +39,7 @@ export async function seedDemo(): Promise<DemoResult> {
         goal: "Founder QA — safe to delete",
         invite_code: generateInviteCode(),
         created_by: f.userId,
+        owner_id: f.userId,
         is_demo: true,
       })
       .select("id")

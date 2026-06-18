@@ -51,6 +51,7 @@ export default function NewGroupPage() {
           goal: goal.trim() || null,
           invite_code: code,
           created_by: user.id,
+          owner_id: user.id,
         })
         .select("id")
         .single();

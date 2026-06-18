@@ -11,7 +11,7 @@ const ago = (n: number) => new Date(2026, 5, 15 - n, 8, 0, 0).toISOString();
 
 function pactGroup(over: Partial<Group> = {}): Group {
   return {
-    id: "g", name: "G", goal: null, invite_code: "X", created_by: "x", created_at: "",
+    id: "g", name: "G", goal: null, invite_code: "X", created_by: "x", owner_id: "x", created_at: "",
     intention: null, motivation: null, end_goal: null, meaning: null,
     workouts_per_week: 3, allowed_disciplines: [], duration_type: "ongoing",
     duration_weeks: null, pact_start_date: "2026-06-01", pact_end_date: null,

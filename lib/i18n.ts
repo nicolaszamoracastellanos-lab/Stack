@@ -69,6 +69,10 @@ export const translations = {
     // Group detail
     gd_group_stats: "Group",
     gd_breakdown: "Members",
+    gd_remove: "Remove",
+    gd_remove_confirm:
+      "Remove {name} from the group? They lose access going forward. Their past posts stay in the feed.",
+    gd_remove_failed: "Could not remove member",
     gd_collective_streak: "Collective streak",
     gd_total_checkins: "Total check-ins",
     gd_consistency: "Consistency this week",
@@ -632,6 +636,10 @@ export const translations = {
     // Group detail
     gd_group_stats: "Grupo",
     gd_breakdown: "Integrantes",
+    gd_remove: "Quitar",
+    gd_remove_confirm:
+      "¿Quitar a {name} del grupo? Pierde el acceso de ahora en adelante. Sus publicaciones anteriores se quedan en el feed.",
+    gd_remove_failed: "No se pudo quitar al integrante",
     gd_collective_streak: "Racha colectiva",
     gd_total_checkins: "Registros totales",
     gd_consistency: "Constancia esta semana",

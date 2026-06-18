@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Leaderboard } from "@/components/Leaderboard";
 import { NudgeButton } from "@/components/NudgeButton";
+import { RemoveMemberButton } from "@/components/RemoveMemberButton";
 import { RecapCard } from "@/components/RecapCard";
 import { GroupChat } from "@/components/GroupChat";
 import { PactSection } from "@/components/PactSection";
@@ -249,13 +250,25 @@ export function GroupDetail({
           <Leaderboard
             members={data.members}
             trailing={(m) =>
-              !m.isYou && !m.checkedInToday ? (
-                <NudgeButton
-                  groupId={data.group.id}
-                  fromUserId={userId}
-                  toUserId={m.userId}
-                />
-              ) : null
+              m.isYou ? null : (
+                <div className="flex shrink-0 items-center gap-2">
+                  {!m.checkedInToday && (
+                    <NudgeButton
+                      groupId={data.group.id}
+                      fromUserId={userId}
+                      toUserId={m.userId}
+                    />
+                  )}
+                  {/* Owner-only remove (STACK_FIXES2 D). */}
+                  {data.isCreator && (
+                    <RemoveMemberButton
+                      groupId={data.group.id}
+                      memberUserId={m.userId}
+                      memberName={m.name}
+                    />
+                  )}
+                </div>
+              )
             }
           />
         </div>

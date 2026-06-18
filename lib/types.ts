@@ -59,6 +59,8 @@ export type Group = {
   goal: string | null;
   invite_code: string;
   created_by: string;
+  /** Explicit owner (backfilled to creator); only the owner can remove members. */
+  owner_id: string | null;
   created_at: string;
   // Pact identity (Batch 4) — all optional.
   intention: string | null;

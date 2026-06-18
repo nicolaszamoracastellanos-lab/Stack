@@ -298,7 +298,8 @@ export async function getGroupDetail(
 
   return {
     group,
-    isCreator: group.created_by === userId,
+    // Owner is the authority for admin actions (backfilled to the creator).
+    isCreator: (group.owner_id ?? group.created_by) === userId,
     inviteLink: `${baseUrl}/join/${group.invite_code}`,
     proposal,
     debts: {
