@@ -10,6 +10,8 @@ export type StreakContext = {
   needsGoal: boolean;
   weeklyGoal: number | null;
   quotaActiveFromKey: string | null;
+  /** User's IANA timezone for day bucketing (server/client agree). */
+  tz: string | null;
   preferredRestDays: number[];
   /** Server-seeded streak (client recomputes with local "today"). */
   streak: QuotaStreak;
@@ -43,11 +45,13 @@ export async function loadStreakContext(
   const weeklyGoal = profile?.weekly_goal ?? null;
   const quotaActiveFromKey = profile?.quota_active_from ?? null;
   const preferredRestDays = profile?.preferred_rest_days ?? [];
+  const tz = profile?.timezone ?? null;
 
   const streak = computeQuotaStreak(personalDates, {
     weeklyGoal,
     quotaActiveFromKey,
     restDayKeys,
+    tz,
     now,
   });
 
@@ -127,6 +131,7 @@ export async function loadStreakContext(
     needsGoal: weeklyGoal == null,
     weeklyGoal,
     quotaActiveFromKey,
+    tz,
     preferredRestDays,
     streak: streakOverride
       ? { ...streak, count: streakOverride.count, state: streakOverride.state }

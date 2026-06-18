@@ -32,6 +32,7 @@ export default async function CheckinPage() {
     weeklyGoal: profile?.weekly_goal ?? null,
     quotaActiveFromKey: profile?.quota_active_from ?? null,
     restDayKeys: restDays,
+    tz: profile?.timezone ?? null,
     now,
   });
   // If today isn't logged yet, this post extends the streak by one.

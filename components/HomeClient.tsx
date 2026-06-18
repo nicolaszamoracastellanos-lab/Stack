@@ -127,6 +127,7 @@ export function HomeClient({
           weeklyGoal: ctx.weeklyGoal,
           quotaActiveFromKey: ctx.quotaActiveFromKey,
           restDayKeys: restDays,
+          tz: ctx.tz,
           now,
         }),
       );

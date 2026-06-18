@@ -49,6 +49,7 @@ type ProfileLite = {
   show_stats: boolean | null;
   weekly_goal: number | null;
   quota_active_from: string | null;
+  timezone: string | null;
   tier_confirmed: string | null;
   tier_provisional: string | null;
 } | null;
@@ -72,7 +73,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
         supabase
           .from("group_members")
           .select(
-            "user_id, profile:profiles(username, display_name, avatar_url, show_stats, weekly_goal, quota_active_from, tier_confirmed, tier_provisional)",
+            "user_id, profile:profiles(username, display_name, avatar_url, show_stats, weekly_goal, quota_active_from, timezone, tier_confirmed, tier_provisional)",
           )
           .eq("group_id", g.id),
         supabase
@@ -104,6 +105,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
           ? computeQuotaStreak(dates, {
               weeklyGoal: profile?.weekly_goal ?? null,
               quotaActiveFromKey: profile?.quota_active_from ?? null,
+              tz: profile?.timezone ?? null,
               now,
             }).count
           : 0;

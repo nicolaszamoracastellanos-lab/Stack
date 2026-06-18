@@ -63,12 +63,21 @@ export type QuotaOpts = {
   quotaActiveFromKey: DayKey | null;
   /** Marked rest days (day-keys) — only used in the pre-quota grace window. */
   restDayKeys?: string[];
+  /**
+   * IANA timezone for day bucketing. Pass the user's stored timezone so the
+   * result is identical whether computed server-side (UTC runtime) or client-
+   * side (device zone). When omitted, falls back to the runtime's local zone.
+   */
+  tz?: string | null;
   now?: Date;
 };
 
-/** Distinct local day-keys with at least one workout. */
-export function workoutDaySet(dates: Array<string | number | Date>): Set<DayKey> {
-  return new Set(dates.map((d) => dayKey(new Date(d))));
+/** Distinct day-keys (in `tz`, or runtime-local) with at least one workout. */
+export function workoutDaySet(
+  dates: Array<string | number | Date>,
+  tz?: string | null,
+): Set<DayKey> {
+  return new Set(dates.map((d) => dayKey(new Date(d), tz)));
 }
 
 function classifyResolvedDay(
@@ -103,10 +112,11 @@ export function computeQuotaStreak(
   opts: QuotaOpts,
 ): QuotaStreak {
   const now = opts.now ?? new Date();
-  const todayKey = dayKey(now);
+  const tz = opts.tz;
+  const todayKey = dayKey(now, tz);
   const yesterdayKey = addDaysKey(todayKey, -1);
   const restSet = new Set(opts.restDayKeys ?? []);
-  const workouts = workoutDaySet(dates);
+  const workouts = workoutDaySet(dates, tz);
   const { weeklyGoal, quotaActiveFromKey } = opts;
 
   // Current-week facts (drive state + ring), independent of the walk.
@@ -116,10 +126,19 @@ export function computeQuotaStreak(
   ).length;
   const daysLeftInclToday = 7 - weekdayMon0(todayKey);
   const workedToday = workouts.has(todayKey);
+  const currentWeekStart = getWeekStartKey(todayKey);
   const quotaEraNow =
     weeklyGoal != null &&
     quotaActiveFromKey != null &&
-    getWeekStartKey(todayKey) >= quotaActiveFromKey;
+    currentWeekStart >= quotaActiveFromKey;
+  // Partial first week (STACK_FIXES2 A): a goal is set but quota hasn't activated
+  // yet for THIS week (mid-week joiners, and the conversion grace week). The
+  // streak is fully protected here — it can never break or show at-risk; the
+  // real quota begins on the first full Monday (quotaActiveFromKey).
+  const preActivationCurrentWeek =
+    weeklyGoal != null &&
+    quotaActiveFromKey != null &&
+    currentWeekStart < quotaActiveFromKey;
   const needed = weeklyGoal != null ? Math.max(0, weeklyGoal - weekWorkoutsCurrent) : 0;
   const slack = daysLeftInclToday - needed;
 
@@ -151,17 +170,28 @@ export function computeQuotaStreak(
     }
     const quotaEra =
       weeklyGoal != null && quotaActiveFromKey != null && wk >= quotaActiveFromKey;
+    // Protect the CURRENT partial first week: logged day extends, missed day
+    // bridges (never breaks). Past weeks keep their normal classification.
+    const isProtected =
+      weeklyGoal != null &&
+      quotaActiveFromKey != null &&
+      wk === currentWeekStart &&
+      wk < quotaActiveFromKey;
     const worked = workouts.has(k);
     if (worked) weekWorkouts++;
-    streak = classifyResolvedDay(
-      k,
-      worked,
-      weekWorkouts,
-      quotaEra,
-      weeklyGoal,
-      restSet,
-      streak,
-    );
+    if (isProtected) {
+      if (worked) streak = streak + 1; // else: bridge, no break, no increment
+    } else {
+      streak = classifyResolvedDay(
+        k,
+        worked,
+        weekWorkouts,
+        quotaEra,
+        weeklyGoal,
+        restSet,
+        streak,
+      );
+    }
     k = addDaysKey(k, 1);
   }
   const streakAtYesterday = streak;
@@ -188,8 +218,13 @@ export function computeQuotaStreak(
       count = streakAtYesterday;
       state = count === 0 ? "broken" : slack === 0 ? "at-risk" : "alive";
     }
+  } else if (preActivationCurrentWeek) {
+    // Partial first week: never at-risk, never broken. Logged day counts; an
+    // unlogged (still-open) day simply holds the streak.
+    count = workedToday ? streakAtYesterday + 1 : streakAtYesterday;
+    state = "alive";
   } else {
-    // Grace / no goal: old-style today handling.
+    // No goal set: old-style grace today handling.
     if (workedToday) {
       count = streakAtYesterday + 1;
       state = "alive";

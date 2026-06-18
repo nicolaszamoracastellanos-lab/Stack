@@ -34,6 +34,7 @@ export default async function FounderPage() {
     weeklyGoal: profile.weekly_goal,
     quotaActiveFromKey: profile.quota_active_from,
     restDayKeys: restDays,
+    tz: profile.timezone,
   });
   const engine = {
     weeklyGoal: profile.weekly_goal,

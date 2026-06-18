@@ -147,4 +147,52 @@ check("grace until next Monday: quota can't break the current week on conversion
   assert.equal(r.count, 1); // Mon logged; rests bridge but don't increment
 });
 
+// ---- STACK_FIXES2 A: the founder's Q=6 case + partial first week ----
+const Q6_WEEK = ["15", "16", "17"].map((d) => at(`2026-06-${d}`)); // Mon/Tue/Wed
+const Q6_OPTS = { weeklyGoal: 6, quotaActiveFromKey: "2026-06-15" }; // quota active
+
+check("Q=6: Mon/Tue/Wed logged → Thursday is NOT at-risk (slack 1)", () => {
+  const r = computeQuotaStreak(Q6_WEEK, { ...Q6_OPTS, now: noonOf("2026-06-18") });
+  assert.equal(r.weekWorkouts, 3);
+  assert.equal(r.needed, 3);
+  assert.equal(r.daysLeftInclToday, 4); // Thu/Fri/Sat/Sun
+  assert.equal(r.slack, 1);
+  assert.equal(r.state, "alive");
+});
+
+check("Q=6: skip Thursday → Friday IS at-risk (slack 0)", () => {
+  const r = computeQuotaStreak(Q6_WEEK, { ...Q6_OPTS, now: noonOf("2026-06-19") });
+  assert.equal(r.slack, 0);
+  assert.equal(r.state, "at-risk");
+});
+
+check("Q=6: skip Thursday+Friday → Saturday streak breaks", () => {
+  const r = computeQuotaStreak(Q6_WEEK, { ...Q6_OPTS, now: noonOf("2026-06-20") });
+  assert.equal(r.slack < 0, true);
+  assert.equal(r.state, "broken");
+});
+
+check("partial first week: mid-week joiner is never at-risk or broken", () => {
+  // Joined Wed, goal set Wed → quota activates next Monday (06-22). Logged Wed,
+  // missed Thu. Friday must be protected: alive, streak holds, no at-risk/break.
+  const r = computeQuotaStreak([at("2026-06-17")], {
+    weeklyGoal: 6,
+    quotaActiveFromKey: "2026-06-22",
+    now: noonOf("2026-06-19"),
+  });
+  assert.equal(r.state, "alive");
+  assert.equal(r.count, 1); // Wed counts, Thu bridges
+});
+
+check("timezone-aware: a late-UTC workout counts on the local day", () => {
+  // 2026-06-17 02:00 UTC is still Tue 2026-06-16 in New York.
+  const r = computeQuotaStreak(["2026-06-17T02:00:00Z"], {
+    weeklyGoal: 6,
+    quotaActiveFromKey: "2026-06-15",
+    tz: "America/New_York",
+    now: noonOf("2026-06-16"),
+  });
+  assert.equal(r.weekWorkouts, 1); // counts on Tuesday local, not Wednesday
+});
+
 console.log(`\n${passed} passed`);

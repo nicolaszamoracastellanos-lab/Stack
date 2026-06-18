@@ -46,6 +46,7 @@ export function SoloHome({
       weeklyGoal: ctx.weeklyGoal,
       quotaActiveFromKey: ctx.quotaActiveFromKey,
       restDayKeys: restDays,
+      tz: ctx.tz,
       now: new Date(),
     });
     // Founder simulator override (founder-only); never set for normal users.
