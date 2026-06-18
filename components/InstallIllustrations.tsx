@@ -121,7 +121,7 @@ function SafariToolbar({ highlightShare }: { highlightShare?: boolean }) {
       {/* address pill */}
       <rect x="64" y="548" width="192" height="32" rx="16" fill={SHEET2} />
       <text x="160" y="568" fill="#c9c9ce" fontSize="11" textAnchor="middle">
-        stack-one-tawny.vercel.app
+        stack-app.online
       </text>
       {/* toolbar icons */}
       <g stroke="#9a9aa0" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -219,7 +219,7 @@ export function StepAddToHome({ label }: { label: string }) {
           Stack
         </text>
         <text x="88" y="244" fill={MUT} fontSize="11">
-          stack-one-tawny.vercel.app
+          stack-app.online
         </text>
       </g>
       {/* app share icons row */}
@@ -274,7 +274,7 @@ export function StepAdd({ label }: { label: string }) {
           Stack
         </text>
         <text x="128" y="266" fill={MUT} fontSize="11">
-          stack-one-tawny.vercel.app
+          stack-app.online
         </text>
       </g>
       <text x="160" y="318" fill={MUT} fontSize="11" textAnchor="middle" className="font-sans">

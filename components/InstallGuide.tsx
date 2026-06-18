@@ -14,7 +14,7 @@ import {
   StepHomeScreen,
 } from "@/components/InstallIllustrations";
 
-const FALLBACK_HOST = "stack-one-tawny.vercel.app";
+const FALLBACK_HOST = "stack-app.online";
 
 const STEPS = [
   { titleKey: "install_step1_title", bodyKey: "install_step1_body", Art: StepSafari },
