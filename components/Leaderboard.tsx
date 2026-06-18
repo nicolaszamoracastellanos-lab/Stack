@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { TierBadge } from "@/components/TierBadge";
 import { useLanguage } from "@/lib/language-context";
-import { tierByKey } from "@/lib/tiers";
 import type { LeaderEntry } from "@/lib/groups-dashboard";
 
 /** Small 7-day consistency ring (value 0–1). */
@@ -76,20 +76,7 @@ export function Leaderboard({
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 truncate text-body font-medium text-text">
-                {/* Tier colour dot — disambiguates equal streak lengths (C4). */}
-                {m.tier && (
-                  <span
-                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-pill"
-                    title={m.tier}
-                    style={{
-                      backgroundColor: tierByKey(m.tier)?.hex,
-                      boxShadow: tierByKey(m.tier)?.outline
-                        ? `0 0 0 1px ${tierByKey(m.tier)!.outline}`
-                        : undefined,
-                    }}
-                  />
-                )}
+              <p className="flex items-center gap-1.5 text-body font-medium text-text">
                 <span className="truncate">{m.name}</span>
                 {m.isYou && (
                   <span className="shrink-0 text-caption text-text-dim">
@@ -97,6 +84,13 @@ export function Leaderboard({
                   </span>
                 )}
               </p>
+              {/* Tier badge next to the name (STACK_FIXES2 B) — colour + name
+                  disambiguates equal streak lengths. */}
+              {m.tier && (
+                <div className="mt-1">
+                  <TierBadge tierKey={m.tier} size="sm" />
+                </div>
+              )}
               <p className="text-caption text-text-dim">
                 {m.showStats
                   ? t("leaderboard_days", { n: m.daysThisWeek })

@@ -21,6 +21,8 @@ export type FeedMember = {
   user_id: string;
   name: string;
   avatarUrl: string | null;
+  /** Tier (confirmed or provisional) for the badge (STACK_FIXES2 B). */
+  tier: import("@/lib/tiers").TierKey | null;
 };
 export type FeedReaction = {
   checkin_id: string;
@@ -53,7 +55,14 @@ type ProfileLite = {
   username: string;
   display_name: string | null;
   avatar_url?: string | null;
+  tier_confirmed?: string | null;
+  tier_provisional?: string | null;
 } | null;
+
+function tierOf(profile: ProfileLite): import("@/lib/tiers").TierKey | null {
+  return ((profile?.tier_confirmed ?? profile?.tier_provisional) ??
+    null) as import("@/lib/tiers").TierKey | null;
+}
 
 /** Friendly display name: the chosen display name, else @username. */
 export function nameOf(profile: ProfileLite): string {
@@ -75,7 +84,9 @@ export async function getHomeData(
   const [memberRes, checkinRes, mineRes] = await Promise.all([
     supabase
       .from("group_members")
-      .select("user_id, profile:profiles(username, display_name, avatar_url)")
+      .select(
+        "user_id, profile:profiles(username, display_name, avatar_url, tier_confirmed, tier_provisional)",
+      )
       .eq("group_id", groupId),
     supabase
       .from("checkins")
@@ -96,6 +107,7 @@ export async function getHomeData(
       user_id: (row as { user_id: string }).user_id,
       name: nameOf(profile),
       avatarUrl: profile?.avatar_url ?? null,
+      tier: tierOf(profile),
     };
   });
   const nameByUser = Object.fromEntries(members.map((m) => [m.user_id, m.name]));

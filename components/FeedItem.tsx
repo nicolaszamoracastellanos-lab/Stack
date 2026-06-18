@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/Button";
 import { SharePhotoButton } from "@/components/SharePhotoButton";
 import { useLanguage } from "@/lib/language-context";
@@ -16,6 +17,8 @@ export type FeedItemData = {
   userId: string;
   name: string;
   avatarUrl?: string | null;
+  /** Poster's tier (confirmed or provisional) for the badge (STACK_FIXES2 B). */
+  tier?: import("@/lib/tiers").TierKey | null;
   photoUrl: string;
   note?: string | null;
   sport?: string | null;
@@ -103,7 +106,11 @@ export function FeedItem({
       <header className="flex items-center gap-3 p-4">
         <Link href={`/u/${item.userId}`} className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar name={item.name} src={item.avatarUrl} size="md" />
-          <p className="truncate text-body font-medium text-text">{item.name}</p>
+          <span className="flex min-w-0 flex-col gap-1">
+            <span className="truncate text-body font-medium text-text">{item.name}</span>
+            {/* Poster tier badge (STACK_FIXES2 B). */}
+            {item.tier && <TierBadge tierKey={item.tier} size="sm" />}
+          </span>
         </Link>
         <time className="font-mono text-caption text-text-dim nums">{time}</time>
         {isAuthor && (

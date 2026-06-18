@@ -104,6 +104,10 @@ export function HomeClient({
     () => Object.fromEntries(members.map((m) => [m.user_id, m.avatarUrl])),
     [members],
   );
+  const tierByUser = useMemo(
+    () => Object.fromEntries(members.map((m) => [m.user_id, m.tier])),
+    [members],
+  );
 
   // Keep refs fresh for use inside realtime callbacks (stable subscription).
   const feedRef = useRef(feed);
@@ -459,9 +463,9 @@ export function HomeClient({
               state={personal.state}
               size="md"
             />
-            <div className="mt-3">
+            <Link href="/tiers" className="mt-3 inline-block">
               <TierBadge tierKey={tierKey} provisional={!ctx.confirmedTier} size="sm" />
-            </div>
+            </Link>
           </div>
           <div className="rounded-card border border-border bg-surface p-5">
             <StreakBadge
@@ -534,6 +538,7 @@ export function HomeClient({
                 userId: c.user_id,
                 name: c.name,
                 avatarUrl: c.avatarUrl,
+                tier: tierByUser[c.user_id] ?? null,
                 photoUrl: c.photoUrl,
                 note: c.note,
                 sport: c.sport,

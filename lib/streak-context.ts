@@ -2,7 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types";
 import { computeQuotaStreak, type QuotaStreak } from "@/lib/streak-quota";
 import { evaluateTiersFromHistory, currentWeekFreq } from "@/lib/tier-eval";
-import { tierProjection, type TierKey, type TierProjection } from "@/lib/tiers";
+import {
+  tierForFrequency,
+  tierProjection,
+  type TierKey,
+  type TierProjection,
+} from "@/lib/tiers";
 import { nextWeekStartKey } from "@/lib/week";
 
 export type StreakContext = {
@@ -61,11 +66,18 @@ export async function loadStreakContext(
 
   if (weeklyGoal != null && quotaActiveFromKey) {
     const evalRes = evaluateTiersFromHistory(personalDates, quotaActiveFromKey, now);
+    const nextConfirmed = evalRes.confirmed;
+    let nextProvisional = evalRes.provisional;
+    // Week-1 provisional (STACK_FIXES2 B): before any week has completed there's
+    // no confirmed/provisional from history, so show a provisional tier from the
+    // CURRENT week's frequency so a brand-new account has a tier immediately.
+    if (!nextConfirmed && !nextProvisional && weekFreqNow >= 1) {
+      nextProvisional = tierForFrequency(weekFreqNow)?.key ?? null;
+    }
     const changed =
-      evalRes.confirmed !== confirmedTier ||
-      evalRes.provisional !== provisionalTier;
-    confirmedTier = evalRes.confirmed;
-    provisionalTier = evalRes.provisional;
+      nextConfirmed !== confirmedTier || nextProvisional !== provisionalTier;
+    confirmedTier = nextConfirmed;
+    provisionalTier = nextProvisional;
 
     if (changed) {
       // Persist on the rare change path. Awaited so serverless doesn't cancel

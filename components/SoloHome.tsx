@@ -133,9 +133,9 @@ export function SoloHome({
               state={streak.state}
               size="md"
             />
-            <div className="mt-3">
+            <Link href="/tiers" className="mt-3 inline-block">
               <TierBadge tierKey={tierKey} provisional={!ctx.confirmedTier} size="sm" />
-            </div>
+            </Link>
           </div>
         </div>
       </section>
