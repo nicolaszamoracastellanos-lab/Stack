@@ -3,6 +3,12 @@ import { getFounderEnv } from "@/lib/founder-env";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { computeQuotaStreak } from "@/lib/streak-quota";
+import {
+  dayKey,
+  getWeekStartKey,
+  weekDayKeys,
+  weekdayMon0,
+} from "@/lib/week";
 import { FounderPanel } from "@/components/founder/FounderPanel";
 
 // Founder/QA harness (STACK_FOUNDER_MODE). Server-gated: non-founders are
@@ -41,6 +47,42 @@ export default async function FounderPage() {
     reachable: real.slack >= 0,
   };
 
+  // A · At-risk diagnostic, computed in the FOUNDER'S timezone (the engine is
+  // tz-naive and runs in UTC on the server, so this is the picture that matches
+  // the founder's lived, client-side experience). Read-only — no fix yet.
+  const tz = profile.timezone;
+  const now = new Date();
+  const todayKey = dayKey(now, tz);
+  const weekStartKey = getWeekStartKey(todayKey);
+  const workoutDays = new Set(dates.map((d) => dayKey(new Date(d), tz)));
+  const weekWorkouts = weekDayKeys(todayKey).filter(
+    (k) => k <= todayKey && workoutDays.has(k),
+  ).length;
+  const daysLeftInclToday = 7 - weekdayMon0(todayKey);
+  const Q = profile.weekly_goal;
+  const needed = Q != null ? Math.max(0, Q - weekWorkouts) : null;
+  const slack = needed != null ? daysLeftInclToday - needed : null;
+  const quotaEraActive =
+    Q != null &&
+    profile.quota_active_from != null &&
+    weekStartKey >= profile.quota_active_from;
+  const diag = {
+    timezone: tz ?? "(null)",
+    serverTzTodayKey: dayKey(now),
+    weeklyGoal: Q,
+    quotaActiveFrom: profile.quota_active_from,
+    quotaEraActive,
+    todayKey,
+    weekStartKey,
+    weekWorkouts,
+    daysLeftInclToday,
+    needed,
+    slack,
+    workedToday: workoutDays.has(todayKey),
+    atRiskEligible: quotaEraActive && slack === 0 && !workoutDays.has(todayKey),
+    simActive: !!profile.founder_sim?.active,
+  };
+
   // Snapshot presence (kv_meta via admin, after the gate above).
   let snapshotTakenAt: string | null = null;
   const admin = createAdminClient();
@@ -61,6 +103,7 @@ export default async function FounderPage() {
       env={env}
       subCount={subRes.count ?? 0}
       engine={engine}
+      diag={diag}
       tierConfirmed={(profile.tier_confirmed as never) ?? null}
       tierProvisional={(profile.tier_provisional as never) ?? null}
       simActive={!!profile.founder_sim?.active}

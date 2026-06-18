@@ -15,12 +15,30 @@ import { DemoSection } from "@/components/founder/DemoSection";
  * are added incrementally per the spec's build order; each is independently
  * founder-gated on the server.
  */
+export type AtRiskDiag = {
+  timezone: string;
+  serverTzTodayKey: string;
+  weeklyGoal: number | null;
+  quotaActiveFrom: string | null;
+  quotaEraActive: boolean;
+  todayKey: string;
+  weekStartKey: string;
+  weekWorkouts: number;
+  daysLeftInclToday: number;
+  needed: number | null;
+  slack: number | null;
+  workedToday: boolean;
+  atRiskEligible: boolean;
+  simActive: boolean;
+};
+
 export function FounderPanel({
   userId,
   isFounder,
   env,
   subCount,
   engine,
+  diag,
   tierConfirmed,
   tierProvisional,
   simActive,
@@ -31,6 +49,7 @@ export function FounderPanel({
   env: FounderEnv | null;
   subCount: number;
   engine: FounderEngine;
+  diag: AtRiskDiag;
   tierConfirmed: TierKey | null;
   tierProvisional: TierKey | null;
   simActive: boolean;
@@ -61,6 +80,33 @@ export function FounderPanel({
       </header>
 
       <div className="flex flex-col gap-4">
+        {/* A · At-risk diagnostic (read-only; computed in your timezone) */}
+        <section className="rounded-card border border-volt/40 bg-bg p-5">
+          <p className="text-caption font-medium uppercase tracking-wide text-volt">
+            A · At-risk diagnostic (your timezone)
+          </p>
+          <dl className="mt-3 space-y-1 font-mono text-caption">
+            <Row k="weekly_goal (Q)" v={String(diag.weeklyGoal)} ok={diag.weeklyGoal === 6 ? undefined : false} />
+            <Row k="timezone" v={diag.timezone} />
+            <Row k="today (local)" v={diag.todayKey} />
+            <Row k="today (server/UTC)" v={diag.serverTzTodayKey} />
+            <Row k="week_start (Mon)" v={diag.weekStartKey} />
+            <Row k="quota_active_from" v={diag.quotaActiveFrom ?? "(null)"} />
+            <Row k="quota era active" v={String(diag.quotaEraActive)} />
+            <Row k="workouts this week" v={String(diag.weekWorkouts)} />
+            <Row k="days remaining (incl today)" v={String(diag.daysLeftInclToday)} />
+            <Row k="workouts still needed" v={String(diag.needed)} />
+            <Row k="slack" v={String(diag.slack)} ok={diag.slack === null ? undefined : diag.slack > 0} />
+            <Row k="worked today" v={String(diag.workedToday)} />
+            <Row k="AT-RISK (eligible)" v={String(diag.atRiskEligible)} ok={!diag.atRiskEligible} />
+            <Row k="founder_sim override active" v={String(diag.simActive)} ok={!diag.simActive} />
+          </dl>
+          <p className="mt-3 text-caption text-text-dim">
+            Read-only snapshot. Per the rule, at-risk should be true only when
+            slack === 0. Nothing has been changed.
+          </p>
+        </section>
+
         {/* §1 — gate confirmation */}
         <section className="rounded-card border border-border bg-surface p-5">
           <p className="text-caption font-medium uppercase tracking-wide text-text-dim">
