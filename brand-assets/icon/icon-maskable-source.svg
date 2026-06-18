@@ -1,0 +1,10 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stack">
+  <!-- Maskable source: identical mark, but the near-black background fills the
+       full square EDGE TO EDGE (no corner radius) so the platform can apply its
+       own mask shape. The bars sit inside the maskable safe zone, so the mark
+       itself is unchanged. Generated to icon-maskable-512.png. -->
+  <rect width="1024" height="1024" fill="#0A0A0B"/>
+  <rect x="212" y="614" width="600" height="104" rx="52" fill="#3A3A40"/>
+  <rect x="322" y="460" width="380" height="104" rx="52" fill="#6E6E78"/>
+  <rect x="422" y="306" width="180" height="104" rx="52" fill="#C6F806"/>
+</svg>

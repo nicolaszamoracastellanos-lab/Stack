@@ -1,0 +1,15 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stack">
+  <!-- Stack "summit stack" app icon — source of truth. Three rounded bars
+       climbing to a volt peak on a near-black rounded square. All other icon
+       assets (PNGs, ICO, apple-touch) are generated from this via
+       scripts/generate-icons.mjs. Proportions are fixed by STACK_BRANDING.md;
+       do not change. -->
+  <rect width="1024" height="1024" rx="230" fill="#0A0A0B"/>
+  <rect x="212" y="614" width="600" height="104" rx="52" fill="#3A3A40"/>
+  <rect x="322" y="460" width="380" height="104" rx="52" fill="#6E6E78"/>
+  <!-- PHASE 2 (living icon): the top bar is the volt summit on purpose. A future
+       phase can light this bar volt only when the user has checked in today and
+       dim it when the streak is at risk (in-app icon / notification badge).
+       Do not build now. -->
+  <rect x="422" y="306" width="180" height="104" rx="52" fill="#C6F806"/>
+</svg>
