@@ -3,6 +3,7 @@ import { getUserAndProfile } from "@/lib/auth";
 import { getUserGroups } from "@/lib/groups";
 import { getCombinedFeed } from "@/lib/combined-feed";
 import { getGroupsDashboard } from "@/lib/groups-dashboard";
+import { getUnreadChatByGroup } from "@/lib/chat";
 import { createClient } from "@/lib/supabase/server";
 import { loadStreakContext } from "@/lib/streak-context";
 import { suggestGoal } from "@/lib/tier-eval";
@@ -71,9 +72,10 @@ export default async function HomePage() {
     );
   }
 
-  const [feed, dash] = await Promise.all([
+  const [feed, dash, chatUnread] = await Promise.all([
     getCombinedFeed(),
     getGroupsDashboard(userId),
+    getUnreadChatByGroup(groups.map((g) => g.id)),
   ]);
   const groupCards: GroupCard[] = dash.groups.map((d) => ({
     id: d.group.id,
@@ -81,6 +83,7 @@ export default async function HomePage() {
     checkedInToday: d.members.filter((m) => m.checkedInToday).length,
     memberCount: d.members.length,
     collectiveStreak: d.collectiveStreak,
+    chatUnread: chatUnread[d.group.id] ?? 0,
   }));
   const pinnedIds = (profile?.pinned_groups ?? []).filter((id) =>
     groupCards.some((g) => g.id === id),

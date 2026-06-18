@@ -41,11 +41,13 @@ export function GroupDetail({
   data,
   userId,
   isActive,
+  chatUnread,
   feed,
 }: {
   data: GroupDetailData;
   userId: string;
   isActive: boolean;
+  chatUnread: number;
   feed: {
     items: import("@/components/PostFeed").PostFeedItem[];
     reactions: import("@/lib/feed").FeedReaction[];
@@ -64,6 +66,7 @@ export function GroupDetail({
   const [confirm, setConfirm] = useState<null | "leave" | "delete">(null);
   const [working, setWorking] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const win = data.windows[window];
 
@@ -174,6 +177,30 @@ export function GroupDetail({
       {/* Weekly recap (Section 7) */}
       <div className="mb-8">
         <RecapCard data={data} />
+      </div>
+
+      {/* Chat entry point near the metrics (Batch 6 Stage 3). */}
+      <div className="mb-8">
+        <button
+          type="button"
+          onClick={() => setChatOpen((v) => !v)}
+          className="flex w-full items-center justify-between rounded-card border border-border bg-surface px-4 py-3 hover:border-border-strong"
+        >
+          <span className="flex items-center gap-2 text-body font-medium text-text">
+            <span aria-hidden>💬</span>
+            {t("chat_title")}
+          </span>
+          {!chatOpen && chatUnread > 0 && (
+            <span className="flex min-w-[20px] items-center justify-center rounded-pill bg-danger px-1.5 text-caption font-bold text-white">
+              {chatUnread > 99 ? "99+" : chatUnread}
+            </span>
+          )}
+        </button>
+        {chatOpen && (
+          <div className="mt-3">
+            <GroupChat groupId={data.group.id} userId={userId} members={data.members} />
+          </div>
+        )}
       </div>
 
       {/* Pending rule-change proposal — prominent (Batch 4 §5) */}
@@ -299,14 +326,6 @@ export function GroupDetail({
           />
         </section>
       )}
-
-      {/* SECTION — group chat (Section 8) */}
-      <section className="mt-10">
-        <h2 className="mb-2 text-caption font-medium uppercase tracking-wide text-text-dim">
-          {t("chat_title")}
-        </h2>
-        <GroupChat groupId={data.group.id} userId={userId} members={data.members} />
-      </section>
 
       {/* Open in Home */}
       <div className="mt-8">

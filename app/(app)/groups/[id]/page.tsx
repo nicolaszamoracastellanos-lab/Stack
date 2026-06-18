@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
 import { getGroupDetail } from "@/lib/group-detail";
 import { getHomeData } from "@/lib/feed";
+import { getUnreadChatByGroup } from "@/lib/chat";
 import { GroupDetail } from "@/components/GroupDetail";
 import type { PostFeedItem } from "@/components/PostFeed";
 import { ACTIVE_GROUP_COOKIE } from "@/lib/active-group";
@@ -21,7 +22,10 @@ export default async function GroupDetailPage({
   const data = await getGroupDetail(params.id, userId, baseUrl);
   if (!data) redirect("/groups");
 
-  const home = await getHomeData(params.id, userId);
+  const [home, chatUnread] = await Promise.all([
+    getHomeData(params.id, userId),
+    getUnreadChatByGroup([params.id]),
+  ]);
   const tierByUser = Object.fromEntries(home.members.map((m) => [m.user_id, m.tier]));
   const items: PostFeedItem[] = home.feed.map((c) => ({
     id: c.id,
@@ -48,6 +52,7 @@ export default async function GroupDetailPage({
       data={data}
       userId={userId}
       isActive={activeId === params.id}
+      chatUnread={chatUnread[params.id] ?? 0}
       feed={{
         items,
         reactions: home.reactions,

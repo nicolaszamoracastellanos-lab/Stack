@@ -166,6 +166,10 @@ export const translations = {
     chat_placeholder: "Message your group…",
     chat_send: "Send",
     chat_empty: "No messages yet. Say something.",
+    chat_failed: "Failed to send",
+    chat_retry: "Retry",
+    chat_load_earlier: "Load earlier",
+    chat_open: "Open chat",
     milestone_title: "{n}-day streak",
     milestone_sub: "You're on fire. Keep it alive.",
 
@@ -771,6 +775,10 @@ export const translations = {
     chat_placeholder: "Escríbele a tu grupo…",
     chat_send: "Enviar",
     chat_empty: "Aún no hay mensajes. Di algo.",
+    chat_failed: "No se envió",
+    chat_retry: "Reintentar",
+    chat_load_earlier: "Cargar anteriores",
+    chat_open: "Abrir chat",
     milestone_title: "racha de {n} días",
     milestone_sub: "Estás encendido. Mantenla viva.",
 

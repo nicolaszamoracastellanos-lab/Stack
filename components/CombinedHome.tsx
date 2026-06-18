@@ -20,6 +20,7 @@ export type GroupCard = {
   checkedInToday: number;
   memberCount: number;
   collectiveStreak: number;
+  chatUnread: number;
 };
 
 export function CombinedHome({
@@ -251,6 +252,9 @@ function GroupMini({
       <Link href={`/groups/${g.id}`} className="flex items-center gap-2">
         <Avatar name={g.name} size="sm" />
         <span className="truncate text-label font-medium text-text">{g.name}</span>
+        {g.chatUnread > 0 && (
+          <span className="ml-auto h-2 w-2 shrink-0 rounded-pill bg-danger" aria-hidden />
+        )}
       </Link>
       <p className="text-caption text-text-dim">
         {t("group_card_today", { n: g.checkedInToday })}
@@ -300,7 +304,12 @@ function GroupRow({
       <Link href={`/groups/${g.id}`} className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar name={g.name} size="md" />
         <div className="min-w-0">
-          <p className="truncate text-body font-medium text-text">{g.name}</p>
+          <p className="flex items-center gap-2 truncate text-body font-medium text-text">
+            {g.name}
+            {g.chatUnread > 0 && (
+              <span className="h-2 w-2 shrink-0 rounded-pill bg-danger" aria-hidden />
+            )}
+          </p>
           <p className="text-caption text-text-dim">
             {t("group_card_today", { n: g.checkedInToday })}
             {g.collectiveStreak > 0
