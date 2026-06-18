@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { TimezoneSync } from "@/components/TimezoneSync";
+import { SessionPushSync } from "@/components/SessionPushSync";
 import { getUserAndProfile } from "@/lib/auth";
 import { isProfileComplete } from "@/lib/profile";
 
@@ -35,6 +36,7 @@ export default async function AppLayout({
   return (
     <div className="flex h-[100dvh] flex-col-reverse overflow-hidden lg:flex-row">
       <TimezoneSync userId={userId} current={profile?.timezone ?? null} />
+      <SessionPushSync />
       <Nav />
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         {children}
