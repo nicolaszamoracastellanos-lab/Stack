@@ -4,6 +4,7 @@ import { getSignedPhotoUrls } from "@/lib/storage";
 import { nameOf } from "@/lib/feed";
 import type { FeedReaction, FeedComment } from "@/lib/feed";
 import type { TierKey } from "@/lib/tiers";
+import type { MentionMember } from "@/lib/mentions";
 
 /**
  * Combined "All Activity" feed (STACK_BATCH6 Stage 2). Aggregates check-ins from
@@ -28,6 +29,9 @@ export type CombinedItem = {
   createdAt: string;
   /** Group names the post went to (viewer-shared), for the "posted in X" label. */
   groupNames: string[];
+  /** Representative group id + its members, for mention scope (Stage 4). */
+  groupId: string | null;
+  mentionMembers: MentionMember[];
 };
 
 export type CombinedFeedData = {
@@ -69,6 +73,26 @@ export async function getCombinedFeed(): Promise<CombinedFeedData> {
     return { items: [], reactions: [], comments: [], groupIds: [] };
   }
 
+  // Members per group (for mention autocomplete, group-scoped).
+  const membersByGroup = new Map<string, MentionMember[]>();
+  const { data: memRows } = await supabase
+    .from("group_members")
+    .select("group_id, profile:profiles(id, username, display_name, avatar_url)")
+    .in("group_id", groupIds);
+  for (const row of (memRows ?? []) as unknown as Array<{
+    group_id: string;
+    profile: { id: string; username: string; display_name: string | null; avatar_url: string | null } | null;
+  }>) {
+    if (!row.profile) continue;
+    const list = membersByGroup.get(row.group_id) ?? [];
+    list.push({
+      id: row.profile.id,
+      name: row.profile.display_name?.trim() || `@${row.profile.username}`,
+      avatarUrl: row.profile.avatar_url,
+    });
+    membersByGroup.set(row.group_id, list);
+  }
+
   const { data: rows } = await supabase
     .from("checkins")
     .select(
@@ -107,6 +131,8 @@ export async function getCombinedFeed(): Promise<CombinedFeedData> {
       goal: r.goal ?? null,
       createdAt: r.created_at,
       groupNames: gName ? [gName] : [],
+      groupId: r.group_id,
+      mentionMembers: membersByGroup.get(r.group_id) ?? [],
     });
   }
   const items = Array.from(byPost.values());

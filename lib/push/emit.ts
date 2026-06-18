@@ -7,7 +7,15 @@ type EmitBody =
   | { event: "join"; groupId: string }
   | { event: "nudge"; targetUserId: string; groupId?: string }
   | { event: "reaction"; checkinId: string }
-  | { event: "comment"; checkinId: string; snippet?: string };
+  | { event: "comment"; checkinId: string; snippet?: string }
+  | {
+      event: "mention";
+      userIds: string[];
+      groupId: string;
+      snippet?: string;
+      targetType?: "comment" | "chat_message";
+      targetId?: string;
+    };
 
 /**
  * Fire-and-forget client trigger (Batch 5 D3). Posts an event to the push emit

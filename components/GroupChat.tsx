@@ -4,9 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { TierBadge } from "@/components/TierBadge";
+import { MentionInput } from "@/components/MentionInput";
+import { MentionText } from "@/components/MentionText";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { markChatRead } from "@/lib/chat";
+import { emitPush } from "@/lib/push/emit";
+import { extractMentionUserIds, type MentionMember } from "@/lib/mentions";
 import { localDateKey } from "@/lib/streaks";
 import type { LeaderEntry } from "@/lib/groups-dashboard";
 import type { TierKey } from "@/lib/tiers";
@@ -125,6 +129,11 @@ export function GroupChat({
     });
   }
 
+  const mentionMembers: MentionMember[] = useMemo(
+    () => members.map((m) => ({ id: m.userId, name: m.name, avatarUrl: m.avatarUrl })),
+    [members],
+  );
+
   async function doSend(body: string, localId: string) {
     const { data, error } = await supabase
       .from("messages")
@@ -137,6 +146,18 @@ export function GroupChat({
       );
       return;
     }
+    // Notify mentioned members (group-scoped + validated server-side).
+    const ids = extractMentionUserIds(body);
+    if (ids.length > 0) {
+      emitPush({
+        event: "mention",
+        userIds: ids,
+        groupId,
+        snippet: body,
+        targetType: "chat_message",
+        targetId: (data as Message).id,
+      });
+    }
     setMessages((prev) => {
       const exists = prev.some((m) => m.id === (data as Message).id);
       const withoutLocal = prev.filter((m) => m.id !== localId);
@@ -144,8 +165,8 @@ export function GroupChat({
     });
   }
 
-  function send(e: React.FormEvent) {
-    e.preventDefault();
+  function send(e?: React.FormEvent) {
+    e?.preventDefault();
     const body = draft.trim();
     if (!body) return;
     setDraft("");
@@ -209,13 +230,14 @@ export function GroupChat({
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={send} className="mt-3 flex items-center gap-2">
-        <input
+      <form onSubmit={send} className="mt-3 flex items-end gap-2">
+        <MentionInput
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={setDraft}
+          members={mentionMembers}
           placeholder={t("chat_placeholder")}
-          maxLength={1000}
-          className="min-w-0 flex-1 rounded-input border border-border bg-surface px-3.5 py-2.5 text-body text-text placeholder:text-text-dim focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"
+          onSubmit={() => send()}
+          className="min-h-[2.75rem] w-full resize-none rounded-input border border-border bg-surface px-3.5 py-2.5 text-body text-text placeholder:text-text-dim focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"
         />
         <button
           type="submit"
@@ -254,7 +276,9 @@ function Bubble({
     return (
       <div className="flex flex-col items-end">
         <div className="max-w-[80%] rounded-card rounded-br-sm border border-volt/30 bg-volt/15 px-3 py-2">
-          <p className="whitespace-pre-wrap break-words text-body text-text">{m.body}</p>
+          <p className="whitespace-pre-wrap break-words text-body text-text">
+            <MentionText body={m.body} />
+          </p>
         </div>
         <span className="mt-0.5 flex items-center gap-2 text-caption text-text-dim">
           {m._status === "sending" ? "…" : m._status === "failed" ? (
@@ -281,7 +305,9 @@ function Bubble({
           {who?.tier && <TierBadge tierKey={who.tier} size="sm" />}
         </div>
         <div className="rounded-card rounded-tl-sm border border-border bg-bg px-3 py-2">
-          <p className="whitespace-pre-wrap break-words text-body text-text-muted">{m.body}</p>
+          <p className="whitespace-pre-wrap break-words text-body text-text-muted">
+            <MentionText body={m.body} />
+          </p>
         </div>
         <span className="mt-0.5 block text-caption text-text-dim">{time}</span>
       </div>

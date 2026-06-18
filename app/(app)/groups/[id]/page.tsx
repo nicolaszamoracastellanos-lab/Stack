@@ -27,6 +27,11 @@ export default async function GroupDetailPage({
     getUnreadChatByGroup([params.id]),
   ]);
   const tierByUser = Object.fromEntries(home.members.map((m) => [m.user_id, m.tier]));
+  const mentionMembers = home.members.map((m) => ({
+    id: m.user_id,
+    name: m.name,
+    avatarUrl: m.avatarUrl,
+  }));
   const items: PostFeedItem[] = home.feed.map((c) => ({
     id: c.id,
     postId: c.postId,
@@ -42,6 +47,8 @@ export default async function GroupDetailPage({
     goal: c.goal,
     createdAt: c.created_at,
     groupLabel: null,
+    groupId: params.id,
+    mentionMembers,
   }));
   const userName = profile?.display_name?.trim() || `@${profile?.username ?? "you"}`;
 

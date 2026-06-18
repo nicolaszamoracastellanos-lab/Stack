@@ -5,7 +5,10 @@ import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/Button";
+import { MentionInput } from "@/components/MentionInput";
+import { MentionText } from "@/components/MentionText";
 import { SharePhotoButton } from "@/components/SharePhotoButton";
+import type { MentionMember } from "@/lib/mentions";
 import { useLanguage } from "@/lib/language-context";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { SPORTS, GOALS, labelFor, iconFor } from "@/lib/workout-options";
@@ -21,6 +24,9 @@ export type FeedItemData = {
   tier?: import("@/lib/tiers").TierKey | null;
   /** "posted in X" label for the combined feed (Batch 6 Stage 2). */
   groupLabel?: string | null;
+  /** This post's group (for mention scope/emit) + its members (Batch 6 Stage 4). */
+  groupId?: string | null;
+  mentionMembers?: MentionMember[];
   photoUrl: string;
   note?: string | null;
   sport?: string | null;
@@ -90,8 +96,8 @@ export function FeedItem({
     ? t(item.environment === "indoor" ? "env_indoor" : "env_outdoor")
     : null;
 
-  function submitComment(e: React.FormEvent) {
-    e.preventDefault();
+  function submitComment(e?: React.FormEvent) {
+    e?.preventDefault();
     const body = draft.trim();
     if (!body) return;
     onAddComment(item.id, body);
@@ -235,7 +241,9 @@ export function FeedItem({
                     <Link href={`/u/${c.user_id}`} className="font-medium">
                       {c.name}
                     </Link>{" "}
-                    <span className="text-text-muted">{c.body}</span>
+                    <span className="text-text-muted">
+                      <MentionText body={c.body} />
+                    </span>
                   </p>
                 </div>
                 {c.user_id === currentUserId && (
@@ -252,13 +260,14 @@ export function FeedItem({
           </ul>
         )}
 
-        <form onSubmit={submitComment} className="flex items-center gap-2">
-          <input
+        <form onSubmit={submitComment} className="flex items-end gap-2">
+          <MentionInput
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={setDraft}
+            members={item.mentionMembers ?? []}
             placeholder={t("feed_comment_placeholder")}
-            maxLength={300}
-            className="min-w-0 flex-1 rounded-input border border-border bg-surface-2 px-3 py-2 text-label text-text placeholder:text-text-dim focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"
+            onSubmit={() => submitComment()}
+            className="min-h-[2.5rem] w-full resize-none rounded-input border border-border bg-surface-2 px-3 py-2 text-label text-text placeholder:text-text-dim focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"
           />
           <button
             type="submit"

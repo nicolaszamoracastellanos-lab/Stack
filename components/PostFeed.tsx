@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { deleteCheckinPost } from "@/lib/checkins";
 import { emitPush } from "@/lib/push/emit";
+import { extractMentionUserIds, type MentionMember } from "@/lib/mentions";
 import type { FeedReaction, FeedComment } from "@/lib/feed";
 import type { ReactionAgg } from "@/lib/reactions";
 import type { TierKey } from "@/lib/tiers";
@@ -26,6 +27,9 @@ export type PostFeedItem = {
   goal: string | null;
   createdAt: string;
   groupLabel?: string | null;
+  /** This post's group + its members, for mention scope (Batch 6 Stage 4). */
+  groupId?: string | null;
+  mentionMembers?: MentionMember[];
 };
 
 /**
@@ -107,6 +111,19 @@ export function PostFeed({
       .single();
     if (error || !data) return;
     emitPush({ event: "comment", checkinId, snippet: body });
+    // Notify mentioned members (group-scoped; validated server-side).
+    const post = items.find((p) => p.id === checkinId);
+    const ids = extractMentionUserIds(body);
+    if (post?.groupId && ids.length > 0) {
+      emitPush({
+        event: "mention",
+        userIds: ids,
+        groupId: post.groupId,
+        snippet: body,
+        targetType: "comment",
+        targetId: checkinId,
+      });
+    }
     setComments((prev) =>
       prev.some((c) => c.id === data.id)
         ? prev
@@ -159,6 +176,8 @@ export function PostFeed({
           avatarUrl: c.avatarUrl,
           tier: c.tier,
           groupLabel: c.groupLabel ?? null,
+          groupId: c.groupId ?? null,
+          mentionMembers: c.mentionMembers ?? [],
           photoUrl: c.photoUrl,
           note: c.note,
           sport: c.sport,

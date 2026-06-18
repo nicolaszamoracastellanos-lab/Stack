@@ -36,6 +36,9 @@ export async function POST(req: Request) {
     checkinId?: string;
     postId?: string;
     snippet?: string;
+    userIds?: string[];
+    targetType?: "comment" | "chat_message";
+    targetId?: string;
   };
   try {
     body = await req.json();
@@ -174,6 +177,32 @@ export async function POST(req: Request) {
         url: "/home",
       });
     }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.event === "mention" && Array.isArray(body.userIds) && body.groupId) {
+    // Scope safety: only members of THIS group can be mentioned. Intersect the
+    // requested ids with the group roster and never notify the sender.
+    const { data: roster } = await admin
+      .from("group_members")
+      .select("user_id")
+      .eq("group_id", body.groupId);
+    const memberSet = new Set((roster ?? []).map((m) => m.user_id as string));
+    const recipients = Array.from(new Set(body.userIds)).filter(
+      (id) => memberSet.has(id) && id !== user.id,
+    );
+    const targetType = body.targetType === "chat_message" ? "chat_message" : "comment";
+    const url =
+      targetType === "chat_message" ? `/groups/${body.groupId}` : "/home";
+    await notifyMany(admin, recipients, {
+      type: "mention",
+      actorId: user.id,
+      groupId: body.groupId,
+      targetType,
+      targetId: body.targetId ?? null,
+      data: { name: actorName, snippet: (body.snippet ?? "").slice(0, 80) },
+      url,
+    });
     return NextResponse.json({ ok: true });
   }
 
