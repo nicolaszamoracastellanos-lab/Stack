@@ -33,6 +33,8 @@ function sampleFor(
       if (projection === "down")
         return { vars: { direction: "down", tier: localizedTierName("purple", lang) }, url: "/tiers" };
       return { vars: { confirmed: true, tier: localizedTierName("volt", lang) }, url: "/tiers" };
+    default:
+      return { vars: { name: "María", group: "Dawn Patrol" }, url: "/home" };
   }
 }
 
@@ -53,6 +55,14 @@ export async function fireTestNotification(input: {
   if (!admin) return { ok: false, sent: 0, error: "push not configured" };
 
   const { vars, url } = sampleFor(input.type, input.lang, input.projection);
+  // Also create a visible notification-center row (STACK_BATCH6 1.3), so the
+  // center can be tested, not just delivery.
+  await admin.from("notifications").insert({
+    recipient_id: f.userId,
+    type: input.type,
+    actor_id: null,
+    data: { ...vars, url },
+  });
   const sent = await sendPushToUser(admin, f.userId, input.type, vars, url, {
     force: true,
     lang: input.lang,

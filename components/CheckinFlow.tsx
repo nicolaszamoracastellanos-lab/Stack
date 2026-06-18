@@ -349,10 +349,11 @@ export function CheckinFlow({
       setPosting(false);
       return;
     }
-    // Notify groupmates (Batch 5 D3 #1/#3). Solo posts notify no one.
+    // Notify groupmates (one notification + push per row). Solo posts notify
+    // no one. postId lets the notification deep-link to the post.
     if (!details.justMe) {
       const targetIds = Array.from(details.groups);
-      emitPush({ event: "checkin", groupIds: targetIds });
+      emitPush({ event: "checkin", groupIds: targetIds, postId });
       setActiveGroup(targetIds[0]);
     }
     router.push("/home");

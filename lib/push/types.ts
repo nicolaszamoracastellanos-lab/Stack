@@ -11,8 +11,15 @@ export type NotificationType =
   | "member_workout" // a group member's first log of the day
   | "self_nudge" // you haven't logged and it's late
   | "at_risk" // about to lose your streak
-  | "member_nudge" // a member nudged you
-  | "tier_projection"; // weekly projection / confirmed tier change
+  | "member_nudge" // a member nudged you (legacy alias of "nudge")
+  | "tier_projection" // weekly projection
+  // Batch 6 additions (notification center + push share these):
+  | "reaction" // someone reacted to your check-in
+  | "comment" // someone commented on your check-in
+  | "mention" // someone tagged you
+  | "nudge" // someone nudged you
+  | "tier_change" // your confirmed tier changed
+  | "invite_accepted"; // someone accepted your group invite
 
 export const NOTIFICATION_TYPES: NotificationType[] = [
   "group_post",

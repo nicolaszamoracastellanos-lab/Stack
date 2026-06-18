@@ -12,7 +12,7 @@ import type { TranslationKey } from "@/lib/i18n";
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
-const TYPE_LABEL: Record<NotificationType, TranslationKey> = {
+const TYPE_LABEL: Partial<Record<NotificationType, TranslationKey>> = {
   group_post: "notif_type_group_post",
   group_join: "notif_type_group_join",
   member_workout: "notif_type_member_workout",
@@ -141,11 +141,11 @@ export function NotificationSettings({
           <ul className="mt-3 flex flex-col gap-3">
             {NOTIFICATION_TYPES.map((type) => (
               <li key={type} className="flex items-center justify-between gap-4">
-                <span className="text-label text-text">{t(TYPE_LABEL[type])}</span>
+                <span className="text-label text-text">{t(TYPE_LABEL[type]!)}</span>
                 <Toggle
                   checked={typeState[type] !== false}
                   onChange={(next) => toggleType(type, next)}
-                  label={t(TYPE_LABEL[type])}
+                  label={t(TYPE_LABEL[type]!)}
                 />
               </li>
             ))}

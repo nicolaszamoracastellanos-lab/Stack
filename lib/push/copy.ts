@@ -14,6 +14,8 @@ export type CopyVars = {
   direction?: "up" | "down";
   /** True for a confirmed tier change ("You earned X"). */
   confirmed?: boolean;
+  /** Short text preview (comment / mention body). */
+  snippet?: string;
 };
 
 const TIER_NAMES: Record<string, { en: string; es: string }> = {
@@ -83,6 +85,68 @@ const BUILDERS: Record<NotificationType, Builder> = {
       lang,
       `${v.name ?? "Someone"} nudged you to work out.`,
       `${v.name ?? "Alguien"} te dio un empujón para entrenar.`,
+    ),
+  }),
+  nudge: (lang, v) => ({
+    title: "Stack",
+    body: pick(
+      lang,
+      `${v.name ?? "Someone"} nudged you to work out.`,
+      `${v.name ?? "Alguien"} te dio un empujón para entrenar.`,
+    ),
+  }),
+  reaction: (lang, v) => ({
+    title: "Stack",
+    body: pick(
+      lang,
+      `${v.name ?? "Someone"} reacted to your check-in.`,
+      `${v.name ?? "Alguien"} reaccionó a tu registro.`,
+    ),
+  }),
+  comment: (lang, v) => ({
+    title: "Stack",
+    body: v.snippet
+      ? pick(
+          lang,
+          `${v.name ?? "Someone"} commented: ${v.snippet}`,
+          `${v.name ?? "Alguien"} comentó: ${v.snippet}`,
+        )
+      : pick(
+          lang,
+          `${v.name ?? "Someone"} commented on your check-in.`,
+          `${v.name ?? "Alguien"} comentó tu registro.`,
+        ),
+  }),
+  mention: (lang, v) => ({
+    title: "Stack",
+    body: v.snippet
+      ? pick(
+          lang,
+          `${v.name ?? "Someone"} mentioned you: ${v.snippet}`,
+          `${v.name ?? "Alguien"} te mencionó: ${v.snippet}`,
+        )
+      : pick(
+          lang,
+          `${v.name ?? "Someone"} mentioned you.`,
+          `${v.name ?? "Alguien"} te mencionó.`,
+        ),
+  }),
+  tier_change: (lang, v) => ({
+    title: "Stack",
+    body: v.tier
+      ? pick(lang, `You earned ${v.tier} 🟢`, `Alcanzaste ${v.tier} 🟢`)
+      : pick(
+          lang,
+          "Your confirmed tier changed.",
+          "Tu nivel confirmado cambió.",
+        ),
+  }),
+  invite_accepted: (lang, v) => ({
+    title: "Stack",
+    body: pick(
+      lang,
+      `${v.name ?? "Someone"} accepted your invite to ${v.group ?? "your group"}.`,
+      `${v.name ?? "Alguien"} aceptó tu invitación a ${v.group ?? "tu grupo"}.`,
     ),
   }),
   tier_projection: (lang, v) => {

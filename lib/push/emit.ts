@@ -3,9 +3,11 @@
 import type { NotificationType } from "@/lib/push/types";
 
 type EmitBody =
-  | { event: "checkin"; groupIds: string[] }
+  | { event: "checkin"; groupIds: string[]; postId?: string }
   | { event: "join"; groupId: string }
-  | { event: "nudge"; targetUserId: string };
+  | { event: "nudge"; targetUserId: string; groupId?: string }
+  | { event: "reaction"; checkinId: string }
+  | { event: "comment"; checkinId: string; snippet?: string };
 
 /**
  * Fire-and-forget client trigger (Batch 5 D3). Posts an event to the push emit

@@ -19,6 +19,7 @@ import { useCountUp } from "@/lib/use-count-up";
 import { createClient } from "@/lib/supabase/client";
 import { CHECKINS_BUCKET } from "@/lib/storage";
 import { deleteCheckinPost } from "@/lib/checkins";
+import { emitPush } from "@/lib/push/emit";
 import {
   computeGroupStreak,
   localDateKey,
@@ -334,9 +335,11 @@ export function HomeClient({
         .eq("user_id", userId)
         .eq("emoji", emoji);
     } else {
-      await supabase
+      const { error } = await supabase
         .from("reactions")
         .insert({ checkin_id: checkinId, user_id: userId, emoji });
+      // Notify the post author (one row + push). Server skips self-notify.
+      if (!error) emitPush({ event: "reaction", checkinId });
     }
   }
 
@@ -347,6 +350,8 @@ export function HomeClient({
       .select("id, checkin_id, user_id, body, created_at")
       .single();
     if (error || !data) return;
+    // Notify the post author (one row + push). Server skips self-notify.
+    emitPush({ event: "comment", checkinId, snippet: body });
     setComments((prev) =>
       prev.some((c) => c.id === data.id)
         ? prev

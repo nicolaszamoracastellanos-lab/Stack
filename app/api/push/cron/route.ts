@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push/send";
+import { notify } from "@/lib/notifications";
 import { computeQuotaStreak } from "@/lib/streak-quota";
 import { currentWeekFreq } from "@/lib/tier-eval";
 import { tierProjection } from "@/lib/tiers";
@@ -118,7 +119,8 @@ async function handle(req: Request) {
 
     // At-risk (18:00): slack used up and not yet trained today.
     if (hour === 18 && streak.state === "at-risk" && !loggedToday) {
-      fired += await sendPushToUser(admin, userId, "at_risk", {}, "/home");
+      await notify(admin, { recipientId: userId, type: "at_risk", url: "/home" });
+      fired++;
     }
 
     // Self-nudge (19:00): no log today, not a preferred rest day, quota not yet
@@ -130,7 +132,12 @@ async function handle(req: Request) {
       streak.needed > 0 &&
       streak.slack >= 0
     ) {
-      fired += await sendPushToUser(admin, userId, "self_nudge", {}, "/checkin");
+      await notify(admin, {
+        recipientId: userId,
+        type: "self_nudge",
+        url: "/checkin",
+      });
+      fired++;
     }
 
     // Weekly tier projection (Sunday 20:00).
@@ -138,7 +145,13 @@ async function handle(req: Request) {
       const wf = currentWeekFreq(dates, now);
       const proj = tierProjection(wf, (prof.tier_confirmed as never) ?? null);
       if (proj.direction !== "steady") {
-        fired += await sendPushToUser(admin, userId, "tier_projection", {}, "/tiers");
+        await notify(admin, {
+          recipientId: userId,
+          type: "tier_projection",
+          data: { direction: proj.direction },
+          url: "/tiers",
+        });
+        fired++;
       }
     }
   }

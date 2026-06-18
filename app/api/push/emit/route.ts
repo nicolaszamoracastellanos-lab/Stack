@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendPushToUser } from "@/lib/push/send";
+import { notify, notifyMany } from "@/lib/notifications";
 import { dayKey } from "@/lib/week";
 
 export const runtime = "nodejs";
 
 /**
- * Event-driven push fan-out (Batch 5 D3). Called by client actions right after
- * they create the underlying event (a check-in, a join, a nudge). The actor is
- * authenticated via their session; recipients + copy are resolved server-side
- * with the service role so a user can't address arbitrary people.
+ * Event-driven notifications (STACK_BATCH6 Stage 1). Called by client actions
+ * right after they create the underlying event. The actor is authenticated via
+ * their session; recipients are resolved server-side with the service role.
+ * Each event goes through notify() (one row + push from that row).
  *
- *   { event: "checkin", groupIds: string[] }
- *   { event: "join",    groupId: string }
- *   { event: "nudge",   targetUserId: string }
+ *   { event: "checkin",  groupIds: string[], postId?: string }
+ *   { event: "join",     groupId: string }
+ *   { event: "nudge",    targetUserId: string, groupId?: string }
+ *   { event: "reaction", checkinId: string }
+ *   { event: "comment",  checkinId: string, snippet?: string }
  */
 export async function POST(req: Request) {
   const supabase = createClient();
@@ -31,6 +33,9 @@ export async function POST(req: Request) {
     groupIds?: string[];
     groupId?: string;
     targetUserId?: string;
+    checkinId?: string;
+    postId?: string;
+    snippet?: string;
   };
   try {
     body = await req.json();
@@ -65,15 +70,21 @@ export async function POST(req: Request) {
       .maybeSingle();
     return (data?.name as string) ?? "your group";
   }
+  // Resolve a check-in's author + group (for reaction/comment notifications).
+  async function checkinOwner(checkinId: string) {
+    const { data } = await admin!
+      .from("checkins")
+      .select("user_id, group_id")
+      .eq("id", checkinId)
+      .maybeSingle();
+    return data as { user_id: string; group_id: string | null } | null;
+  }
 
   if (body.event === "checkin" && Array.isArray(body.groupIds)) {
     const todayKey = dayKey(new Date(), actorTz);
     for (const groupId of body.groupIds) {
-      const [name, recipients] = await Promise.all([
-        groupName(groupId),
-        membersExceptActor(groupId),
-      ]);
-      // First of the day for this member in this group? (one member_workout/day)
+      // Cap group_post at one per member per day: only notify on the first post
+      // of the day in this group (avoids spam on multiple posts).
       const { data: mine } = await admin
         .from("checkins")
         .select("created_at")
@@ -84,12 +95,21 @@ export async function POST(req: Request) {
       const todayCount = (mine ?? []).filter(
         (c) => dayKey(new Date(c.created_at as string), actorTz) === todayKey,
       ).length;
-      const type = todayCount <= 1 ? "member_workout" : "group_post";
-      await Promise.all(
-        recipients.map((uid) =>
-          sendPushToUser(admin, uid, type, { name: actorName, group: name }),
-        ),
-      );
+      if (todayCount > 1) continue; // already notified today for this group
+
+      const [name, recipients] = await Promise.all([
+        groupName(groupId),
+        membersExceptActor(groupId),
+      ]);
+      await notifyMany(admin, recipients, {
+        type: "group_post",
+        actorId: user.id,
+        groupId,
+        targetType: "post",
+        targetId: body.postId ?? null,
+        data: { name: actorName, group: name },
+        url: "/home",
+      });
     }
     return NextResponse.json({ ok: true });
   }
@@ -99,18 +119,61 @@ export async function POST(req: Request) {
       groupName(body.groupId),
       membersExceptActor(body.groupId),
     ]);
-    await Promise.all(
-      recipients.map((uid) =>
-        sendPushToUser(admin, uid, "group_join", { name: actorName, group: name }),
-      ),
-    );
+    await notifyMany(admin, recipients, {
+      type: "group_join",
+      actorId: user.id,
+      groupId: body.groupId,
+      targetType: "group",
+      targetId: body.groupId,
+      data: { name: actorName, group: name },
+      url: `/groups/${body.groupId}`,
+    });
     return NextResponse.json({ ok: true });
   }
 
   if (body.event === "nudge" && body.targetUserId) {
-    await sendPushToUser(admin, body.targetUserId, "member_nudge", {
-      name: actorName,
+    await notify(admin, {
+      recipientId: body.targetUserId,
+      type: "nudge",
+      actorId: user.id,
+      groupId: body.groupId ?? null,
+      data: { name: actorName },
+      url: "/home",
     });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.event === "reaction" && body.checkinId) {
+    const owner = await checkinOwner(body.checkinId);
+    if (owner) {
+      await notify(admin, {
+        recipientId: owner.user_id,
+        type: "reaction",
+        actorId: user.id,
+        groupId: owner.group_id,
+        targetType: "post",
+        targetId: body.checkinId,
+        data: { name: actorName },
+        url: "/home",
+      });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.event === "comment" && body.checkinId) {
+    const owner = await checkinOwner(body.checkinId);
+    if (owner) {
+      await notify(admin, {
+        recipientId: owner.user_id,
+        type: "comment",
+        actorId: user.id,
+        groupId: owner.group_id,
+        targetType: "post",
+        targetId: body.checkinId,
+        data: { name: actorName, snippet: (body.snippet ?? "").slice(0, 80) },
+        url: "/home",
+      });
+    }
     return NextResponse.json({ ok: true });
   }
 

@@ -10,6 +10,7 @@ import { HomeClient } from "@/components/HomeClient";
 import { SoloHome } from "@/components/SoloHome";
 import { GroupSwitcher } from "@/components/GroupSwitcher";
 import { BrandBar } from "@/components/BrandBar";
+import { NotificationBell } from "@/components/NotificationBell";
 
 // The heart of the app. Server-fetches the group's feed + the data needed to
 // seed the streaks, then hands off to HomeClient for the live, interactive UI.
@@ -21,6 +22,13 @@ export default async function HomePage() {
   if (!userId) redirect("/login");
   const supabase = createClient();
   const now = new Date();
+
+  // Unread notification count for the bell (RLS: own rows only).
+  const { count: unread } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("recipient_id", userId)
+    .is("read_at", null);
 
   // Solo mode (Batch 5 B1): no group yet, but full personal value.
   if (!active) {
@@ -53,7 +61,10 @@ export default async function HomePage() {
 
     return (
       <main className="mx-auto w-full max-w-xl px-6 py-8">
-        <BrandBar className="mb-8" />
+        <div className="mb-8 flex items-center justify-between">
+          <BrandBar />
+          <NotificationBell userId={userId} initialUnread={unread ?? 0} />
+        </div>
         <SoloHome
           userId={userId}
           personalDates={personalDates}
@@ -84,7 +95,10 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
-      <BrandBar />
+      <div className="mb-2 flex items-center justify-between">
+        <BrandBar />
+        <NotificationBell userId={userId} initialUnread={unread ?? 0} />
+      </div>
 
       <header className="mb-8 min-w-0" data-tour="home-header">
         {groups.length > 1 ? (
