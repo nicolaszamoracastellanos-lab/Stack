@@ -59,8 +59,6 @@ export async function sendPushToUser(
   url = "/home",
   opts: { force?: boolean; lang?: Lang } = {},
 ): Promise<number> {
-  if (!ensureVapid()) return 0;
-
   const { data: prof } = await admin
     .from("profiles")
     .select("notif_master, notif_types, quiet_start, quiet_end, timezone, language")
@@ -79,16 +77,30 @@ export async function sendPushToUser(
     }
   }
 
-  const { data: subs } = await admin
-    .from("push_subscriptions")
-    .select("endpoint, p256dh, auth")
-    .eq("user_id", userId);
-  if (!subs || subs.length === 0) return 0;
-
   const lang: Lang =
     opts.lang ?? (prefs.language === "es" ? "es" : "en");
-  const payload = JSON.stringify(buildNotification(type, lang, vars, url));
-  return deliver(admin, subs, payload);
+  const note = buildNotification(type, lang, vars, url);
+
+  // Web (browser / PWA) subscriptions go out via VAPID/web-push (only when
+  // VAPID keys are configured)…
+  const { data: subs } = ensureVapid()
+    ? await admin
+        .from("push_subscriptions")
+        .select("endpoint, p256dh, auth")
+        .eq("user_id", userId)
+    : { data: null };
+  const webSent =
+    subs && subs.length > 0 ? await deliver(admin, subs, JSON.stringify(note)) : 0;
+
+  // …and native (iOS/Android app) devices go out via the Expo Push API.
+  const nativeSent = await deliverExpo(admin, userId, {
+    title: note.title,
+    body: note.body,
+    url: note.url ?? url,
+    tag: note.tag,
+  });
+
+  return webSent + nativeSent;
 }
 
 /**
@@ -100,17 +112,78 @@ export async function sendRawToUser(
   userId: string,
   payload: { title: string; body: string; url?: string },
 ): Promise<number> {
-  if (!ensureVapid()) return 0;
-  const { data: subs } = await admin
-    .from("push_subscriptions")
-    .select("endpoint, p256dh, auth")
+  const url = payload.url ?? "/home";
+  const { data: subs } = ensureVapid()
+    ? await admin
+        .from("push_subscriptions")
+        .select("endpoint, p256dh, auth")
+        .eq("user_id", userId)
+    : { data: null };
+  const webSent =
+    subs && subs.length > 0
+      ? await deliver(admin, subs, JSON.stringify({ ...payload, url, tag: "raw" }))
+      : 0;
+  const nativeSent = await deliverExpo(admin, userId, {
+    title: payload.title,
+    body: payload.body,
+    url,
+    tag: "raw",
+  });
+  return webSent + nativeSent;
+}
+
+/**
+ * Deliver to a user's NATIVE devices (iOS/Android) via the Expo Push API. Expo
+ * fans the message out to APNs / FCM, so no Apple/Google credentials live here —
+ * only the device's Expo push token, stored by the mobile app. Prunes tokens
+ * Expo reports as no longer registered ("DeviceNotRegistered").
+ *
+ * No-op (returns 0) when the user has no native devices registered.
+ */
+async function deliverExpo(
+  admin: SupabaseClient,
+  userId: string,
+  note: { title: string; body: string; url: string; tag?: string },
+): Promise<number> {
+  const { data: tokens } = await admin
+    .from("device_push_tokens")
+    .select("token")
     .eq("user_id", userId);
-  if (!subs || subs.length === 0) return 0;
-  return deliver(
-    admin,
-    subs,
-    JSON.stringify({ ...payload, url: payload.url ?? "/home", tag: "raw" }),
-  );
+  if (!tokens || tokens.length === 0) return 0;
+
+  const messages = tokens.map((t) => ({
+    to: t.token as string,
+    title: note.title,
+    body: note.body,
+    sound: "default" as const,
+    data: { url: note.url },
+    ...(note.tag ? { collapseId: note.tag } : {}),
+  }));
+
+  try {
+    const res = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(messages),
+    });
+    const json = (await res.json()) as {
+      data?: Array<{ status: string; details?: { error?: string } }>;
+    };
+    let sent = 0;
+    const dead: string[] = [];
+    (json.data ?? []).forEach((receipt, i) => {
+      if (receipt.status === "ok") sent++;
+      else if (receipt.details?.error === "DeviceNotRegistered") {
+        dead.push(messages[i].to);
+      }
+    });
+    if (dead.length) {
+      await admin.from("device_push_tokens").delete().in("token", dead);
+    }
+    return sent;
+  } catch {
+    return 0; // network/Expo hiccup — never break the request
+  }
 }
 
 type SubRow = { endpoint: string; p256dh: string; auth: string };
