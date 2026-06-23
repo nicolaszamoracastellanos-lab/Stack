@@ -49,7 +49,7 @@ export function OnboardingFlow({
   profile: Profile | null;
   next?: string;
 }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const router = useRouter();
   const supabase = createClient();
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -184,6 +184,14 @@ export function OnboardingFlow({
       }
       return;
     }
+    // Welcome the new member to the team (best-effort, never blocks). The route
+    // sends once and is a no-op if the email is already out or not configured.
+    void fetch("/api/welcome", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language: lang }),
+    }).catch(() => {});
+
     router.replace(destination);
     router.refresh();
   }
