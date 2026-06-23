@@ -17,9 +17,43 @@ export const translations = {
     // Landing
     landing_tagline: "Show up. Every day.",
     landing_supporting:
-      "Stack workouts in front of the crew who will notice the second you stop. No app to impress. Just people. No excuses.",
+      "Stack workouts, put something on the line, make it interesting and don't be the one who quits.",
+    landing_supporting2:
+      "Where you and your inner circle build consistency, discipline and get closer to your goals together.",
     landing_cta_signup: "Start stacking",
     landing_cta_login: "Log in",
+    landing_credit: "Created by the Stack team.",
+    landing_appstore: "Soon on iOS and Android.",
+
+    // Waitlist / updates signup (landing footer)
+    waitlist_link: "Be the first one to know about our updates",
+    waitlist_placeholder: "you@email.com",
+    waitlist_submit: "Notify me",
+    waitlist_submitting: "Joining…",
+    waitlist_success: "You're in. Check your inbox — welcome to the Stack.",
+    waitlist_error: "Couldn't sign you up. Try again.",
+    waitlist_invalid: "Enter a valid email.",
+
+    // Penalty feature announcement (popup on group create + nudge on groups
+    // with a challenge but no penalty yet)
+    penalty_intro_eyebrow: "New on Stack",
+    penalty_intro_title: "Now you can add a penalty",
+    penalty_intro_lead:
+      "Put something real on the line. Give your challenge teeth so nobody wants to be the one who breaks it.",
+    penalty_point1_title: "Set the stake",
+    penalty_point1_body: "Money, a favor, or your own custom dare — whatever stings just enough.",
+    penalty_point2_title: "Choose who pays",
+    penalty_point2_body:
+      "Only the one who breaks the streak, anyone who misses the weekly target, or last place each cycle.",
+    penalty_point3_title: "Stack keeps score",
+    penalty_point3_body: "It tracks who owes after a miss. You settle it your way.",
+    penalty_intro_cta: "Set up the penalty",
+    penalty_intro_later: "Maybe later",
+    penalty_nudge_title: "Now on Stack: add a penalty",
+    penalty_nudge_body:
+      "Your challenge has no stake yet. Set a penalty for whoever loses the streak or the challenge — money, a favor, or a custom dare.",
+    penalty_nudge_cta: "Add a penalty",
+    penalty_nudge_dismiss: "Dismiss",
 
     // Generic
     email_label: "Email",
@@ -642,9 +676,42 @@ export const translations = {
     // Landing
     landing_tagline: "Preséntate. Todos los días.",
     landing_supporting:
-      "Suma entrenamientos frente a la gente que se va a dar cuenta en el momento en que pares. No es para impresionar a una app. Es por ellos. Sin excusas.",
+      "Suma entrenamientos, pon algo en juego, hazlo interesante y no seas el que se rinde.",
+    landing_supporting2:
+      "Donde tú y tu círculo cercano construyen constancia, disciplina y se acercan juntos a sus metas.",
     landing_cta_signup: "Empieza a sumar",
     landing_cta_login: "Iniciar sesión",
+    landing_credit: "Creado por el equipo de Stack.",
+    landing_appstore: "Pronto en iOS y Android.",
+
+    // Waitlist / updates signup
+    waitlist_link: "Sé el primero en enterarte de nuestras novedades",
+    waitlist_placeholder: "tu@correo.com",
+    waitlist_submit: "Avísenme",
+    waitlist_submitting: "Uniéndote…",
+    waitlist_success: "Listo. Revisa tu correo — bienvenido a Stack.",
+    waitlist_error: "No pudimos registrarte. Inténtalo de nuevo.",
+    waitlist_invalid: "Ingresa un correo válido.",
+
+    // Penalty feature announcement
+    penalty_intro_eyebrow: "Nuevo en Stack",
+    penalty_intro_title: "Ahora puedes poner un castigo",
+    penalty_intro_lead:
+      "Pon algo real en juego. Dale dientes a tu reto para que nadie quiera ser el que lo rompa.",
+    penalty_point1_title: "Define la apuesta",
+    penalty_point1_body: "Dinero, un favor o tu propio reto a la medida — lo que duela lo justo.",
+    penalty_point2_title: "Elige quién paga",
+    penalty_point2_body:
+      "Solo el que rompe la racha, cualquiera que falle la meta semanal, o el último lugar de cada ciclo.",
+    penalty_point3_title: "Stack lleva la cuenta",
+    penalty_point3_body: "Registra quién queda debiendo cuando alguien falla. Ustedes lo arreglan a su manera.",
+    penalty_intro_cta: "Poner el castigo",
+    penalty_intro_later: "Quizás después",
+    penalty_nudge_title: "Nuevo en Stack: pon un castigo",
+    penalty_nudge_body:
+      "Tu reto todavía no tiene apuesta. Ponle un castigo al que pierda la racha o el reto — dinero, un favor o un reto a la medida.",
+    penalty_nudge_cta: "Poner un castigo",
+    penalty_nudge_dismiss: "Cerrar",
 
     // Generic
     email_label: "Correo",

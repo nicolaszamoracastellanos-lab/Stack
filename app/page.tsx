@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/Button";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { Wordmark } from "@/components/Wordmark";
+import { WaitlistSignup } from "@/components/WaitlistSignup";
 import { useLanguage } from "@/lib/language-context";
 
 export default function LandingPage() {
@@ -38,6 +39,9 @@ export default function LandingPage() {
           <p className="mt-5 max-w-xl text-balance text-body text-text-muted">
             {t("landing_supporting")}
           </p>
+          <p className="mt-3 max-w-xl text-balance text-body text-text-muted">
+            {t("landing_supporting2")}
+          </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <Link href="/signup" className="sm:w-auto">
@@ -54,8 +58,10 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <footer className="px-6 py-6 text-caption text-text-dim sm:px-10">
-        Built by Nico Zamora C.
+      <footer className="flex flex-col gap-3 px-6 py-6 text-caption text-text-dim sm:px-10">
+        <span className="text-volt">{t("landing_appstore")}</span>
+        <WaitlistSignup />
+        <span>{t("landing_credit")}</span>
       </footer>
     </main>
   );

@@ -10,6 +10,7 @@ import { PostFeed } from "@/components/PostFeed";
 import { RecapCard } from "@/components/RecapCard";
 import { GroupChat } from "@/components/GroupChat";
 import { PactSection } from "@/components/PactSection";
+import { PenaltyNudge } from "@/components/PenaltyIntro";
 import { StakesLedger } from "@/components/StakesLedger";
 import { ProposalCard } from "@/components/ProposalCard";
 import { isPact } from "@/lib/pacts";
@@ -214,6 +215,16 @@ export function GroupDetail({
       <div className="mb-8">
         <PactSection group={data.group} isCreator={data.isCreator} />
       </div>
+
+      {/* Penalty feature nudge — a group with a challenge but no stake yet.
+          Only the creator can set it, so only they see the invite. */}
+      {isPact(data.group) &&
+        data.isCreator &&
+        !(data.group.stake_value && data.group.who_pays) && (
+          <div className="mb-8">
+            <PenaltyNudge groupId={data.group.id} />
+          </div>
+        )}
 
       {/* Stakes ledger + broken-pact roasts (Batch 4 §3/§4) */}
       {isPact(data.group) && (

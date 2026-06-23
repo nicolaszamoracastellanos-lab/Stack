@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { generateInviteCode } from "@/lib/utils";
 import { inviteLink as buildInviteLink } from "@/lib/site";
 import { setActiveGroup } from "@/lib/active-group";
+import { PenaltyPopup } from "@/components/PenaltyIntro";
 
 type Created = { id: string; code: string };
 
@@ -106,6 +107,7 @@ export default function NewGroupPage() {
   if (created) {
     return (
       <main className="mx-auto w-full max-w-xl px-6 py-10">
+        <PenaltyPopup groupId={created.id} />
         <h1 className="text-h1">{t("invite_title")}</h1>
         <p className="mt-2 text-body text-text-muted">{t("invite_subtitle")}</p>
 
