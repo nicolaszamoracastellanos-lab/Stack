@@ -259,7 +259,7 @@ const ONBOARDING: Record<Language, OnboardingCopy> = {
     founderLabel: "A NOTE FROM OUR FOUNDER",
     founderNote:
       "Thank you for trusting us — it genuinely means the world to me and to the whole team. We built Stack to make showing up easier when someone's in it with you, and I truly hope it helps you reach your goals, stay consistent, and have real fun in the process. We're so glad you're here. Let's get after it, together.",
-    signature: "— Nico, Founder of Stack",
+    signature: "— Nicolas Zamora C., Founder and CEO of Stack",
   },
   es: {
     subject: "Bienvenido al equipo de Stack 🏔️",
@@ -283,7 +283,7 @@ const ONBOARDING: Record<Language, OnboardingCopy> = {
     founderLabel: "UNA NOTA DE NUESTRO FUNDADOR",
     founderNote:
       "Gracias por confiar en nosotros — de verdad significa muchísimo para mí y para todo el equipo. Creamos Stack para que presentarse sea más fácil cuando alguien lo vive contigo, y espero de corazón que te ayude a alcanzar tus metas, mantener la constancia y divertirte de verdad en el proceso. Nos alegra mucho tenerte aquí. Vamos con todo, juntos.",
-    signature: "— Nico, Fundador de Stack",
+    signature: "— Nicolas Zamora C., Fundador y CEO de Stack",
   },
 };
 
