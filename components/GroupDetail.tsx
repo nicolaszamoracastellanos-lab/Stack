@@ -10,6 +10,7 @@ import { PostFeed } from "@/components/PostFeed";
 import { RecapCard } from "@/components/RecapCard";
 import { GroupChat } from "@/components/GroupChat";
 import { PactSection } from "@/components/PactSection";
+import { PactAlert } from "@/components/PactAlert";
 import { PenaltyNudge } from "@/components/PenaltyIntro";
 import { StakesLedger } from "@/components/StakesLedger";
 import { ProposalCard } from "@/components/ProposalCard";
@@ -174,6 +175,13 @@ export function GroupDetail({
           )}
         </div>
       </div>
+
+      {/* Pact accountability alert — loud, top of group, everyone sees it. */}
+      {data.pactAlert && (
+        <div className="mb-8">
+          <PactAlert alert={data.pactAlert} />
+        </div>
+      )}
 
       {/* Weekly recap (Section 7) */}
       <div className="mb-8">

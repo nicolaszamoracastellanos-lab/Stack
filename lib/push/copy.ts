@@ -16,6 +16,8 @@ export type CopyVars = {
   confirmed?: boolean;
   /** Short text preview (comment / mention body). */
   snippet?: string;
+  /** The pact stake owed, used by pact_broken copy (e.g. "$200"). */
+  stake?: string;
 };
 
 const TIER_NAMES: Record<string, { en: string; es: string }> = {
@@ -147,6 +149,14 @@ const BUILDERS: Record<NotificationType, Builder> = {
       lang,
       `${v.name ?? "Someone"} accepted your invite to ${v.group ?? "your group"}.`,
       `${v.name ?? "Alguien"} aceptó tu invitación a ${v.group ?? "tu grupo"}.`,
+    ),
+  }),
+  pact_broken: (lang, v) => ({
+    title: pick(lang, "Pact broken 🚨", "Pacto roto 🚨"),
+    body: pick(
+      lang,
+      `${v.name ?? "Someone"} broke the pact in ${v.group ?? "your group"} — they owe ${v.stake ?? "the stake"}.`,
+      `${v.name ?? "Alguien"} rompió el pacto en ${v.group ?? "tu grupo"} — debe ${v.stake ?? "la apuesta"}.`,
     ),
   }),
   tier_projection: (lang, v) => {

@@ -19,7 +19,8 @@ export type NotificationType =
   | "mention" // someone tagged you
   | "nudge" // someone nudged you
   | "tier_change" // your confirmed tier changed
-  | "invite_accepted"; // someone accepted your group invite
+  | "invite_accepted" // someone accepted your group invite
+  | "pact_broken"; // a member broke the pact and owes the stake
 
 export const NOTIFICATION_TYPES: NotificationType[] = [
   "group_post",

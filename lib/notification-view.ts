@@ -16,6 +16,7 @@ export type NotifData = {
   group?: string;
   snippet?: string;
   tier?: string;
+  stake?: string;
   url?: string;
 };
 
@@ -67,6 +68,7 @@ const DESC: Record<string, TranslationKey> = {
   tier_projection: "notif_desc_tier_projection",
   at_risk: "notif_desc_at_risk",
   self_nudge: "notif_desc_self_nudge",
+  pact_broken: "notif_desc_pact_broken",
 };
 
 /** i18n key for the one-line description; comment/mention drop the snippet

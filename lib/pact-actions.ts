@@ -1,7 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { evaluatePactDebts, type PactCheckin } from "@/lib/pact-eval";
+import { notifyMany } from "@/lib/notifications";
+import { nameOf } from "@/lib/feed";
 import type { Group } from "@/lib/types";
 
 /**
@@ -56,8 +59,60 @@ export async function recordPactDebts(groupId: string): Promise<number> {
       onConflict: "group_id,debtor_user,period_key",
       ignoreDuplicates: true,
     })
-    .select("id");
-  return inserted?.length ?? 0;
+    .select("id, debtor_user");
+
+  const newCount = inserted?.length ?? 0;
+  if (newCount > 0) {
+    // A real break just landed — tell the WHOLE team (including the breaker).
+    // Idempotent insert means this only fires the first time a break is seen.
+    await notifyPactBreaks(
+      groupId,
+      g,
+      memberIds,
+      Array.from(new Set((inserted ?? []).map((r) => r.debtor_user as string))),
+    );
+  }
+  return newCount;
+}
+
+/**
+ * Notify every group member that a pact was broken. Best-effort: needs the
+ * service role (writes other users' notification rows) and silently does
+ * nothing if it isn't configured. One notification per distinct breaker, even
+ * if they missed several weeks at once.
+ */
+async function notifyPactBreaks(
+  groupId: string,
+  group: Group,
+  memberIds: string[],
+  breakerIds: string[],
+): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin || breakerIds.length === 0) return;
+
+  const { data: profs } = await admin
+    .from("profiles")
+    .select("id, username, display_name")
+    .in("id", breakerIds);
+  const nameById = new Map(
+    (profs ?? []).map((p) => [
+      p.id as string,
+      nameOf({ username: p.username as string, display_name: p.display_name as string | null }),
+    ]),
+  );
+
+  for (const breakerId of breakerIds) {
+    await notifyMany(admin, memberIds, {
+      type: "pact_broken",
+      groupId,
+      data: {
+        name: nameById.get(breakerId) ?? "Someone",
+        group: group.name,
+        stake: group.stake_value ?? "",
+      },
+      url: `/groups/${groupId}`,
+    });
+  }
 }
 
 /**

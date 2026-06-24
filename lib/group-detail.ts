@@ -8,6 +8,7 @@ import {
   type StreakState,
 } from "@/lib/streaks";
 import { computeQuotaStreak } from "@/lib/streak-quota";
+import { isPact, disciplineCounts } from "@/lib/pacts";
 import type { LeaderEntry } from "@/lib/groups-dashboard";
 import type { TierKey } from "@/lib/tiers";
 import type { Group } from "@/lib/types";
@@ -27,6 +28,16 @@ export type DebtEntry = {
   status: "outstanding" | "settled";
   createdAt: string;
   settledAt: string | null;
+};
+
+/** Loud, top-of-group standing for a pact that has a stake on the line. */
+export type PactAlert = {
+  stake: string;
+  target: number;
+  /** Members who broke a completed pact week and owe the stake. */
+  broke: { userId: string; name: string; isYou: boolean }[];
+  /** Members with zero qualifying workouts so far this week (not already broke). */
+  behind: { userId: string; name: string; isYou: boolean }[];
 };
 
 export type ProposalView = {
@@ -53,6 +64,8 @@ export type GroupDetailData = {
   debts: { outstanding: DebtEntry[]; settled: DebtEntry[] };
   /** A pending rule-change proposal awaiting unanimous approval (§5). */
   proposal: ProposalView | null;
+  /** Loud pact standing for the whole team; null unless it's a staked pact. */
+  pactAlert: PactAlert | null;
 };
 
 type ProfileLite = {
@@ -101,7 +114,7 @@ export async function getGroupDetail(
       .eq("group_id", groupId),
     supabase
       .from("checkins")
-      .select("user_id, created_at")
+      .select("user_id, created_at, sport")
       .eq("group_id", groupId)
       .limit(5000),
   ]);
@@ -296,12 +309,75 @@ export async function getGroupDetail(
     };
   }
 
+  // Loud pact standing for the whole team (only when there's a stake on the line).
+  let pactAlert: PactAlert | null = null;
+  if (isPact(group) && group.stake_value && group.who_pays) {
+    const target = group.workouts_per_week ?? 0;
+    const allowed = group.allowed_disciplines ?? [];
+
+    // Current week, Sunday → Saturday, matching the debt evaluator.
+    const todayMid = new Date(now);
+    todayMid.setHours(0, 0, 0, 0);
+    const weekStart = new Date(todayMid);
+    weekStart.setDate(todayMid.getDate() - todayMid.getDay());
+    const weekKeys = new Set<string>();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      weekKeys.add(localDateKey(d));
+    }
+    const weekQualifyingDays = (uid: string): number => {
+      const days = new Set<string>();
+      for (const c of checkins) {
+        if ((c as { user_id: string }).user_id !== uid) continue;
+        const sport = (c as { sport: string | null }).sport ?? null;
+        if (!disciplineCounts(allowed, sport)) continue;
+        const k = localDateKey(new Date(c.created_at as string));
+        if (weekKeys.has(k)) days.add(k);
+      }
+      return days.size;
+    };
+
+    // Breakers (owe the stake) from completed weeks — distinct per member.
+    const brokeMap = new Map<string, { userId: string; name: string; isYou: boolean }>();
+    for (const d of allDebts) {
+      if (d.status !== "outstanding") continue;
+      brokeMap.set(d.debtorUserId, {
+        userId: d.debtorUserId,
+        name: d.debtorName,
+        isYou: d.isYou,
+      });
+    }
+
+    // "Behind" = zero qualifying days this week, but only once a member has
+    // burned more than their weekly rest allowance (so Monday isn't an alarm).
+    const daysElapsed = todayMid.getDay() + 1; // Sun=1 … Sat=7
+    const restAllowance = Math.max(0, 7 - target);
+    const behind =
+      target > 0 && daysElapsed > restAllowance
+        ? members
+            .filter(
+              (m) =>
+                m.showStats &&
+                !brokeMap.has(m.userId) &&
+                weekQualifyingDays(m.userId) === 0,
+            )
+            .map((m) => ({ userId: m.userId, name: m.name, isYou: m.isYou }))
+        : [];
+
+    const broke = Array.from(brokeMap.values());
+    if (broke.length > 0 || behind.length > 0) {
+      pactAlert = { stake: group.stake_value, target, broke, behind };
+    }
+  }
+
   return {
     group,
     // Owner is the authority for admin actions (backfilled to the creator).
     isCreator: (group.owner_id ?? group.created_by) === userId,
     inviteLink: buildInviteLink(group.invite_code),
     proposal,
+    pactAlert,
     debts: {
       outstanding: allDebts.filter((d) => d.status === "outstanding"),
       settled: allDebts.filter((d) => d.status === "settled"),
