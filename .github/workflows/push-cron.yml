@@ -14,3 +14,10 @@ jobs:
             -H "authorization: Bearer ${CRON_SECRET}"
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      - name: Ping pact sweep
+        run: |
+          curl -fsS -X POST \
+            "https://stack-one-tawny.vercel.app/api/pacts/cron" \
+            -H "authorization: Bearer ${CRON_SECRET}"
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
