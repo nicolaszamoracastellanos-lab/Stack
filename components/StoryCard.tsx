@@ -229,6 +229,8 @@ export const StoryCard = forwardRef<
       {template === "milestone" && (
         <>
           <div style={{ position: "absolute", inset: 0, background: "rgba(10,10,11,0.62)" }} />
+          {/* Bottom scrim so the wordmark never sits on undimmed photo edges. */}
+          <div style={scrim(320, "rgba(0,0,0,0.6)")} />
           <div
             style={{
               position: "absolute",

@@ -98,6 +98,7 @@ export function Heatmap({
 
   const weekdayRows = [0, 2, 4]; // Mon, Wed, Fri (rows run Mon→Sun)
   const cellSize = range === "3m" ? "h-3.5 w-3.5" : "h-3 w-3";
+  const isEmpty = !Object.values(counts).some((n) => n > 0);
 
   return (
     <div>
@@ -109,8 +110,10 @@ export function Heatmap({
               key={r}
               type="button"
               onClick={() => setRange(r)}
+              aria-pressed={range === r}
               className={cn(
-                "rounded-pill px-3 py-1 text-caption font-medium transition-colors",
+                "rounded-pill px-3 py-1.5 text-caption font-medium transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60",
                 range === r
                   ? "bg-surface-2 text-text"
                   : "text-text-dim hover:text-text",
@@ -122,7 +125,15 @@ export function Heatmap({
         </div>
       </div>
 
-      <div className="overflow-x-auto pb-2">
+      {/* The grid reads as one image for assistive tech (a per-cell label on
+          ~370 divs is noise); the visual per-day detail stays in the titles. */}
+      <div
+        className="overflow-x-auto pb-2"
+        role="img"
+        aria-label={`${t("profile_heatmap_subtitle")}: ${
+          Object.values(counts).filter((n) => n > 0).length
+        }`}
+      >
         <div className="inline-flex flex-col gap-1">
           {/* Month labels */}
           <div className="flex gap-1 pl-8">
@@ -130,7 +141,7 @@ export function Heatmap({
               <div
                 key={i}
                 className={cn(
-                  "text-[10px] leading-none text-text-dim",
+                  "text-micro leading-none text-text-dim",
                   range === "3m" ? "w-3.5" : "w-3",
                 )}
               >
@@ -146,7 +157,7 @@ export function Heatmap({
                 <div
                   key={row}
                   className={cn(
-                    "text-[10px] leading-3 text-text-dim",
+                    "text-micro leading-3 text-text-dim",
                     range === "3m" ? "h-3.5" : "h-3",
                   )}
                 >
@@ -183,6 +194,13 @@ export function Heatmap({
           </div>
         </div>
       </div>
+
+      {/* Empty state: a blank grid needs a reason to fill it. */}
+      {isEmpty && (
+        <p className="mt-3 rounded-input border border-volt/30 bg-volt/10 px-3 py-2 text-label text-text">
+          {t("heatmap_empty")}
+        </p>
+      )}
 
       {/* Legend */}
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-text-dim">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Dot } from "@/components/Badge";
+import { NudgeBanner } from "@/components/NudgeBanner";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { Snapshot } from "@/components/Snapshot";
 import { PostFeed, type PostFeedItem } from "@/components/PostFeed";
@@ -112,6 +113,10 @@ export function CombinedHome({
         ctx={ctx}
         suggestedGoal={suggestedGoal}
       />
+
+      {/* Unread-nudge banner (deep-links to /checkin), under the snapshot's
+          at-risk alert and above the feed. */}
+      <NudgeBanner userId={userId} />
 
       {/* 2.2 pinned groups */}
       {pinned.length > 0 && (

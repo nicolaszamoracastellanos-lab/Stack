@@ -29,14 +29,39 @@ export function NotificationCenter({
   initial: NotifRow[];
 }) {
   const { t } = useLanguage();
+  const supabase = useMemo(() => createClient(), []);
   const [rows, setRows] = useState<NotifRow[]>(initial);
+
+  // Live inserts while the center is open (same channel pattern as the bell).
+  useEffect(() => {
+    const channel = supabase
+      .channel(`notifc:${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `recipient_id=eq.${userId}`,
+        },
+        (payload) => {
+          const n = payload.new as NotifRow;
+          setRows((prev) => (prev.some((r) => r.id === n.id) ? prev : [n, ...prev]));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, userId]);
 
   // Mark all currently-unread rows read on open.
   useEffect(() => {
     const unread = initial.filter((n) => !n.read_at).map((n) => n.id);
     if (unread.length === 0) return;
     const at = new Date().toISOString();
-    createClient()
+    supabase
       .from("notifications")
       .update({ read_at: at })
       .eq("recipient_id", userId)

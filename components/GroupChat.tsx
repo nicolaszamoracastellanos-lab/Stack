@@ -49,6 +49,16 @@ export function GroupChat({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   const atBottomRef = useRef(true);
+  const readTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Trailing 2s debounce so a burst of inbound messages costs one read-write.
+  const scheduleMarkRead = useCallback(() => {
+    if (readTimerRef.current) clearTimeout(readTimerRef.current);
+    readTimerRef.current = setTimeout(() => {
+      readTimerRef.current = null;
+      markChatRead(groupId);
+    }, 2000);
+  }, [groupId]);
 
   const roster = useMemo(() => {
     const byId: Record<string, { name: string; avatarUrl: string | null; tier: TierKey | null }> = {};
@@ -82,16 +92,17 @@ export function GroupChat({
         (payload) => {
           const m = payload.new as Message;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-          if (m.user_id !== userId) markChatRead(groupId);
+          if (m.user_id !== userId) scheduleMarkRead();
         },
       )
       .subscribe();
 
     return () => {
       active = false;
+      if (readTimerRef.current) clearTimeout(readTimerRef.current);
       supabase.removeChannel(channel);
     };
-  }, [supabase, groupId, userId]);
+  }, [supabase, groupId, userId, scheduleMarkRead]);
 
   // Auto-scroll to newest unless the user has scrolled up.
   useEffect(() => {
@@ -222,7 +233,7 @@ export function GroupChat({
                     </span>
                   </div>
                 )}
-                <Bubble mine={mine} m={m} who={who} lang={lang} onRetry={() => retry(m)} retryLabel={t("chat_retry")} failedLabel={t("chat_failed")} />
+                <Bubble mine={mine} m={m} who={who} lang={lang} onRetry={() => retry(m)} retryLabel={t("chat_retry")} failedLabel={t("chat_failed")} fallbackName={t("fallback_member")} />
               </div>
             );
           })
@@ -259,6 +270,7 @@ function Bubble({
   onRetry,
   retryLabel,
   failedLabel,
+  fallbackName,
 }: {
   mine: boolean;
   m: Message;
@@ -267,6 +279,8 @@ function Bubble({
   onRetry: () => void;
   retryLabel: string;
   failedLabel: string;
+  /** Translated departed-member fallback name. */
+  fallbackName: string;
 }) {
   const time = new Date(m.created_at).toLocaleTimeString(lang, {
     hour: "numeric",
@@ -299,14 +313,12 @@ function Bubble({
   return (
     <div className="flex items-start gap-2.5">
       <Link href={`/u/${m.user_id}`} className="mt-4 shrink-0">
-        {/* TODO i18n: no key exists yet for the departed-member fallback name. */}
-        <Avatar name={who?.name ?? "Member"} src={who?.avatarUrl ?? null} size="sm" />
+        <Avatar name={who?.name ?? fallbackName} src={who?.avatarUrl ?? null} size="sm" />
       </Link>
       <div className="min-w-0 max-w-[80%]">
         <div className="mb-0.5 flex items-center gap-2">
           <Link href={`/u/${m.user_id}`} className="truncate text-caption font-medium text-text">
-            {/* TODO i18n: no key exists yet for the departed-member fallback name. */}
-            {who?.name ?? "Member"}
+            {who?.name ?? fallbackName}
           </Link>
           {who?.tier && <TierBadge tierKey={who.tier} size="sm" />}
         </div>

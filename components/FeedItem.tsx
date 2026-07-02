@@ -43,7 +43,8 @@ type FeedItemProps = {
   comments: FeedComment[];
   currentUserId: string;
   onToggleReaction: (checkinId: string, emoji: string) => void;
-  onAddComment: (checkinId: string, body: string) => void;
+  /** Resolves to an error code on failure, null on success (optimistic parent). */
+  onAddComment: (checkinId: string, body: string) => Promise<string | null>;
   onDeleteComment: (commentId: string) => void;
   onDelete: (checkinId: string) => Promise<string | null>;
 };
@@ -67,6 +68,7 @@ export function FeedItem({
 }: FeedItemProps) {
   const { t, lang } = useLanguage();
   const [draft, setDraft] = useState("");
+  const [commentError, setCommentError] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -100,12 +102,19 @@ export function FeedItem({
     ? t(item.environment === "indoor" ? "env_indoor" : "env_outdoor")
     : null;
 
-  function submitComment(e?: React.FormEvent) {
+  async function submitComment(e?: React.FormEvent) {
     e?.preventDefault();
     const body = draft.trim();
     if (!body) return;
-    onAddComment(item.id, body);
+    // Optimistic: the parent appends the comment right away; clear the input
+    // now and restore it (with an error) only if the insert fails.
     setDraft("");
+    setCommentError(false);
+    const err = await onAddComment(item.id, body);
+    if (err) {
+      setDraft(body);
+      setCommentError(true);
+    }
   }
 
   return (
@@ -238,12 +247,12 @@ export function FeedItem({
             {comments.map((c) => (
               <li key={c.id} className="flex items-start gap-2">
                 <Link href={`/u/${c.user_id}`} className="mt-0.5 shrink-0">
-                  <Avatar name={c.name} src={c.avatarUrl} size="sm" />
+                  <Avatar name={c.name || t("fallback_member")} src={c.avatarUrl} size="sm" />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <p className="text-body text-text">
                     <Link href={`/u/${c.user_id}`} className="font-medium">
-                      {c.name}
+                      {c.name || t("fallback_member")}
                     </Link>{" "}
                     <span className="text-text-muted">
                       <MentionText body={c.body} />
@@ -263,6 +272,8 @@ export function FeedItem({
             ))}
           </ul>
         )}
+
+        {commentError && <FormError>{t("action_failed")}</FormError>}
 
         <form onSubmit={submitComment} className="flex items-end gap-2">
           <MentionInput
