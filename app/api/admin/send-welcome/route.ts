@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, onboardingEmail } from "@/lib/email";
@@ -19,10 +20,16 @@ export const maxDuration = 60;
  *                                   the row is stamped so reruns are safe. dryRun
  *                                   lists recipients without sending.
  */
+/** Constant-time token check (hash both sides so lengths always match). */
+function tokenOk(provided: string | null, expected: string | undefined): boolean {
+  if (!provided || !expected) return false;
+  const a = createHash("sha256").update(provided).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
 export async function POST(req: Request) {
-  const token = process.env.ADMIN_TASK_TOKEN;
-  const provided = req.headers.get("x-admin-token");
-  if (!token || provided !== token) {
+  if (!tokenOk(req.headers.get("x-admin-token"), process.env.ADMIN_TASK_TOKEN)) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 

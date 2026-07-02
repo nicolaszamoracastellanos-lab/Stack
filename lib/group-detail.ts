@@ -9,6 +9,8 @@ import {
 } from "@/lib/streaks";
 import { computeQuotaStreak } from "@/lib/streak-quota";
 import { isPact, disciplineCounts } from "@/lib/pacts";
+import { pactWeekStartKey } from "@/lib/pact-eval";
+import { dayKey, addDaysKey, weekdayMon0 } from "@/lib/week";
 import type { LeaderEntry } from "@/lib/groups-dashboard";
 import type { TierKey } from "@/lib/tiers";
 import type { Group } from "@/lib/types";
@@ -330,25 +332,37 @@ export async function getGroupDetail(
     const target = group.workouts_per_week ?? 0;
     const allowed = group.allowed_disciplines ?? [];
 
-    // Current week, Sunday → Saturday, matching the debt evaluator.
-    const todayMid = new Date(now);
-    todayMid.setHours(0, 0, 0, 0);
-    const weekStart = new Date(todayMid);
-    weekStart.setDate(todayMid.getDate() - todayMid.getDay());
-    const weekKeys = new Set<string>();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      weekKeys.add(localDateKey(d));
+    // Each member's CURRENT week (Sunday → Saturday) in their OWN timezone,
+    // matching the debt evaluator's per-member frames.
+    const tzByUid = new Map<string, string | null>();
+    for (const row of rows) {
+      tzByUid.set(
+        (row as { user_id: string }).user_id,
+        (row as unknown as { profile: ProfileLite }).profile?.timezone ?? null,
+      );
     }
-    // One pass over the check-ins: distinct qualifying day-keys per member.
+    const weekStartByUid = new Map<string, string>();
+    const weekEndByUid = new Map<string, string>();
+    const daysElapsedByUid = new Map<string, number>(); // Sun=1 … Sat=7
+    tzByUid.forEach((tz, uid) => {
+      const todayK = dayKey(now, tz);
+      const start = pactWeekStartKey(todayK);
+      weekStartByUid.set(uid, start);
+      weekEndByUid.set(uid, addDaysKey(start, 6));
+      daysElapsedByUid.set(uid, (weekdayMon0(todayK) + 1) % 7 + 1);
+    });
+
+    // One pass over the check-ins: distinct qualifying day-keys per member,
+    // each resolved in that member's frame.
     const weekDaysByUid = new Map<string, Set<string>>();
     for (const c of checkins) {
+      const uid = (c as { user_id: string }).user_id;
+      const start = weekStartByUid.get(uid);
+      if (!start) continue;
       const sport = (c as { sport: string | null }).sport ?? null;
       if (!disciplineCounts(allowed, sport)) continue;
-      const k = localDateKey(new Date(c.created_at as string));
-      if (!weekKeys.has(k)) continue;
-      const uid = (c as { user_id: string }).user_id;
+      const k = dayKey(new Date(c.created_at as string), tzByUid.get(uid));
+      if (k < start || k > weekEndByUid.get(uid)!) continue;
       let s = weekDaysByUid.get(uid);
       if (!s) weekDaysByUid.set(uid, (s = new Set()));
       s.add(k);
@@ -367,15 +381,15 @@ export async function getGroupDetail(
 
     // "Behind" = zero qualifying days this week, but only once a member has
     // burned more than their weekly rest allowance (so Monday isn't an alarm).
-    const daysElapsed = todayMid.getDay() + 1; // Sun=1 … Sat=7
     const restAllowance = Math.max(0, 7 - target);
     const behind =
-      target > 0 && daysElapsed > restAllowance
+      target > 0
         ? members
             .filter(
               (m) =>
                 m.showStats &&
                 !brokeMap.has(m.userId) &&
+                (daysElapsedByUid.get(m.userId) ?? 0) > restAllowance &&
                 (weekDaysByUid.get(m.userId)?.size ?? 0) === 0,
             )
             .map((m) => ({ userId: m.userId, name: m.name, isYou: m.isYou }))

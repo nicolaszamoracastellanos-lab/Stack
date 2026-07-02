@@ -74,4 +74,50 @@ check("not a pact → no debts", () => {
   );
 });
 
+// ---- Timezone-aware evaluation (explicit tz → deterministic on any machine).
+
+check("tz: a late-Saturday check-in counts toward the member's local week", () => {
+  // 2026-06-14T03:00Z is Sat Jun 13, 11pm in New York but Sun Jun 14 in UTC.
+  // Week under test: Jun 7–13. NOW = Mon Jun 15 noon UTC (Monday in both tzs).
+  const tzNow = new Date("2026-06-15T12:00:00Z");
+  const late = "2026-06-14T03:00:00Z";
+  const debts = evaluatePactDebts(
+    pactGroup({ workouts_per_week: 1, pact_start_date: "2026-06-07" }),
+    [
+      { id: "ny", tz: "America/New_York" },
+      { id: "utc", tz: "UTC" },
+    ],
+    [
+      { user_id: "ny", created_at: late, sport: "lifting" },
+      { user_id: "utc", created_at: late, sport: "lifting" },
+    ],
+    tzNow,
+  );
+  // NY's check-in lands on their Saturday → target met. UTC's lands on the
+  // NEXT week's Sunday → week Jun 7–13 missed.
+  assert.deepEqual(
+    debts.map((d) => ({ uid: d.debtor_user, key: d.period_key })),
+    [{ uid: "utc", key: "2026-06-07" }],
+  );
+});
+
+check("tz: a week is only judged once it has ended in the member's frame", () => {
+  // Sun Jun 14 00:00 UTC: Kiritimati (UTC+14) is already Sunday afternoon, so
+  // their Jun 7–13 week has ended; Pago Pago (UTC-11) is still Saturday.
+  const edgeNow = new Date("2026-06-14T00:00:00Z");
+  const debts = evaluatePactDebts(
+    pactGroup({ pact_start_date: "2026-06-07" }),
+    [
+      { id: "east", tz: "Pacific/Kiritimati" },
+      { id: "west", tz: "Pacific/Pago_Pago" },
+    ],
+    [],
+    edgeNow,
+  );
+  assert.deepEqual(
+    debts.map((d) => ({ uid: d.debtor_user, key: d.period_key })),
+    [{ uid: "east", key: "2026-06-07" }],
+  );
+});
+
 console.log(`\n${passed} pact-eval tests passed.`);
