@@ -20,16 +20,16 @@ export default async function HomePage() {
   if (!userId) redirect("/login");
   const supabase = createClient();
   const now = new Date();
-  const groups = await getUserGroups();
 
-  const { count: unread } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("recipient_id", userId)
-    .is("read_at", null);
-
-  // Personal post dates (deduped by post) + rest days for the snapshot streak.
-  const [mineRes, restRes] = await Promise.all([
+  // Everything independent loads in ONE round: groups, the unread badge,
+  // personal post dates (deduped by post) and rest days for the streak.
+  const [groups, unreadRes, mineRes, restRes] = await Promise.all([
+    getUserGroups(),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", userId)
+      .is("read_at", null),
     supabase
       .from("checkins")
       .select("id, post_id, created_at")
@@ -38,6 +38,7 @@ export default async function HomePage() {
       .limit(400),
     supabase.from("rest_days").select("day").eq("user_id", userId),
   ]);
+  const unread = unreadRes.count;
   const seen = new Set<string>();
   const personalDates: string[] = [];
   for (const c of mineRes.data ?? []) {
@@ -73,8 +74,8 @@ export default async function HomePage() {
   }
 
   const [feed, dash, chatUnread] = await Promise.all([
-    getCombinedFeed(),
-    getGroupsDashboard(userId),
+    getCombinedFeed(groups),
+    getGroupsDashboard(userId, groups),
     getUnreadChatByGroup(groups.map((g) => g.id)),
   ]);
   const groupCards: GroupCard[] = dash.groups.map((d) => ({

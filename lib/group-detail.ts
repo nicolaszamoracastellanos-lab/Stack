@@ -98,20 +98,39 @@ export async function getGroupDetail(
   const supabase = createClient();
   const now = new Date();
 
-  const [groupRes, memberRes, checkinRes] = await Promise.all([
-    supabase.from("groups").select("*").eq("id", groupId).single(),
-    supabase
-      .from("group_members")
-      .select(
-        "user_id, profile:profiles(username, display_name, avatar_url, show_stats, weekly_goal, quota_active_from, timezone, tier_confirmed, tier_provisional)",
-      )
-      .eq("group_id", groupId),
-    supabase
-      .from("checkins")
-      .select("user_id, created_at, sport")
-      .eq("group_id", groupId)
-      .limit(5000),
-  ]);
+  const [groupRes, memberRes, checkinRes, ledgerRes, propRes] =
+    await Promise.all([
+      supabase.from("groups").select("*").eq("id", groupId).single(),
+      supabase
+        .from("group_members")
+        .select(
+          "user_id, profile:profiles(username, display_name, avatar_url, show_stats, weekly_goal, quota_active_from, timezone, tier_confirmed, tier_provisional)",
+        )
+        .eq("group_id", groupId),
+      supabase
+        .from("checkins")
+        .select("user_id, created_at, sport")
+        .eq("group_id", groupId)
+        .limit(5000),
+      // Stakes ledger (Batch 4 §3) — debts with the debtor's name.
+      supabase
+        .from("stakes_ledger")
+        .select(
+          "id, debtor_user, stake_description, period_key, status, created_at, settled_at, debtor:profiles!stakes_ledger_debtor_user_fkey(username, display_name)",
+        )
+        .eq("group_id", groupId)
+        .order("created_at", { ascending: false }),
+      // Pending rule-change proposal (§5).
+      supabase
+        .from("rule_change_proposals")
+        .select(
+          "id, proposed_by, summary, approvals, proposer:profiles!rule_change_proposals_proposed_by_fkey(username, display_name)",
+        )
+        .eq("group_id", groupId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1),
+    ]);
 
   const group = groupRes.data as Group | null;
   if (!group) return null;
@@ -286,15 +305,7 @@ export async function getGroupDetail(
     return best;
   };
 
-  // Stakes ledger (Batch 4 §3) — debts with the debtor's name.
-  const { data: ledgerRows } = await supabase
-    .from("stakes_ledger")
-    .select(
-      "id, debtor_user, stake_description, period_key, status, created_at, settled_at, debtor:profiles!stakes_ledger_debtor_user_fkey(username, display_name)",
-    )
-    .eq("group_id", groupId)
-    .order("created_at", { ascending: false });
-
+  const ledgerRows = ledgerRes.data;
   const allDebts: DebtEntry[] = (ledgerRows ?? []).map((r) => {
     const row = r as unknown as {
       id: string;
@@ -319,17 +330,7 @@ export async function getGroupDetail(
     };
   });
 
-  // Pending rule-change proposal (§5).
-  const { data: propRows } = await supabase
-    .from("rule_change_proposals")
-    .select(
-      "id, proposed_by, summary, approvals, proposer:profiles!rule_change_proposals_proposed_by_fkey(username, display_name)",
-    )
-    .eq("group_id", groupId)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false })
-    .limit(1);
-
+  const propRows = propRes.data;
   let proposal: ProposalView | null = null;
   const pr = (propRows ?? [])[0] as unknown as
     | {

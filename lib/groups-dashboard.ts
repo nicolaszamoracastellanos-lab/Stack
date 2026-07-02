@@ -56,12 +56,17 @@ type ProfileLite = {
  * by current streak (computed from that group's check-ins) — the leaderboard
  * that answers "who's #1 here". Returns the active group id for highlighting.
  */
-export async function getGroupsDashboard(userId: string): Promise<{
+export async function getGroupsDashboard(
+  userId: string,
+  /** Pre-fetched groups — pass when the caller already loaded them so a home
+   * render doesn't repeat the membership query. */
+  prefetchedGroups?: Group[],
+): Promise<{
   groups: DashboardGroup[];
   activeId: string | null;
 }> {
   const supabase = createClient();
-  const groups = await getUserGroups();
+  const groups = prefetchedGroups ?? (await getUserGroups());
   const now = new Date();
 
   const dashGroups = await Promise.all(

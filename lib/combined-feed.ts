@@ -5,6 +5,7 @@ import { nameOf } from "@/lib/feed";
 import type { FeedReaction, FeedComment } from "@/lib/feed";
 import type { TierKey } from "@/lib/tiers";
 import type { MentionMember } from "@/lib/mentions";
+import type { Group } from "@/lib/types";
 
 /**
  * Combined "All Activity" feed (STACK_BATCH6 Stage 2). Aggregates check-ins from
@@ -64,9 +65,13 @@ type CheckinRow = {
   author: ProfileLite;
 };
 
-export async function getCombinedFeed(): Promise<CombinedFeedData> {
+export async function getCombinedFeed(
+  /** Pre-fetched groups — pass when the caller already loaded them so a home
+   * render doesn't repeat the membership query. */
+  prefetchedGroups?: Group[],
+): Promise<CombinedFeedData> {
   const supabase = createClient();
-  const groups = await getUserGroups();
+  const groups = prefetchedGroups ?? (await getUserGroups());
   const groupIds = groups.map((g) => g.id);
   const groupName = new Map(groups.map((g) => [g.id, g.name]));
   if (groupIds.length === 0) {
@@ -191,7 +196,8 @@ export async function getCombinedFeed(): Promise<CombinedFeedData> {
       id: c.id as string,
       checkin_id: c.checkin_id as string,
       user_id: c.user_id as string,
-      name: nameById.get(c.user_id as string)?.name ?? "Member",
+      // Empty on a missing profile — the client renders t("fallback_member").
+      name: nameById.get(c.user_id as string)?.name ?? "",
       avatarUrl: nameById.get(c.user_id as string)?.avatar ?? null,
       body: c.body as string,
       created_at: c.created_at as string,

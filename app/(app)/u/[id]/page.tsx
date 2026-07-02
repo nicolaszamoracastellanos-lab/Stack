@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
 import { getMemberProfile } from "@/lib/member-profile";
 import { MemberProfile } from "@/components/MemberProfile";
@@ -14,8 +14,9 @@ export default async function MemberPage({
   const { userId } = await getUserAndProfile();
   if (!userId) redirect("/login");
 
+  // A bad or unknown id is an honest 404, not a silent bounce home.
   const data = await getMemberProfile(userId, params.id);
-  if (!data) redirect("/home");
+  if (!data) notFound();
 
   return <MemberProfile data={data} />;
 }

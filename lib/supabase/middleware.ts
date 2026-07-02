@@ -6,8 +6,21 @@ import { AUTH_COOKIE_OPTIONS } from "@/lib/supabase/config";
 // /join/[code]) is reachable logged-out. Profile/username gating (logged in but
 // no username yet -> /onboarding) is handled in the (app) layout, which already
 // queries the profile, to avoid a DB round-trip in middleware on every request.
-const PROTECTED = ["/home", "/checkin", "/profile", "/groups"];
-const AUTH_ONLY = ["/onboarding"];
+// Keep this in sync with app/(app)/* — the layout's getUserAndProfile redirect
+// is the backstop, but middleware catching it first avoids a flash of work.
+const PROTECTED = [
+  "/home",
+  "/checkin",
+  "/profile",
+  "/groups",
+  "/activity",
+  "/tiers",
+  "/notifications",
+  "/settings",
+  "/u",
+  "/founder",
+];
+const AUTH_ONLY = ["/onboarding", "/welcome"];
 
 function matches(path: string, prefixes: string[]) {
   return prefixes.some((p) => path === p || path.startsWith(p + "/"));
