@@ -17,13 +17,16 @@ export default async function CheckinPage() {
   const [mineRes, restRes, lastRes] = await Promise.all([
     supabase.from("checkins").select("created_at").eq("user_id", userId).limit(400),
     supabase.from("rest_days").select("day").eq("user_id", userId),
-    // The user's most recent post — seeds the default destination (Batch 5 B2).
+    // The user's recent rows — seed the default destination (Batch 5 B2) AND
+    // the last-used sport/environment/focus so a daily check-in is mostly
+    // taps-through. 20 rows covers the last post's multi-group fan-out without
+    // a second round-trip.
     supabase
       .from("checkins")
-      .select("post_id, group_id, created_at")
+      .select("post_id, group_id, created_at, sport, environment, goal")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(1),
+      .limit(20),
   ]);
   const personalDates = (mineRes.data ?? []).map((r) => r.created_at as string);
   const restDays = (restRes.data ?? []).map((r) => r.day as string);
@@ -39,19 +42,17 @@ export default async function CheckinPage() {
   const streakAfter = current.workedToday ? current.count : current.count + 1;
 
   // Default destination = the group(s) the last post went to, else "Just me".
+  // The last post's multi-group rows are already in lastRes (same post_id) —
+  // no second query needed.
   const groupIdSet = new Set(groups.map((g) => g.id));
-  const last = lastRes.data?.[0];
+  const recent = lastRes.data ?? [];
+  const last = recent[0];
   let initialDestination: { justMe: boolean; groupIds: string[] };
   if (groups.length === 0) {
     initialDestination = { justMe: true, groupIds: [] };
   } else if (last && last.post_id) {
-    // Re-expand the last post to all the groups it targeted (still-joined only).
-    const { data: lastRows } = await supabase
-      .from("checkins")
-      .select("group_id")
-      .eq("user_id", userId)
-      .eq("post_id", last.post_id as string);
-    const ids = (lastRows ?? [])
+    const ids = recent
+      .filter((r) => r.post_id === last.post_id)
       .map((r) => r.group_id as string | null)
       .filter((id): id is string => !!id && groupIdSet.has(id));
     initialDestination = ids.length
@@ -76,6 +77,15 @@ export default async function CheckinPage() {
       streakAfter={streakAfter}
       initialTemplate={initialTemplate}
       initialSelfieMirror={profile?.selfie_mirror_default ?? false}
+      lastDetails={
+        last
+          ? {
+              sport: (last.sport as string | null) ?? "",
+              environment: (last.environment as string | null) ?? "",
+              goal: (last.goal as string | null) ?? "",
+            }
+          : null
+      }
     />
   );
 }

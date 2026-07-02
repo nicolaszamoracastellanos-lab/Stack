@@ -35,22 +35,6 @@ const TEMPLATE_KEYS = new Set(CARD_TEMPLATES.map((tpl) => tpl.key));
 type Order = "details" | "photo";
 type Step = "details" | "photo" | "review";
 
-/** Empty state when the user has no group to check in to. */
-export function CheckinNoGroup() {
-  const { t } = useLanguage();
-  return (
-    <main className="mx-auto flex min-h-[80dvh] w-full max-w-xl flex-col items-center justify-center px-6 text-center">
-      <p className="text-h2">{t("checkin_title")}</p>
-      <p className="mt-3 text-body text-text-muted">{t("checkin_no_group")}</p>
-      <Link href="/home" className="mt-8">
-        <Button variant="primary" size="lg">
-          {t("home_create_group")}
-        </Button>
-      </Link>
-    </main>
-  );
-}
-
 /**
  * Redesigned multi-step check-in (Batch 3 §1). Two phases — details and photo —
  * in a user-chosen, remembered order (default details-first so the details can
@@ -67,6 +51,7 @@ export function CheckinFlow({
   streakAfter,
   initialTemplate,
   initialSelfieMirror,
+  lastDetails,
 }: {
   userId: string;
   groups: Group[];
@@ -78,6 +63,10 @@ export function CheckinFlow({
   initialTemplate: string;
   /** Per-user selfie-mirror preference; seeds the review-step Mirror toggle. */
   initialSelfieMirror: boolean;
+  /** Last check-in's sport/environment/focus — smart defaults so the daily
+   * flow is confirm-taps, not re-entry. Stored free-text maps back to the
+   * "other" option. */
+  lastDetails?: { sport: string; environment: string; goal: string } | null;
 }) {
   const { t, lang } = useLanguage();
   const router = useRouter();
@@ -96,17 +85,27 @@ export function CheckinFlow({
     order === "photo" ? ["photo", "details", "review"] : ["details", "photo", "review"];
   const step = sequence[stepIdx];
 
-  const [details, setDetails] = useState<CheckinDetails>(() => ({
-    groups: new Set(initialDestination.justMe ? [] : initialDestination.groupIds),
-    justMe: initialDestination.justMe,
-    sport: "",
-    sportOther: "",
-    environment: "",
-    goal: "",
-    goalOther: "",
-    notes: "",
-    sportQuery: "",
-  }));
+  const [details, setDetails] = useState<CheckinDetails>(() => {
+    // Prefill from the last check-in. A stored value that isn't a known option
+    // key is the user's free text — re-seed it through the "other" slot.
+    const sportKnown =
+      !lastDetails?.sport || SPORTS.some((s) => s.key === lastDetails.sport);
+    const goalKnown =
+      !lastDetails?.goal || GOALS.some((g) => g.key === lastDetails.goal);
+    return {
+      groups: new Set(
+        initialDestination.justMe ? [] : initialDestination.groupIds,
+      ),
+      justMe: initialDestination.justMe,
+      sport: lastDetails?.sport ? (sportKnown ? lastDetails.sport : OTHER_KEY) : "",
+      sportOther: sportKnown ? "" : lastDetails?.sport ?? "",
+      environment: lastDetails?.environment ?? "",
+      goal: lastDetails?.goal ? (goalKnown ? lastDetails.goal : OTHER_KEY) : "",
+      goalOther: goalKnown ? "" : lastDetails?.goal ?? "",
+      notes: "",
+      sportQuery: "",
+    };
+  });
   const [photo, setPhoto] = useState<
     { blob: Blob; url: string; dataUrl: string } | null
   >(null);
@@ -169,16 +168,21 @@ export function CheckinFlow({
   const [cardBusy, setCardBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Capture the true-size (1080x1920) card node to a PNG blob. Real HTML → PNG
-  // via html-to-image. On iOS Safari the first pass can come back blank while
-  // images/fonts settle, so we warm up once and use the second pass.
-  async function generateCardBlob(): Promise<Blob | null> {
+  // Capture the true-size (1080x1920) card node via html-to-image. On iOS
+  // Safari the first pass can come back blank while images/fonts settle, so we
+  // warm up once and use the second pass. Share exports stay lossless PNG;
+  // the POSTED feed image uses JPEG so a daily post is ~200KB, not multiple MB
+  // of lossless photo.
+  async function generateCardBlob(
+    format: "png" | "jpeg" = "png",
+  ): Promise<Blob | null> {
     const node = cardRef.current;
     if (!node) return null;
     try {
       // Loaded on demand so the heavy lib stays out of the check-in route's
       // initial JS bundle.
-      const { toPng } = await import("html-to-image");
+      const { toPng, toJpeg } = await import("html-to-image");
+      const capture = format === "jpeg" ? toJpeg : toPng;
       try {
         await document.fonts.ready;
       } catch {
@@ -191,16 +195,17 @@ export function CheckinFlow({
         height: 1920,
         pixelRatio: 1,
         backgroundColor: "#0A0A0B",
+        ...(format === "jpeg" ? { quality: 0.9 } : {}),
       };
       let dataUrl: string;
       try {
-        await toPng(node, base); // iOS Safari warm-up pass
-        dataUrl = await toPng(node, base);
+        await capture(node, base); // iOS Safari warm-up pass
+        dataUrl = await capture(node, base);
       } catch (fontErr) {
         // Font embedding can throw on iOS Safari — retry with system fonts so
         // the card still exports (slightly off-brand beats not working).
         console.error("[card] capture failed, retrying without fonts", fontErr);
-        dataUrl = await toPng(node, { ...base, skipFonts: true });
+        dataUrl = await capture(node, { ...base, skipFonts: true });
       }
       return await (await fetch(dataUrl)).blob();
     } catch (err) {
@@ -325,10 +330,10 @@ export function CheckinFlow({
       // session details, template and toggles the user set on the review screen),
       // so the feed shows exactly what they edited, not the bare photo. Falls back
       // to the plain composed photo if card rendering fails, so a post never dies.
-      const cardBlob = await generateCardBlob();
+      const cardBlob = await generateCardBlob("jpeg");
       const blob = cardBlob ?? photo.blob;
-      const ext = cardBlob ? "png" : "jpg";
-      const contentType = cardBlob ? "image/png" : "image/jpeg";
+      const ext = "jpg";
+      const contentType = "image/jpeg";
       const path = checkinPhotoPath(userId, `${crypto.randomUUID()}.${ext}`);
       const { error: upErr } = await supabase.storage
         .from(CHECKINS_BUCKET)

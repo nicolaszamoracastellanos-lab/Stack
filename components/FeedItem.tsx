@@ -84,7 +84,8 @@ export function FeedItem({
       setDeleting(false);
       setConfirmDelete(false);
     }
-    // On success the item is removed by the parent (optimistic + realtime).
+    // On success the item is removed by the parent (optimistic; the feed has
+    // no realtime channel — others see it on their next load/refresh).
   }
 
   const [now, setNow] = useState<number>(() => new Date(item.createdAt).getTime());
