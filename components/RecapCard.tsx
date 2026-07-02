@@ -25,7 +25,22 @@ export function RecapCard({ data }: { data: GroupDetailData }) {
   const { t } = useLanguage();
   const week = data.windows.week;
 
-  const perfect = data.members.filter((m) => m.showStats && m.daysThisWeek >= 7);
+  // Perfect week = the member hit THEIR weekly goal, not a flat 7/7.
+  const perfect = data.members.filter(
+    (m) =>
+      m.showStats &&
+      m.daysThisWeek >= Math.min(7, Math.max(1, m.weeklyGoal ?? 7)),
+  );
+
+  // A recap has to be earned — a brand-new or quiet week gets a nudge, not a
+  // wall of zeros.
+  if (week.total === 0) {
+    return (
+      <section className="rounded-card border border-volt/30 bg-volt/10 p-4">
+        <p className="text-label text-text">{t("recap_empty")}</p>
+      </section>
+    );
+  }
 
   return (
     <section className="overflow-hidden rounded-card border border-volt/30 bg-gradient-to-br from-volt/10 to-surface p-5">
@@ -42,7 +57,7 @@ export function RecapCard({ data }: { data: GroupDetailData }) {
           label={t("gd_collective_streak")}
         />
         <RecapStat
-          value={week.mostConsistent ? `${week.mostConsistent.days}/7` : "—"}
+          value={week.mostConsistent ? `${week.mostConsistent.days}/7` : "0/7"}
           label={t("gd_most_consistent")}
         />
       </div>

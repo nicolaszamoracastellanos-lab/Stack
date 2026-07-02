@@ -101,9 +101,14 @@ export function evaluatePactDebts(
 
     let debtors: string[];
     if (group.who_pays === "last_place") {
+      // Last place owes — but hitting the target is always safe. Without this
+      // carve-out a full tie (including a week where EVERYONE hit the goal)
+      // would charge the entire group, which reads as punitive, not motivating.
       const counts = mems.map((m) => ({ uid: m.id, n: countIn(m.id, wStart) }));
       const min = Math.min(...counts.map((c) => c.n));
-      debtors = counts.filter((c) => c.n === min).map((c) => c.uid);
+      debtors = counts
+        .filter((c) => c.n === min && c.n < target)
+        .map((c) => c.uid);
     } else {
       // breaker / any_misser
       debtors = mems

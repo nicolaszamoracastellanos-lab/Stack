@@ -1,16 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { nameOf } from "@/lib/feed";
 import { inviteLink as buildInviteLink } from "@/lib/site";
-import {
-  computeGroupStreak,
-  localDateKey,
-  toDaySet,
-  type StreakState,
-} from "@/lib/streaks";
-import { computeQuotaStreak } from "@/lib/streak-quota";
+import { computeGroupStreak, type StreakState } from "@/lib/streaks";
+import { computeQuotaStreak, workoutDaySet } from "@/lib/streak-quota";
 import { isPact, disciplineCounts } from "@/lib/pacts";
 import { pactWeekStartKey } from "@/lib/pact-eval";
-import { dayKey, addDaysKey, weekdayMon0 } from "@/lib/week";
+import { dayKey, addDaysKey, weekdayMon0, weekDayKeys } from "@/lib/week";
 import type { LeaderEntry } from "@/lib/groups-dashboard";
 import type { TierKey } from "@/lib/tiers";
 import type { Group } from "@/lib/types";
@@ -82,13 +77,10 @@ type ProfileLite = {
   tier_provisional: string | null;
 } | null;
 
-function daySetBack(now: Date, n: number): Set<string> {
+/** The last `n` day-keys ending at `todayKey` (a member-frame civil today). */
+function backKeys(todayKey: string, n: number): Set<string> {
   const s = new Set<string>();
-  for (let i = 0; i < n; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    s.add(localDateKey(d));
-  }
+  for (let i = 0; i < n; i++) s.add(addDaysKey(todayKey, -i));
   return s;
 }
 
@@ -126,10 +118,25 @@ export async function getGroupDetail(
 
   const checkins = checkinRes.data ?? [];
   const rows = memberRes.data ?? [];
-  const todayKey = localDateKey(now);
-  const weekSet = daySetBack(now, 7);
-  const monthSet = daySetBack(now, 30);
-  const last7 = Array.from(weekSet);
+
+  // Per-member time frames: today, the current Mon–Sun week (the app-wide
+  // locked week definition — NOT a rolling 7-day window) and the trailing
+  // 30 days, all resolved in EACH member's stored timezone so the numbers
+  // here agree with the dashboard and with the member's own home screen.
+  const tzByUid = new Map<string, string | null>();
+  const todayKeyByUid = new Map<string, string>();
+  const weekSetByUid = new Map<string, Set<string>>();
+  const monthSetByUid = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const uid = (row as { user_id: string }).user_id;
+    const tz =
+      (row as unknown as { profile: ProfileLite }).profile?.timezone ?? null;
+    const todayK = dayKey(now, tz);
+    tzByUid.set(uid, tz);
+    todayKeyByUid.set(uid, todayK);
+    weekSetByUid.set(uid, new Set(weekDayKeys(todayK)));
+    monthSetByUid.set(uid, backKeys(todayK, 30));
+  }
 
   // Group check-ins per member once — datesOf/daySetOf are hit several times
   // per member below (streaks, consistency, windows, pact alert), so repeated
@@ -145,8 +152,19 @@ export async function getGroupDetail(
   const daySetByUid = new Map<string, Set<string>>();
   const daySetOf = (uid: string): Set<string> => {
     let s = daySetByUid.get(uid);
-    if (!s) daySetByUid.set(uid, (s = toDaySet(datesOf(uid))));
+    if (!s)
+      daySetByUid.set(uid, (s = workoutDaySet(datesOf(uid), tzByUid.get(uid))));
     return s;
+  };
+  /** Distinct days this member checked in within a member-frame key set. */
+  const daysIn = (uid: string, set: Set<string> | undefined): number => {
+    if (!set) return 0;
+    const ds = daySetOf(uid);
+    let n = 0;
+    set.forEach((k) => {
+      if (ds.has(k)) n++;
+    });
+    return n;
   };
 
   // Section B — per-member rows (privacy-aware).
@@ -192,13 +210,12 @@ export async function getGroupDetail(
         name: nameOf(profile),
         avatarUrl: profile?.avatar_url ?? null,
         streak,
-        checkedInToday: groupDaySet.has(todayKey),
-        daysThisWeek: showStats
-          ? last7.filter((k) => groupDaySet.has(k)).length
-          : 0,
+        checkedInToday: groupDaySet.has(todayKeyByUid.get(uid)!),
+        daysThisWeek: showStats ? daysIn(uid, weekSetByUid.get(uid)) : 0,
         isYou,
         showStats,
         tier,
+        weeklyGoal: profile?.weekly_goal ?? null,
       };
     }),
   );
@@ -216,24 +233,43 @@ export async function getGroupDetail(
   );
   const collective = computeGroupStreak(memberArrays, now);
 
-  // Group consistency this week (counts everyone's real days; aggregate only).
-  const memberCount = rows.length || 1;
-  let groupWeekDays = 0;
+  // Group consistency this week, goal-aware: each member contributes their
+  // checked days (capped at their goal) against their goal, so a 4/week member
+  // who hit 4 counts as complete rather than dragging the group under 100%.
+  let earnedDays = 0;
+  let possibleDays = 0;
   for (const row of rows) {
-    const ds = daySetOf((row as { user_id: string }).user_id);
-    groupWeekDays += last7.filter((k) => ds.has(k)).length;
+    const uid = (row as { user_id: string }).user_id;
+    const profile = (row as unknown as { profile: ProfileLite }).profile;
+    const goal = Math.min(7, Math.max(1, profile?.weekly_goal ?? 7));
+    earnedDays += Math.min(daysIn(uid, weekSetByUid.get(uid)), goal);
+    possibleDays += goal;
   }
-  const consistencyPct = Math.round((groupWeekDays / (memberCount * 7)) * 100);
+  const consistencyPct = Math.round((earnedDays / Math.max(1, possibleDays)) * 100);
 
-  // Totals + "most consistent" per window. `window === null` means all-time.
-  const totalIn = (set: Set<string> | null) =>
-    set === null
+  // Totals + "most consistent" per window, each check-in resolved in its
+  // owner's frame. `window` picks the per-member key set; null means all-time.
+  type WindowKind = "week" | "month" | null;
+  const setFor = (uid: string, kind: WindowKind) =>
+    kind === "week"
+      ? weekSetByUid.get(uid)
+      : kind === "month"
+        ? monthSetByUid.get(uid)
+        : undefined;
+
+  const totalIn = (kind: WindowKind) =>
+    kind === null
       ? checkins.length
-      : checkins.filter((c) =>
-          set.has(localDateKey(new Date(c.created_at as string))),
-        ).length;
+      : checkins.filter((c) => {
+          const uid = c.user_id as string;
+          const set = setFor(uid, kind);
+          if (!set) return false;
+          return set.has(
+            dayKey(new Date(c.created_at as string), tzByUid.get(uid)),
+          );
+        }).length;
 
-  const mostConsistentIn = (set: Set<string> | null): WindowStat["mostConsistent"] => {
+  const mostConsistentIn = (kind: WindowKind): WindowStat["mostConsistent"] => {
     let best: { name: string; days: number } | null = null;
     for (const row of rows) {
       const uid = (row as { user_id: string }).user_id;
@@ -241,11 +277,8 @@ export async function getGroupDetail(
       const isYou = uid === userId;
       const showStats = isYou || profile?.show_stats !== false;
       if (!showStats) continue; // never expose a hidden member's standing
-      const ds = daySetOf(uid);
       const days =
-        set === null
-          ? ds.size
-          : Array.from(set).filter((k) => ds.has(k)).length;
+        kind === null ? daySetOf(uid).size : daysIn(uid, setFor(uid, kind));
       if (days > 0 && (!best || days > best.days)) {
         best = { name: nameOf(profile), days };
       }
@@ -333,14 +366,7 @@ export async function getGroupDetail(
     const allowed = group.allowed_disciplines ?? [];
 
     // Each member's CURRENT week (Sunday → Saturday) in their OWN timezone,
-    // matching the debt evaluator's per-member frames.
-    const tzByUid = new Map<string, string | null>();
-    for (const row of rows) {
-      tzByUid.set(
-        (row as { user_id: string }).user_id,
-        (row as unknown as { profile: ProfileLite }).profile?.timezone ?? null,
-      );
-    }
+    // matching the debt evaluator's per-member frames (tzByUid from above).
     const weekStartByUid = new Map<string, string>();
     const weekEndByUid = new Map<string, string>();
     const daysElapsedByUid = new Map<string, number>(); // Sun=1 … Sat=7
@@ -417,8 +443,8 @@ export async function getGroupDetail(
     consistencyPct,
     members,
     windows: {
-      week: { total: totalIn(weekSet), mostConsistent: mostConsistentIn(weekSet) },
-      month: { total: totalIn(monthSet), mostConsistent: mostConsistentIn(monthSet) },
+      week: { total: totalIn("week"), mostConsistent: mostConsistentIn("week") },
+      month: { total: totalIn("month"), mostConsistent: mostConsistentIn("month") },
       all: { total: totalIn(null), mostConsistent: mostConsistentIn(null) },
     },
   };

@@ -14,10 +14,10 @@ import { Heatmap } from "@/components/Heatmap";
 import { JoinByCode } from "@/components/JoinByCode";
 import { useLanguage } from "@/lib/language-context";
 import { useCountUp } from "@/lib/use-count-up";
-import { localDateKey, toDaySet } from "@/lib/streaks";
-import { computeQuotaStreak } from "@/lib/streak-quota";
+import { localDateKey } from "@/lib/streaks";
+import { computeQuotaStreak, workoutDaySet } from "@/lib/streak-quota";
 import type { StreakContext } from "@/lib/streak-context";
-import { weekDayKeys } from "@/lib/week";
+import { dayKey, weekDayKeys } from "@/lib/week";
 
 const PROMPT_SESSION_KEY = "stack_solo_prompt_seen";
 
@@ -57,18 +57,20 @@ export function SoloHome({
   const displayedStreak = useCountUp(streak.count);
 
   const goalDenom = ctx.weeklyGoal && ctx.weeklyGoal > 0 ? ctx.weeklyGoal : 7;
+  // Ring + "today" resolve in the same stored-timezone frame as the streak
+  // beside them, so a traveller never sees the two disagree.
   const consistency = useMemo(() => {
-    const set = toDaySet(personalDates);
-    const days = weekDayKeys(localDateKey(new Date())).filter((k) =>
+    const set = workoutDaySet(personalDates, ctx.tz);
+    const days = weekDayKeys(dayKey(new Date(), ctx.tz)).filter((k) =>
       set.has(k),
     ).length;
     const value = Math.min(1, days / goalDenom);
     return { days, value, percent: Math.round(value * 100) };
-  }, [personalDates, goalDenom]);
+  }, [personalDates, goalDenom, ctx.tz]);
 
   const checkedInToday = useMemo(
-    () => toDaySet(personalDates).has(localDateKey(new Date())),
-    [personalDates],
+    () => workoutDaySet(personalDates, ctx.tz).has(dayKey(new Date(), ctx.tz)),
+    [personalDates, ctx.tz],
   );
 
   const counts = useMemo(() => {
