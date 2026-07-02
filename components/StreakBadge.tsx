@@ -58,7 +58,7 @@ export function StreakBadge({
           className={cn(
             "font-mono nums tabular-nums",
             color,
-            isDisplay ? "text-display" : "text-h2 font-bold",
+            isDisplay ? "text-display" : "text-h2",
           )}
         >
           {count}

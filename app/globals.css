@@ -50,4 +50,14 @@
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
   }
+
+  /* Uppercase section eyebrow — one treatment everywhere. */
+  .eyebrow {
+    @apply text-caption uppercase tracking-[0.2em] text-text-dim;
+  }
+
+  /* Tactile press feedback for touch — pair with transition classes. */
+  .pressable {
+    @apply transition duration-150 active:scale-[0.98] active:opacity-90;
+  }
 }

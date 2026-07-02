@@ -1,8 +1,14 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 /**
  * Circular consistency ring — the hero element on Home, modeled on Whoop's
- * recovery ring. Shows the share of the last 7 days the user checked in, filling
- * in volt as it completes, with the percentage large in the center (Geist Mono).
- * Driven entirely by Stack's own data — no biometrics.
+ * recovery ring. Shows this Mon–Sun week's check-in days against the weekly
+ * goal, filling in volt as it completes, with the percentage large in the
+ * center. Driven entirely by Stack's own data — no biometrics.
+ *
+ * Animates on first load (draws from empty) and on any value update.
  */
 export function ConsistencyRing({
   value,
@@ -20,7 +26,15 @@ export function ConsistencyRing({
   const r = (SIZE - STROKE) / 2;
   const c = 2 * Math.PI * r;
   const v = Math.max(0, Math.min(1, value));
-  const offset = c * (1 - v);
+
+  // First paint renders the ring empty; the next frame sets the real value so
+  // the CSS transition draws it in. After that, updates animate natively.
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setDrawn(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const offset = drawn ? c * (1 - v) : c;
 
   return (
     <div className="relative" style={{ width: SIZE, height: SIZE }}>
@@ -58,7 +72,7 @@ export function ConsistencyRing({
 
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-mono nums leading-none tracking-tight">
-          <span className="text-[44px] font-bold text-text">{percent}</span>
+          <span className="text-stat text-text">{percent}</span>
           <span className="text-h2 text-text-muted">%</span>
         </span>
         <span className="mt-1 max-w-[7rem] text-center text-caption text-text-dim">

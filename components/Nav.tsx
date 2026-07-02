@@ -170,7 +170,7 @@ export function Nav() {
                 )}
               >
                 {item.icon(active)}
-                <span className="text-[10px] leading-none lg:hidden">
+                <span className="text-micro leading-none lg:hidden">
                   {t(item.key)}
                 </span>
               </Link>

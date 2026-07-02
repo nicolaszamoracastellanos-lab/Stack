@@ -54,11 +54,15 @@ const config: Config = {
       // tracking and weight so a single utility class sets the whole style.
       fontSize: {
         display: ["64px", { lineHeight: "1", letterSpacing: "-0.03em", fontWeight: "700" }],
+        // Hero stat — the ring percent, streak count. Between h1 and display.
+        stat: ["44px", { lineHeight: "1", letterSpacing: "-0.02em", fontWeight: "700" }],
         h1: ["32px", { lineHeight: "1.15", letterSpacing: "-0.02em", fontWeight: "700" }],
         h2: ["24px", { lineHeight: "1.25", letterSpacing: "-0.01em", fontWeight: "600" }],
         body: ["16px", { lineHeight: "1.6", fontWeight: "400" }],
         label: ["14px", { lineHeight: "1.4", fontWeight: "500" }],
         caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+        // Smallest legible size — count badges, tab labels, heatmap axes.
+        micro: ["11px", { lineHeight: "1.2", fontWeight: "500" }],
       },
       borderRadius: {
         card: "12px",

@@ -61,7 +61,7 @@ export function TierBadge({
         className,
       )}
       style={{
-        borderColor: provisional ? "var(--border-strong, #2A2A2E)" : tier.hex,
+        borderColor: provisional ? "#3A3A40" /* border-strong token */ : tier.hex,
         backgroundColor: `${tier.hex}1f`, // ~12% alpha
         color: tier.hex,
       }}
