@@ -67,6 +67,22 @@ export async function POST(req: Request) {
 
   const pending = (profiles ?? []).filter((p) => !p.welcome_email_sent_at);
 
+  // Email lives in auth.users, not profiles — resolve it in bulk via the
+  // service role (one page of 1000 per call) instead of one lookup per member.
+  const emailById = new Map<string, string>();
+  for (let page = 1; ; page++) {
+    const { data: pageData, error: listErr } = await admin.auth.admin.listUsers(
+      { page, perPage: 1000 },
+    );
+    if (listErr) {
+      return NextResponse.json({ error: listErr.message }, { status: 500 });
+    }
+    for (const u of pageData.users) {
+      if (u.email) emailById.set(u.id, u.email);
+    }
+    if (pageData.users.length < 1000) break;
+  }
+
   const result = {
     ok: true,
     mode: "bulk" as const,
@@ -78,9 +94,7 @@ export async function POST(req: Request) {
   };
 
   for (const p of pending) {
-    // Email lives in auth.users, not profiles — resolve it via the service role.
-    const { data: u } = await admin.auth.admin.getUserById(p.id);
-    const email = u?.user?.email;
+    const email = emailById.get(p.id);
     if (!email) {
       result.noEmail += 1;
       continue;

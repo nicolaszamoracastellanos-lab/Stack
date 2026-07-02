@@ -129,8 +129,23 @@ export async function getGroupDetail(
   const monthSet = daySetBack(now, 30);
   const last7 = Array.from(weekSet);
 
-  const datesOf = (uid: string) =>
-    checkins.filter((c) => c.user_id === uid).map((c) => c.created_at as string);
+  // Group check-ins per member once — datesOf/daySetOf are hit several times
+  // per member below (streaks, consistency, windows, pact alert), so repeated
+  // full scans of up to 5000 rows add up.
+  const datesByUid = new Map<string, string[]>();
+  for (const c of checkins) {
+    const uid = c.user_id as string;
+    const arr = datesByUid.get(uid);
+    if (arr) arr.push(c.created_at as string);
+    else datesByUid.set(uid, [c.created_at as string]);
+  }
+  const datesOf = (uid: string) => datesByUid.get(uid) ?? [];
+  const daySetByUid = new Map<string, Set<string>>();
+  const daySetOf = (uid: string): Set<string> => {
+    let s = daySetByUid.get(uid);
+    if (!s) daySetByUid.set(uid, (s = toDaySet(datesOf(uid))));
+    return s;
+  };
 
   // Section B — per-member rows (privacy-aware).
   // Fix #7: the per-member STREAK is the member's PERSONAL (global) streak —
@@ -142,7 +157,7 @@ export async function getGroupDetail(
     rows.map(async (row) => {
       const uid = (row as { user_id: string }).user_id;
       const profile = (row as unknown as { profile: ProfileLite }).profile;
-      const groupDaySet = toDaySet(datesOf(uid));
+      const groupDaySet = daySetOf(uid);
       const isYou = uid === userId;
       const showStats = isYou || profile?.show_stats !== false;
 
@@ -203,7 +218,7 @@ export async function getGroupDetail(
   const memberCount = rows.length || 1;
   let groupWeekDays = 0;
   for (const row of rows) {
-    const ds = toDaySet(datesOf((row as { user_id: string }).user_id));
+    const ds = daySetOf((row as { user_id: string }).user_id);
     groupWeekDays += last7.filter((k) => ds.has(k)).length;
   }
   const consistencyPct = Math.round((groupWeekDays / (memberCount * 7)) * 100);
@@ -224,7 +239,7 @@ export async function getGroupDetail(
       const isYou = uid === userId;
       const showStats = isYou || profile?.show_stats !== false;
       if (!showStats) continue; // never expose a hidden member's standing
-      const ds = toDaySet(datesOf(uid));
+      const ds = daySetOf(uid);
       const days =
         set === null
           ? ds.size
@@ -326,17 +341,18 @@ export async function getGroupDetail(
       d.setDate(weekStart.getDate() + i);
       weekKeys.add(localDateKey(d));
     }
-    const weekQualifyingDays = (uid: string): number => {
-      const days = new Set<string>();
-      for (const c of checkins) {
-        if ((c as { user_id: string }).user_id !== uid) continue;
-        const sport = (c as { sport: string | null }).sport ?? null;
-        if (!disciplineCounts(allowed, sport)) continue;
-        const k = localDateKey(new Date(c.created_at as string));
-        if (weekKeys.has(k)) days.add(k);
-      }
-      return days.size;
-    };
+    // One pass over the check-ins: distinct qualifying day-keys per member.
+    const weekDaysByUid = new Map<string, Set<string>>();
+    for (const c of checkins) {
+      const sport = (c as { sport: string | null }).sport ?? null;
+      if (!disciplineCounts(allowed, sport)) continue;
+      const k = localDateKey(new Date(c.created_at as string));
+      if (!weekKeys.has(k)) continue;
+      const uid = (c as { user_id: string }).user_id;
+      let s = weekDaysByUid.get(uid);
+      if (!s) weekDaysByUid.set(uid, (s = new Set()));
+      s.add(k);
+    }
 
     // Breakers (owe the stake) from completed weeks — distinct per member.
     const brokeMap = new Map<string, { userId: string; name: string; isYou: boolean }>();
@@ -360,7 +376,7 @@ export async function getGroupDetail(
               (m) =>
                 m.showStats &&
                 !brokeMap.has(m.userId) &&
-                weekQualifyingDays(m.userId) === 0,
+                (weekDaysByUid.get(m.userId)?.size ?? 0) === 0,
             )
             .map((m) => ({ userId: m.userId, name: m.name, isYou: m.isYou }))
         : [];

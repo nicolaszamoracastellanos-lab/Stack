@@ -25,25 +25,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  // Atomically claim the send: only the request that flips NULL → timestamp
+  // gets a row back, so concurrent double-fires can't email twice. No profile
+  // yet, or already welcomed → no row, nothing to do (idempotent).
+  const { data: claimed } = await supabase
     .from("profiles")
-    .select("display_name, welcome_email_sent_at")
+    .update({ welcome_email_sent_at: new Date().toISOString() })
     .eq("id", user.id)
+    .is("welcome_email_sent_at", null)
+    .select("display_name")
     .maybeSingle();
-
-  // No profile yet, or already welcomed → nothing to do (idempotent).
-  if (!profile || profile.welcome_email_sent_at) {
+  if (!claimed) {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
-  const { subject, html, text } = onboardingEmail(language, profile.display_name);
+  const { subject, html, text } = onboardingEmail(language, claimed.display_name);
   const sent = await sendEmail({ to: user.email, subject, html, text });
 
-  // Only stamp when it actually went out, so a dormant key retries next time.
-  if (sent) {
+  // Release the claim when nothing went out, so a dormant key retries next time.
+  if (!sent) {
     await supabase
       .from("profiles")
-      .update({ welcome_email_sent_at: new Date().toISOString() })
+      .update({ welcome_email_sent_at: null })
       .eq("id", user.id);
   }
 

@@ -82,8 +82,17 @@ function shell(lang: Language, preheader: string, inner: string): string {
 </html>`;
 }
 
-function label(text: string): string {
-  return `<div style="font-size:11px;letter-spacing:0.12em;color:${C.dim};font-weight:700;">${text}</div>`;
+function label(text: string, color: string = C.dim): string {
+  return `<div style="font-size:11px;letter-spacing:0.12em;color:${color};font-weight:700;">${text}</div>`;
+}
+
+/** Escape user-provided text (e.g. a display name) before it lands in HTML. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function stepsHtml(items: string[]): string {
@@ -177,7 +186,7 @@ export function welcomeEmail(language?: string | null): {
   const inner = `
     <tr>
       <td style="padding:18px 28px 0 28px;">
-        ${label(c.badge).replace(C.dim, C.volt)}
+        ${label(c.badge, C.volt)}
         <h1 style="margin:8px 0 0 0;font-size:28px;line-height:1.15;color:${C.text};font-weight:800;">${c.heading}</h1>
         <p style="margin:14px 0 0 0;font-size:15px;line-height:1.6;color:${C.muted};">${c.intro}</p>
       </td>
@@ -298,8 +307,8 @@ export function onboardingEmail(
   const inner = `
     <tr>
       <td style="padding:18px 28px 0 28px;">
-        ${label(c.badge).replace(C.dim, C.volt)}
-        <h1 style="margin:8px 0 0 0;font-size:28px;line-height:1.15;color:${C.text};font-weight:800;">${c.heading(cleanName)}</h1>
+        ${label(c.badge, C.volt)}
+        <h1 style="margin:8px 0 0 0;font-size:28px;line-height:1.15;color:${C.text};font-weight:800;">${c.heading(escapeHtml(cleanName))}</h1>
         <p style="margin:14px 0 0 0;font-size:15px;line-height:1.6;color:${C.muted};">${c.intro}</p>
       </td>
     </tr>
@@ -308,7 +317,7 @@ export function onboardingEmail(
       ${stepsHtml(c.features)}</td></tr>
     <tr><td style="padding:16px 28px 0 28px;">
       <div style="border:1px solid ${C.volt};border-radius:12px;padding:18px 18px;background:rgba(198,248,6,0.06);">
-        ${label(c.comingLabel).replace(C.dim, C.volt)}
+        ${label(c.comingLabel, C.volt)}
         <p style="margin:8px 0 0 0;font-size:15px;line-height:1.6;color:${C.text};">${c.coming}</p></div></td></tr>
     <tr><td style="padding:24px 28px 0 28px;">
       <div style="border-top:1px solid ${C.border};padding-top:20px;">
