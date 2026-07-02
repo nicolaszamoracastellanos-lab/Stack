@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { setActiveGroup } from "@/lib/active-group";
@@ -75,6 +76,8 @@ export default function JoinPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
+      // Don't leave the button stuck in its loading state behind the redirect.
+      setJoining(false);
       router.replace(`/login?next=/join/${code}`);
       return;
     }
@@ -169,9 +172,7 @@ export default function JoinPage() {
         )}
       </div>
 
-      {error && (
-        <p className="mt-4 text-label text-danger">{t("error_generic")}</p>
-      )}
+      <FormError className="mt-4">{error && t("error_generic")}</FormError>
 
       <Button
         variant="primary"

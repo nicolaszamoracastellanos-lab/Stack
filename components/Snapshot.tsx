@@ -12,10 +12,9 @@ import { RestPrompt } from "@/components/RestPrompt";
 import { PushPrompt } from "@/components/PushPrompt";
 import { useLanguage } from "@/lib/language-context";
 import { useCountUp } from "@/lib/use-count-up";
-import { localDateKey, toDaySet } from "@/lib/streaks";
-import { computeQuotaStreak } from "@/lib/streak-quota";
+import { computeQuotaStreak, workoutDaySet } from "@/lib/streak-quota";
 import type { StreakContext } from "@/lib/streak-context";
-import { weekDayKeys } from "@/lib/week";
+import { dayKey, weekDayKeys } from "@/lib/week";
 
 /**
  * Personal snapshot (STACK_BATCH6 2.1): consistency ring, quota streak, tier
@@ -52,16 +51,20 @@ export function Snapshot({
   const displayedStreak = useCountUp(streak.count);
 
   const goalDenom = ctx.weeklyGoal && ctx.weeklyGoal > 0 ? ctx.weeklyGoal : 7;
+  // Ring + "today" resolve in the same stored-timezone frame as the streak
+  // beside them, so a traveller never sees the two disagree.
   const consistency = useMemo(() => {
-    const set = toDaySet(personalDates);
-    const days = weekDayKeys(localDateKey(new Date())).filter((k) => set.has(k)).length;
+    const set = workoutDaySet(personalDates, ctx.tz);
+    const days = weekDayKeys(dayKey(new Date(), ctx.tz)).filter((k) =>
+      set.has(k),
+    ).length;
     const value = Math.min(1, days / goalDenom);
     return { days, value, percent: Math.round(value * 100) };
-  }, [personalDates, goalDenom]);
+  }, [personalDates, goalDenom, ctx.tz]);
 
   const checkedInToday = useMemo(
-    () => toDaySet(personalDates).has(localDateKey(new Date())),
-    [personalDates],
+    () => workoutDaySet(personalDates, ctx.tz).has(dayKey(new Date(), ctx.tz)),
+    [personalDates, ctx.tz],
   );
 
   const tierKey = (ctx.confirmedTier ?? ctx.provisionalTier) ?? null;

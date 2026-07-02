@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Tween a number toward `target` whenever it changes. Used for the streak
- * count-up when a check-in increments it. Fast and subtle (cubic ease-out),
- * in keeping with the app's disciplined motion.
+ * Tween a number toward `target` on first mount (from 0) and whenever it
+ * changes. Used for the streak count-up on load and when a check-in
+ * increments it. Fast and subtle (cubic ease-out), in keeping with the app's
+ * disciplined motion.
  */
 export function useCountUp(target: number, duration = 500): number {
-  const [value, setValue] = useState(target);
-  const prevRef = useRef(target);
+  const [value, setValue] = useState(0);
+  const prevRef = useRef(0);
 
   useEffect(() => {
     const from = prevRef.current;

@@ -4,10 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { Input } from "@/components/Input";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
-import { SITE_URL } from "@/lib/site";
+
+// Same pattern as the waitlist / subscribe endpoint — kept local on purpose.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Forgot password: sends a Supabase reset link. The link returns through
@@ -25,14 +28,22 @@ export default function ForgotPasswordPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!EMAIL_RE.test(email.trim())) {
+      setError(t("error_email_invalid"));
+      return;
+    }
     setLoading(true);
     const supabase = createClient();
+    // Use the current origin (like signup) so dev resets don't point at prod.
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email.trim(),
-      { redirectTo: `${SITE_URL}/auth/callback?next=/reset-password` },
+      {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      },
     );
     setLoading(false);
     if (resetError) {
+      console.error("[forgot-password] error:", resetError);
       setError(t("error_generic"));
       return;
     }
@@ -64,7 +75,7 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             required
           />
-          {error && <p className="text-label text-danger">{error}</p>}
+          <FormError>{error}</FormError>
           <Button
             type="submit"
             variant="primary"

@@ -147,7 +147,7 @@ export function ImageCropper({
 
         <div className="mt-5 flex justify-center">
           <div
-            className="relative overflow-hidden rounded-md bg-bg touch-none"
+            className="relative overflow-hidden rounded-card bg-bg touch-none"
             style={{ width: FRAME_W, height: FRAME_H }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -168,9 +168,9 @@ export function ImageCropper({
               <>
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 rounded-md"
+                  className="pointer-events-none absolute inset-0 rounded-card"
                   style={{
-                    boxShadow: "0 0 0 9999px rgba(10,10,11,0.55)",
+                    boxShadow: "0 0 0 9999px rgba(10,10,11,0.55)", // bg token @ 55%; inline style needs a literal
                     clipPath: "circle(50% at 50% 50%)",
                   }}
                 />
@@ -183,7 +183,7 @@ export function ImageCropper({
             {shape === "rect" && (
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 rounded-md border border-white/20"
+                className="pointer-events-none absolute inset-0 rounded-card border border-white/20"
               />
             )}
           </div>

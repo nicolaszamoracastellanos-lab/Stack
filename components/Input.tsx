@@ -38,7 +38,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         className={cn(
           "flex items-center rounded-input border bg-surface transition-colors duration-150",
           "focus-within:border-volt focus-within:ring-2 focus-within:ring-volt/30",
-          error ? "border-danger" : "border-border hover:border-border-strong",
+          error ? "border-border-strong" : "border-border hover:border-border-strong",
         )}
       >
         {prefix && (
@@ -61,8 +61,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         />
       </div>
       {error ? (
-        <p id={`${inputId}-error`} className="text-caption text-danger">
-          {error}
+        <p id={`${inputId}-error`} className="text-caption text-text-muted">
+          {`⚠️ ${error}`}
         </p>
       ) : hint ? (
         <p id={`${inputId}-hint`} className="text-caption text-text-dim">

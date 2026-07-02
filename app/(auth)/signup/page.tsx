@@ -5,9 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { Input } from "@/components/Input";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
+
+// Same pattern as the waitlist / subscribe endpoint — kept local on purpose.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function SignupForm() {
   const { t } = useLanguage();
@@ -17,9 +21,10 @@ function SignupForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // Holds either a translated string or a raw Supabase message — never a silent
-  // generic for unexpected errors.
+  // Always a translated string — raw Supabase messages go to the console only.
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Where the email confirmation link returns to. Prefer the configured base
@@ -36,6 +41,21 @@ function SignupForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setEmailError(null);
+    setPasswordError(null);
+
+    // Client-side validation before hitting the API.
+    let invalid = false;
+    if (!EMAIL_RE.test(email.trim())) {
+      setEmailError(t("error_email_invalid"));
+      invalid = true;
+    }
+    if (password.length < 8) {
+      setPasswordError(t("error_password_short"));
+      invalid = true;
+    }
+    if (invalid) return;
+
     setLoading(true);
 
     const supabase = createClient();
@@ -52,8 +72,9 @@ function SignupForm() {
       } else if (msg.includes("password")) {
         setError(t("error_weak_password"));
       } else {
-        // Show the real reason (e.g. email rate limit) instead of a generic.
-        setError(signUpError.message);
+        // Log the real reason (e.g. email rate limit); show a neutral generic.
+        console.error("[signup] error:", signUpError);
+        setError(t("error_generic"));
       }
       setLoading(false);
       return;
@@ -103,7 +124,11 @@ function SignupForm() {
           label={t("email_label")}
           placeholder={t("email_placeholder")}
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setEmailError(null);
+          }}
+          error={emailError ?? undefined}
           autoComplete="email"
           required
         />
@@ -112,16 +137,16 @@ function SignupForm() {
           label={t("password_label")}
           placeholder={t("password_placeholder")}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setPasswordError(null);
+          }}
+          error={passwordError ?? undefined}
           autoComplete="new-password"
           required
         />
 
-        {error && (
-          <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
 
         <Button
           type="submit"

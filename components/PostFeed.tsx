@@ -68,7 +68,7 @@ export function PostFeed({
       const cell = (byEmoji[r.emoji] ??= { count: 0, mine: false, who: [] });
       cell.count++;
       if (r.user_id === userId) cell.mine = true;
-      cell.who.push(r.user_id === userId ? t("groups_you_tag") : "Member");
+      cell.who.push(r.user_id === userId ? t("groups_you_tag") : t("fallback_member"));
     }
     return out;
   }, [reactions, userId, t]);
@@ -103,13 +103,29 @@ export function PostFeed({
     }
   }
 
-  async function addComment(checkinId: string, body: string) {
+  async function addComment(checkinId: string, body: string): Promise<string | null> {
+    // Optimistic: show the comment immediately, then reconcile with the
+    // inserted row (or remove it on failure — FeedItem restores the input).
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const temp: FeedComment = {
+      id: tempId,
+      checkin_id: checkinId,
+      user_id: userId,
+      name: userName,
+      avatarUrl: userAvatar,
+      body,
+      created_at: new Date().toISOString(),
+    };
+    setComments((prev) => [...prev, temp]);
     const { data, error } = await supabase
       .from("comments")
       .insert({ checkin_id: checkinId, user_id: userId, body })
       .select("id, checkin_id, user_id, body, created_at")
       .single();
-    if (error || !data) return;
+    if (error || !data) {
+      setComments((prev) => prev.filter((c) => c.id !== tempId));
+      return "failed";
+    }
     emitPush({ event: "comment", checkinId, snippet: body });
     // Notify mentioned members (group-scoped; validated server-side).
     const post = items.find((p) => p.id === checkinId);
@@ -124,22 +140,24 @@ export function PostFeed({
         targetId: checkinId,
       });
     }
-    setComments((prev) =>
-      prev.some((c) => c.id === data.id)
-        ? prev
-        : [
-            ...prev,
-            {
-              id: data.id as string,
-              checkin_id: data.checkin_id as string,
-              user_id: data.user_id as string,
-              name: userName,
-              avatarUrl: userAvatar,
-              body: data.body as string,
-              created_at: data.created_at as string,
-            },
-          ],
-    );
+    // Replace the temp comment with the real row (keep whichever arrived first).
+    setComments((prev) => {
+      const withoutTemp = prev.filter((c) => c.id !== tempId);
+      if (withoutTemp.some((c) => c.id === data.id)) return withoutTemp;
+      return [
+        ...withoutTemp,
+        {
+          id: data.id as string,
+          checkin_id: data.checkin_id as string,
+          user_id: data.user_id as string,
+          name: userName,
+          avatarUrl: userAvatar,
+          body: data.body as string,
+          created_at: data.created_at as string,
+        },
+      ];
+    });
+    return null;
   }
 
   async function deleteComment(commentId: string) {

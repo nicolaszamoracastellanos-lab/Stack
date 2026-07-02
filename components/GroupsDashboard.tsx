@@ -12,8 +12,8 @@ import type { DashboardGroup } from "@/lib/groups-dashboard";
 /**
  * One-line group card (Batch 2 · Section 4). The whole row taps into the
  * group's detail page — a clean, scannable directory instead of a wall of
- * expanded blocks. One compact signal: the collective streak, plus a red dot if
- * YOU haven't checked in today for this group.
+ * expanded blocks. One compact signal: the collective streak, plus a volt dot
+ * if YOU haven't checked in today for this group.
  */
 function GroupRow({ item, active }: { item: DashboardGroup; active: boolean }) {
   const { t } = useLanguage();
@@ -30,7 +30,7 @@ function GroupRow({ item, active }: { item: DashboardGroup; active: boolean }) {
         <Avatar name={g.name} size="md" />
         {!item.youCheckedInToday && (
           <span
-            className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
+            className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-volt"
             title={t("groups_at_risk")}
           />
         )}

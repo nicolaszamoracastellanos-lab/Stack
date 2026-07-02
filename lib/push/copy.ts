@@ -46,7 +46,7 @@ const BUILDERS: Record<NotificationType, Builder> = {
     body: pick(
       lang,
       `${v.name ?? "Someone"} just stacked up in ${v.group ?? "your group"}.`,
-      `${v.name ?? "Alguien"} acaba de sumar en ${v.group ?? "tu grupo"}.`,
+      `${v.name ?? "Alguien"} acaba de stackear en ${v.group ?? "tu grupo"}.`,
     ),
   }),
   group_join: (lang, v) => ({
@@ -69,8 +69,8 @@ const BUILDERS: Record<NotificationType, Builder> = {
     title: "Stack",
     body: pick(
       lang,
-      "Late in the day — still time to keep your streak.",
-      "Ya es tarde — aún hay tiempo para mantener tu racha.",
+      "Late in the day. Still time to keep your streak.",
+      "Ya es tarde. Aún hay tiempo para mantener tu racha.",
     ),
   }),
   at_risk: (lang) => ({
@@ -85,16 +85,16 @@ const BUILDERS: Record<NotificationType, Builder> = {
     title: "Stack",
     body: pick(
       lang,
-      `${v.name ?? "Someone"} nudged you to work out.`,
-      `${v.name ?? "Alguien"} te dio un empujón para entrenar.`,
+      `${v.name ?? "Someone"} nudged you 👀 Still time to check in.`,
+      `${v.name ?? "Alguien"} te dio un empujón 👀 Aún hay tiempo para registrar.`,
     ),
   }),
   nudge: (lang, v) => ({
     title: "Stack",
     body: pick(
       lang,
-      `${v.name ?? "Someone"} nudged you to work out.`,
-      `${v.name ?? "Alguien"} te dio un empujón para entrenar.`,
+      `${v.name ?? "Someone"} nudged you 👀 Still time to check in.`,
+      `${v.name ?? "Alguien"} te dio un empujón 👀 Aún hay tiempo para registrar.`,
     ),
   }),
   reaction: (lang, v) => ({
@@ -155,8 +155,8 @@ const BUILDERS: Record<NotificationType, Builder> = {
     title: pick(lang, "Pact broken 🚨", "Pacto roto 🚨"),
     body: pick(
       lang,
-      `${v.name ?? "Someone"} broke the pact in ${v.group ?? "your group"} — they owe ${v.stake ?? "the stake"}.`,
-      `${v.name ?? "Alguien"} rompió el pacto en ${v.group ?? "tu grupo"} — debe ${v.stake ?? "la apuesta"}.`,
+      `${v.name ?? "Someone"} broke the pact in ${v.group ?? "your group"}. They owe ${v.stake ?? "the stake"}.`,
+      `${v.name ?? "Alguien"} rompió el pacto en ${v.group ?? "tu grupo"}. Debe ${v.stake ?? "la apuesta"}.`,
     ),
   }),
   tier_projection: (lang, v) => {
@@ -171,8 +171,8 @@ const BUILDERS: Record<NotificationType, Builder> = {
         title: "Stack",
         body: pick(
           lang,
-          `You're going harder than your goal — keep it up and you'll reach ${v.tier ?? "the next tier"}.`,
-          `Vas más fuerte que tu meta — sigue así y llegarás a ${v.tier ?? "el siguiente nivel"}.`,
+          `You're going harder than your goal. Keep it up and you'll reach ${v.tier ?? "the next tier"}.`,
+          `Vas más fuerte que tu meta. Sigue así y llegarás a ${v.tier ?? "el siguiente nivel"}.`,
         ),
       };
     }
@@ -190,8 +190,8 @@ const BUILDERS: Record<NotificationType, Builder> = {
       title: "Stack",
       body: pick(
         lang,
-        "Your pace is shifting your tier — check your progress.",
-        "Tu ritmo está moviendo tu nivel — revisa tu progreso.",
+        "Your pace is shifting your tier. Check your progress.",
+        "Tu ritmo está moviendo tu nivel. Revisa tu progreso.",
       ),
     };
   },

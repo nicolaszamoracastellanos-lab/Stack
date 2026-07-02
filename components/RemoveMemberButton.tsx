@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
+import { Modal } from "@/components/Modal";
 import { useLanguage } from "@/lib/language-context";
 import { removeMember } from "@/lib/group-admin";
 
@@ -21,30 +24,55 @@ export function RemoveMemberButton({
 }) {
   const { t } = useLanguage();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   async function onRemove() {
     if (busy) return;
-    if (!window.confirm(t("gd_remove_confirm").replace("{name}", memberName))) return;
     setBusy(true);
+    setFailed(false);
     const res = await removeMember(groupId, memberUserId);
     setBusy(false);
     if (!res.ok) {
-      window.alert(`${t("gd_remove_failed")}: ${res.error}`);
+      // res.error is a code (not_owner/self/failed), never display text.
+      console.error("remove member:", res.error);
+      setFailed(true);
       return;
     }
+    setOpen(false);
     router.refresh();
   }
 
   return (
-    <button
-      type="button"
-      onClick={onRemove}
-      disabled={busy}
-      className="shrink-0 rounded-pill border border-danger/40 px-2.5 py-1 text-caption font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-      aria-label={t("gd_remove")}
-    >
-      {busy ? t("loading") : t("gd_remove")}
-    </button>
+    <>
+      <Button
+        variant="danger"
+        size="sm"
+        pill
+        onClick={() => {
+          setFailed(false);
+          setOpen(true);
+        }}
+        aria-label={t("gd_remove")}
+        className="shrink-0"
+      >
+        {t("gd_remove")}
+      </Button>
+      <Modal open={open} onClose={() => setOpen(false)} label={t("gd_remove")}>
+        <p className="text-body text-text">
+          {t("gd_remove_confirm").replace("{name}", memberName)}
+        </p>
+        {failed && <FormError className="mt-4">{t("gd_remove_failed")}</FormError>}
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>
+            {t("cancel")}
+          </Button>
+          <Button variant="danger" onClick={onRemove} disabled={busy}>
+            {busy ? t("loading") : t("groups_confirm_yes")}
+          </Button>
+        </div>
+      </Modal>
+    </>
   );
 }

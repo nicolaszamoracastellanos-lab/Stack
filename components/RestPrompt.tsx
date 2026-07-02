@@ -82,14 +82,14 @@ export function RestPrompt({
         <button
           type="button"
           onClick={yes}
-          className="rounded-pill border border-volt bg-volt/15 px-3 py-1.5 text-caption font-medium text-volt"
+          className="rounded-pill border border-volt bg-volt/15 px-3 py-1.5 text-caption font-medium text-volt transition duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         >
           {t("rest_prompt_yes")}
         </button>
         <button
           type="button"
           onClick={close}
-          className="rounded-pill border border-border px-3 py-1.5 text-caption text-text-muted hover:text-text"
+          className="rounded-pill border border-border px-3 py-1.5 text-caption text-text-muted transition duration-150 hover:text-text active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         >
           {t("rest_prompt_no")}
         </button>

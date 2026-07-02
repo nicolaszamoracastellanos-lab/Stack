@@ -2,14 +2,9 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getUserGroups } from "@/lib/groups";
 import { nameOf } from "@/lib/feed";
-import {
-  computeGroupStreak,
-  localDateKey,
-  toDaySet,
-  type StreakState,
-} from "@/lib/streaks";
-import { computeQuotaStreak } from "@/lib/streak-quota";
-import { weekDayKeys } from "@/lib/week";
+import { computeGroupStreak, type StreakState } from "@/lib/streaks";
+import { computeQuotaStreak, workoutDaySet } from "@/lib/streak-quota";
+import { dayKey, weekDayKeys } from "@/lib/week";
 import type { TierKey } from "@/lib/tiers";
 import { ACTIVE_GROUP_COOKIE } from "@/lib/active-group";
 import type { Group } from "@/lib/types";
@@ -28,6 +23,8 @@ export type LeaderEntry = {
   showStats: boolean;
   /** Confirmed-or-provisional tier key for the colour legend (Batch 5 C). */
   tier: TierKey | null;
+  /** Weekly goal (1–7), for goal-aware "perfect week" framing. */
+  weeklyGoal: number | null;
 };
 
 export type DashboardGroup = {
@@ -59,12 +56,17 @@ type ProfileLite = {
  * by current streak (computed from that group's check-ins) — the leaderboard
  * that answers "who's #1 here". Returns the active group id for highlighting.
  */
-export async function getGroupsDashboard(userId: string): Promise<{
+export async function getGroupsDashboard(
+  userId: string,
+  /** Pre-fetched groups — pass when the caller already loaded them so a home
+   * render doesn't repeat the membership query. */
+  prefetchedGroups?: Group[],
+): Promise<{
   groups: DashboardGroup[];
   activeId: string | null;
 }> {
   const supabase = createClient();
-  const groups = await getUserGroups();
+  const groups = prefetchedGroups ?? (await getUserGroups());
   const now = new Date();
 
   const dashGroups = await Promise.all(
@@ -85,18 +87,23 @@ export async function getGroupsDashboard(userId: string): Promise<{
 
       const checkins = checkinRes.data ?? [];
 
-      // Day keys for "today" and the current Mon–Sun week (Batch 5 A2).
-      const todayKey = localDateKey(now);
-      const week = weekDayKeys(todayKey);
-      const weekSet = new Set(week);
+      // Per-member week frames: "today" and the Mon–Sun week resolve in EACH
+      // member's stored timezone, not the server's (UTC on Vercel) — otherwise
+      // the checked-in-today dot and weekly counts flip a day early/late
+      // around midnight for non-UTC users. Matches the streak count below.
+      const weekSetByUid = new Map<string, Set<string>>();
 
       const members: LeaderEntry[] = (memberRes.data ?? []).map((row) => {
         const uid = (row as { user_id: string }).user_id;
         const profile = (row as unknown as { profile: ProfileLite }).profile;
+        const tz = profile?.timezone ?? null;
+        const todayKey = dayKey(now, tz);
+        const week = weekDayKeys(todayKey);
+        weekSetByUid.set(uid, new Set(week));
         const dates = checkins
           .filter((c) => c.user_id === uid)
           .map((c) => c.created_at as string);
-        const daySet = toDaySet(dates);
+        const daySet = workoutDaySet(dates, tz);
         const isYou = uid === userId;
         // Privacy floor: hidden-stat members keep name/avatar/at-risk, but their
         // streak/consistency are zeroed in the payload so nothing leaks.
@@ -124,6 +131,7 @@ export async function getGroupsDashboard(userId: string): Promise<{
           isYou,
           showStats,
           tier,
+          weeklyGoal: profile?.weekly_goal ?? null,
         };
       });
 
@@ -137,9 +145,23 @@ export async function getGroupsDashboard(userId: string): Promise<{
           : b.streak - a.streak || a.name.localeCompare(b.name),
       );
 
-      const weekTotal = checkins.filter((c) =>
-        weekSet.has(localDateKey(new Date(c.created_at as string))),
-      ).length;
+      // Week total in each check-in owner's frame (falls back to the poster's
+      // membership week set; check-ins from since-departed members are skipped).
+      const tzByUid = new Map<string, string | null>();
+      for (const row of memberRes.data ?? []) {
+        tzByUid.set(
+          (row as { user_id: string }).user_id,
+          (row as unknown as { profile: ProfileLite }).profile?.timezone ?? null,
+        );
+      }
+      const weekTotal = checkins.filter((c) => {
+        const uid = c.user_id as string;
+        const weekSet = weekSetByUid.get(uid);
+        if (!weekSet) return false;
+        return weekSet.has(
+          dayKey(new Date(c.created_at as string), tzByUid.get(uid)),
+        );
+      }).length;
 
       // Collective streak: feed one check-in array per member.
       const memberArrays = (memberRes.data ?? []).map((row) => {

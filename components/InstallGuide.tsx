@@ -105,13 +105,9 @@ export function InstallGuide() {
               <code className="rounded-input bg-bg px-2.5 py-1.5 text-caption text-text">
                 {host}
               </code>
-              <button
-                type="button"
-                onClick={copyLink}
-                className="rounded-input border border-border-strong px-2.5 py-1.5 text-caption text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
-              >
+              <Button variant="secondary" size="sm" onClick={copyLink}>
                 {copied ? t("install_link_copied") : t("install_copy_link")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

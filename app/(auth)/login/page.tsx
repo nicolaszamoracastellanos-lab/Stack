@@ -5,12 +5,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { Input } from "@/components/Input";
 import { useLanguage } from "@/lib/language-context";
 import { type TranslationKey } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { isProfileComplete } from "@/lib/profile";
 import type { Profile } from "@/lib/types";
+
+// Same pattern as the waitlist / subscribe endpoint — kept local on purpose.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function LoginForm() {
   const { t } = useLanguage();
@@ -29,6 +33,12 @@ function LoginForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!EMAIL_RE.test(email.trim())) {
+      setError("error_email_invalid");
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -39,7 +49,12 @@ function LoginForm() {
       });
 
     if (signInError || !data.user) {
-      setError("error_invalid_credentials");
+      // An unconfirmed email is not "wrong password" — tell them what to do.
+      if (signInError?.message.toLowerCase().includes("not confirmed")) {
+        setError("error_email_unconfirmed");
+      } else {
+        setError("error_invalid_credentials");
+      }
       setLoading(false);
       return;
     }
@@ -103,7 +118,7 @@ function LoginForm() {
           {t("login_forgot")}
         </Link>
 
-        {error && <p className="text-label text-danger">{t(error)}</p>}
+        <FormError>{error && t(error)}</FormError>
 
         <Button
           type="submit"

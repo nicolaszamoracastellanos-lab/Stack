@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { CountBadge } from "@/components/Badge";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -57,12 +58,10 @@ export function NotificationBell({
     };
   }, [supabase, userId, refetch]);
 
-  const label = unread > 99 ? "99+" : String(unread);
-
   return (
     <Link
       href="/notifications"
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-pill text-text-muted hover:bg-surface hover:text-text"
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-pill text-text-muted transition duration-150 hover:bg-surface hover:text-text active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
       aria-label="Activity"
     >
       <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
@@ -74,11 +73,10 @@ export function NotificationBell({
           strokeLinejoin="round"
         />
       </svg>
-      {unread > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex min-w-[18px] items-center justify-center rounded-pill border-2 border-bg bg-danger px-1 text-[10px] font-bold leading-none text-white">
-          {label}
-        </span>
-      )}
+      <CountBadge
+        count={unread}
+        className="absolute -right-0.5 -top-0.5 border-2 border-bg"
+      />
     </Link>
   );
 }

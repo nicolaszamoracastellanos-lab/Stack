@@ -37,7 +37,10 @@ export async function POST(req: Request) {
         { onConflict: "email", ignoreDuplicates: true },
       )
       .select("id");
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("subscribe upsert:", error);
+      return NextResponse.json({ error: "failed" }, { status: 500 });
+    }
 
     const isNew = Array.isArray(data) && data.length > 0;
     if (isNew) {
@@ -60,7 +63,8 @@ export async function POST(req: Request) {
     .from("waitlist")
     .insert({ email, language, source: "landing" });
   if (error && error.code !== "23505") {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("subscribe insert:", error);
+    return NextResponse.json({ error: "failed" }, { status: 500 });
   }
   return NextResponse.json({ ok: true });
 }

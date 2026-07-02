@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 export function SignOutButton({
   variant = "secondary",
 }: {
-  variant?: "secondary" | "ghost" | "danger";
+  variant?: "secondary" | "ghost";
 }) {
   const { t } = useLanguage();
   const router = useRouter();

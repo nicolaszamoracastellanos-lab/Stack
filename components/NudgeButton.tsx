@@ -21,25 +21,26 @@ export function NudgeButton({
   toUserId: string;
 }) {
   const { t } = useLanguage();
-  const [state, setState] = useState<"idle" | "sending" | "done">("idle");
+  const [state, setState] = useState<"idle" | "done">("idle");
 
-  async function nudge() {
+  function nudge() {
     if (state !== "idle") return;
-    setState("sending");
-    const supabase = createClient();
-    const { error } = await supabase.from("nudges").insert({
-      group_id: groupId,
-      from_user: fromUserId,
-      to_user: toUserId,
-    });
-    // 23505 = already nudged today; treat as success (still "Nudged").
-    if (error && error.code !== "23505") {
-      setState("idle");
-      return;
-    }
-    // Push the nudge (Batch 5 D3 #6). Only on a fresh nudge, not a dup.
-    if (!error) emitPush({ event: "nudge", targetUserId: toUserId });
+    // Optimistic: show "Nudged" right away; the insert runs in the background.
     setState("done");
+    const supabase = createClient();
+    void supabase
+      .from("nudges")
+      .insert({ group_id: groupId, from_user: fromUserId, to_user: toUserId })
+      .then(({ error }) => {
+        // 23505 = already nudged today; treat as success (still "Nudged").
+        if (error && error.code !== "23505") {
+          console.error("nudge:", error);
+          setState("idle");
+          return;
+        }
+        // Push the nudge (Batch 5 D3 #6). Only on a fresh nudge, not a dup.
+        if (!error) emitPush({ event: "nudge", targetUserId: toUserId });
+      });
   }
 
   const done = state === "done";

@@ -50,9 +50,11 @@ export function NudgeBanner({ userId }: { userId: string }) {
         senders.push(r);
       }
       const first = senders[0];
+      // "" = unread nudge from an unknown/departed profile; rendered as the
+      // translated fallback ("Someone"). null = no unread nudges at all.
       setWho(
         first.profile?.display_name?.trim() ||
-          (first.profile ? `@${first.profile.username}` : "Someone"),
+          (first.profile ? `@${first.profile.username}` : ""),
       );
       setExtra(senders.length - 1);
       setGroupId(rows[0].group_id);
@@ -78,8 +80,9 @@ export function NudgeBanner({ userId }: { userId: string }) {
     router.push("/checkin");
   }
 
-  if (!who || gone) return null;
-  const label = extra > 0 ? `${who} +${extra}` : who;
+  if (who === null || gone) return null;
+  const name = who || t("fallback_someone");
+  const label = extra > 0 ? `${name} +${extra}` : name;
 
   return (
     <div className="flex w-full items-center gap-2 rounded-card border border-volt/40 bg-volt/10 pl-4 pr-2">

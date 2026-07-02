@@ -19,7 +19,14 @@ export function loadImageEl(src: string): Promise<HTMLImageElement> {
 
 let cachedMark: Promise<HTMLImageElement> | null = null;
 function loadWatermark(): Promise<HTMLImageElement> {
-  if (!cachedMark) cachedMark = loadImageEl(WATERMARK_SRC);
+  if (!cachedMark) {
+    cachedMark = loadImageEl(WATERMARK_SRC);
+    // A failed load must not poison the cache for the whole session — clear it
+    // so the next post retries the asset (one flaky fetch ≠ no watermark today).
+    cachedMark.catch(() => {
+      cachedMark = null;
+    });
+  }
   return cachedMark;
 }
 

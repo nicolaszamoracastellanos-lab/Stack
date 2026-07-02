@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { MentionInput } from "@/components/MentionInput";
 import { MentionText } from "@/components/MentionText";
 import { SharePhotoButton } from "@/components/SharePhotoButton";
@@ -42,7 +43,8 @@ type FeedItemProps = {
   comments: FeedComment[];
   currentUserId: string;
   onToggleReaction: (checkinId: string, emoji: string) => void;
-  onAddComment: (checkinId: string, body: string) => void;
+  /** Resolves to an error code on failure, null on success (optimistic parent). */
+  onAddComment: (checkinId: string, body: string) => Promise<string | null>;
   onDeleteComment: (commentId: string) => void;
   onDelete: (checkinId: string) => Promise<string | null>;
 };
@@ -66,6 +68,7 @@ export function FeedItem({
 }: FeedItemProps) {
   const { t, lang } = useLanguage();
   const [draft, setDraft] = useState("");
+  const [commentError, setCommentError] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -77,11 +80,14 @@ export function FeedItem({
     setDeleteError(null);
     const err = await onDelete(item.id);
     if (err) {
+      // err is an error code (e.g. "failed"), never display text.
+      console.error("delete checkin:", err);
       setDeleteError(err);
       setDeleting(false);
       setConfirmDelete(false);
     }
-    // On success the item is removed by the parent (optimistic + realtime).
+    // On success the item is removed by the parent (optimistic; the feed has
+    // no realtime channel — others see it on their next load/refresh).
   }
 
   const [now, setNow] = useState<number>(() => new Date(item.createdAt).getTime());
@@ -96,12 +102,19 @@ export function FeedItem({
     ? t(item.environment === "indoor" ? "env_indoor" : "env_outdoor")
     : null;
 
-  function submitComment(e?: React.FormEvent) {
+  async function submitComment(e?: React.FormEvent) {
     e?.preventDefault();
     const body = draft.trim();
     if (!body) return;
-    onAddComment(item.id, body);
+    // Optimistic: the parent appends the comment right away; clear the input
+    // now and restore it (with an error) only if the insert fails.
     setDraft("");
+    setCommentError(false);
+    const err = await onAddComment(item.id, body);
+    if (err) {
+      setDraft(body);
+      setCommentError(true);
+    }
   }
 
   return (
@@ -133,7 +146,7 @@ export function FeedItem({
             type="button"
             onClick={() => setConfirmDelete(true)}
             aria-label={t("checkin_delete")}
-            className="shrink-0 text-text-dim transition-colors hover:text-danger"
+            className="-m-2 shrink-0 rounded-pill p-2 text-text-dim transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 active:scale-[0.98]"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
               <path
@@ -162,9 +175,9 @@ export function FeedItem({
         </div>
       )}
       {deleteError && (
-        <p className="border-b border-danger/40 bg-danger/10 px-4 py-2 text-label text-danger">
-          {deleteError}
-        </p>
+        <div className="border-b border-border px-4 py-3">
+          <FormError>{t("action_failed")}</FormError>
+        </div>
       )}
 
       <div className="relative aspect-[9/16] w-full bg-surface-2">
@@ -234,12 +247,12 @@ export function FeedItem({
             {comments.map((c) => (
               <li key={c.id} className="flex items-start gap-2">
                 <Link href={`/u/${c.user_id}`} className="mt-0.5 shrink-0">
-                  <Avatar name={c.name} src={c.avatarUrl} size="sm" />
+                  <Avatar name={c.name || t("fallback_member")} src={c.avatarUrl} size="sm" />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <p className="text-body text-text">
                     <Link href={`/u/${c.user_id}`} className="font-medium">
-                      {c.name}
+                      {c.name || t("fallback_member")}
                     </Link>{" "}
                     <span className="text-text-muted">
                       <MentionText body={c.body} />
@@ -250,7 +263,7 @@ export function FeedItem({
                   <button
                     type="button"
                     onClick={() => onDeleteComment(c.id)}
-                    className="shrink-0 text-caption text-text-dim hover:text-danger"
+                    className="-m-2 shrink-0 rounded-pill p-2 text-caption text-text-dim transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 active:scale-[0.98]"
                   >
                     {t("feed_comment_delete")}
                   </button>
@@ -260,6 +273,8 @@ export function FeedItem({
           </ul>
         )}
 
+        {commentError && <FormError>{t("action_failed")}</FormError>}
+
         <form onSubmit={submitComment} className="flex items-end gap-2">
           <MentionInput
             value={draft}
@@ -267,7 +282,7 @@ export function FeedItem({
             members={item.mentionMembers ?? []}
             placeholder={t("feed_comment_placeholder")}
             onSubmit={() => submitComment()}
-            className="min-h-[2.5rem] w-full resize-none rounded-input border border-border bg-surface-2 px-3 py-2 text-label text-text placeholder:text-text-dim focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"
+            className="min-h-11 w-full resize-none rounded-input border border-border bg-surface-2 px-3 py-2 text-label text-text placeholder:text-text-dim focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/30"
           />
           <button
             type="submit"

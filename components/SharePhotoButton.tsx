@@ -24,7 +24,12 @@ export function SharePhotoButton({
   const { t } = useLanguage();
   const [busy, setBusy] = useState(false);
 
-  const box = size === "sm" ? "h-7 w-7" : "h-10 w-10";
+  // `sm` stays 28px visually but extends its hit area to 44pt with an
+  // invisible ::after overlay (no layout shift at the absolute call sites).
+  const box =
+    size === "sm"
+      ? "relative h-7 w-7 after:absolute after:-inset-2 after:content-['']"
+      : "h-10 w-10";
   const icon = size === "sm" ? "h-3.5 w-3.5" : "h-5 w-5";
 
   async function onClick(e: React.MouseEvent) {

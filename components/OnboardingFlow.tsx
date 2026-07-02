@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { Input } from "@/components/Input";
 import { ImageCropper } from "@/components/ImageCropper";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -95,7 +96,7 @@ export function OnboardingFlow({
       .upload(path, blob, { contentType: "image/jpeg", upsert: true });
     if (upErr) {
       console.error("[onboarding avatar] error:", upErr);
-      setError(`Avatar upload failed: ${upErr.message}`);
+      setError(t("error_upload_failed"));
       setUploading(false);
       return;
     }
@@ -125,11 +126,6 @@ export function OnboardingFlow({
       setBusy(false);
       if (taken) {
         setError(t("error_username_taken"));
-        return;
-      }
-    } else if (key === "avatar") {
-      if (!avatarUrl) {
-        setError(t("ob_avatar_required"));
         return;
       }
     } else if (key === "display_name" && !displayName.trim()) {
@@ -180,7 +176,7 @@ export function OnboardingFlow({
         setStep(0);
         setError(t("error_username_taken"));
       } else {
-        setError(`${upErr.code ?? "ERR"}: ${upErr.message}`);
+        setError(t("error_save_failed"));
       }
       return;
     }
@@ -272,6 +268,18 @@ export function OnboardingFlow({
                 >
                   {uploading ? t("loading") : t("ob_avatar_choose")}
                 </Button>
+                {/* The Avatar initials fallback carries them until they add one. */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setError(null);
+                    setStep((s) => s + 1);
+                  }}
+                  disabled={uploading || busy}
+                >
+                  {t("ob_avatar_skip")}
+                </Button>
               </div>
             )}
 
@@ -328,11 +336,7 @@ export function OnboardingFlow({
             )}
           </div>
 
-          {error && (
-            <p className="mt-4 rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
-              {error}
-            </p>
-          )}
+          <FormError className="mt-4">{error}</FormError>
 
           {/* Actions */}
           <div className="mt-8 flex gap-3">

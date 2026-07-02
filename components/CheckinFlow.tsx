@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import {
   CheckinDetailsStep,
@@ -34,22 +35,6 @@ const TEMPLATE_KEYS = new Set(CARD_TEMPLATES.map((tpl) => tpl.key));
 type Order = "details" | "photo";
 type Step = "details" | "photo" | "review";
 
-/** Empty state when the user has no group to check in to. */
-export function CheckinNoGroup() {
-  const { t } = useLanguage();
-  return (
-    <main className="mx-auto flex min-h-[80dvh] w-full max-w-xl flex-col items-center justify-center px-6 text-center">
-      <p className="text-h2">{t("checkin_title")}</p>
-      <p className="mt-3 text-body text-text-muted">{t("checkin_no_group")}</p>
-      <Link href="/home" className="mt-8">
-        <Button variant="primary" size="lg">
-          {t("home_create_group")}
-        </Button>
-      </Link>
-    </main>
-  );
-}
-
 /**
  * Redesigned multi-step check-in (Batch 3 §1). Two phases — details and photo —
  * in a user-chosen, remembered order (default details-first so the details can
@@ -66,6 +51,7 @@ export function CheckinFlow({
   streakAfter,
   initialTemplate,
   initialSelfieMirror,
+  lastDetails,
 }: {
   userId: string;
   groups: Group[];
@@ -77,6 +63,10 @@ export function CheckinFlow({
   initialTemplate: string;
   /** Per-user selfie-mirror preference; seeds the review-step Mirror toggle. */
   initialSelfieMirror: boolean;
+  /** Last check-in's sport/environment/focus — smart defaults so the daily
+   * flow is confirm-taps, not re-entry. Stored free-text maps back to the
+   * "other" option. */
+  lastDetails?: { sport: string; environment: string; goal: string } | null;
 }) {
   const { t, lang } = useLanguage();
   const router = useRouter();
@@ -95,17 +85,27 @@ export function CheckinFlow({
     order === "photo" ? ["photo", "details", "review"] : ["details", "photo", "review"];
   const step = sequence[stepIdx];
 
-  const [details, setDetails] = useState<CheckinDetails>(() => ({
-    groups: new Set(initialDestination.justMe ? [] : initialDestination.groupIds),
-    justMe: initialDestination.justMe,
-    sport: "",
-    sportOther: "",
-    environment: "",
-    goal: "",
-    goalOther: "",
-    notes: "",
-    sportQuery: "",
-  }));
+  const [details, setDetails] = useState<CheckinDetails>(() => {
+    // Prefill from the last check-in. A stored value that isn't a known option
+    // key is the user's free text — re-seed it through the "other" slot.
+    const sportKnown =
+      !lastDetails?.sport || SPORTS.some((s) => s.key === lastDetails.sport);
+    const goalKnown =
+      !lastDetails?.goal || GOALS.some((g) => g.key === lastDetails.goal);
+    return {
+      groups: new Set(
+        initialDestination.justMe ? [] : initialDestination.groupIds,
+      ),
+      justMe: initialDestination.justMe,
+      sport: lastDetails?.sport ? (sportKnown ? lastDetails.sport : OTHER_KEY) : "",
+      sportOther: sportKnown ? "" : lastDetails?.sport ?? "",
+      environment: lastDetails?.environment ?? "",
+      goal: lastDetails?.goal ? (goalKnown ? lastDetails.goal : OTHER_KEY) : "",
+      goalOther: goalKnown ? "" : lastDetails?.goal ?? "",
+      notes: "",
+      sportQuery: "",
+    };
+  });
   const [photo, setPhoto] = useState<
     { blob: Blob; url: string; dataUrl: string } | null
   >(null);
@@ -163,19 +163,26 @@ export function CheckinFlow({
   }
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  // Double-submit guard — state alone lags a render behind fast double-taps.
+  const postingRef = useRef(false);
   const [cardBusy, setCardBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Capture the true-size (1080x1920) card node to a PNG blob. Real HTML → PNG
-  // via html-to-image. On iOS Safari the first pass can come back blank while
-  // images/fonts settle, so we warm up once and use the second pass.
-  async function generateCardBlob(): Promise<Blob | null> {
+  // Capture the true-size (1080x1920) card node via html-to-image. On iOS
+  // Safari the first pass can come back blank while images/fonts settle, so we
+  // warm up once and use the second pass. Share exports stay lossless PNG;
+  // the POSTED feed image uses JPEG so a daily post is ~200KB, not multiple MB
+  // of lossless photo.
+  async function generateCardBlob(
+    format: "png" | "jpeg" = "png",
+  ): Promise<Blob | null> {
     const node = cardRef.current;
     if (!node) return null;
     try {
       // Loaded on demand so the heavy lib stays out of the check-in route's
       // initial JS bundle.
-      const { toPng } = await import("html-to-image");
+      const { toPng, toJpeg } = await import("html-to-image");
+      const capture = format === "jpeg" ? toJpeg : toPng;
       try {
         await document.fonts.ready;
       } catch {
@@ -188,16 +195,17 @@ export function CheckinFlow({
         height: 1920,
         pixelRatio: 1,
         backgroundColor: "#0A0A0B",
+        ...(format === "jpeg" ? { quality: 0.9 } : {}),
       };
       let dataUrl: string;
       try {
-        await toPng(node, base); // iOS Safari warm-up pass
-        dataUrl = await toPng(node, base);
+        await capture(node, base); // iOS Safari warm-up pass
+        dataUrl = await capture(node, base);
       } catch (fontErr) {
         // Font embedding can throw on iOS Safari — retry with system fonts so
         // the card still exports (slightly off-brand beats not working).
         console.error("[card] capture failed, retrying without fonts", fontErr);
-        dataUrl = await toPng(node, { ...base, skipFonts: true });
+        dataUrl = await capture(node, { ...base, skipFonts: true });
       }
       return await (await fetch(dataUrl)).blob();
     } catch (err) {
@@ -308,63 +316,71 @@ export function CheckinFlow({
   }
 
   async function post() {
-    const e = validateDetails();
-    if (e) return setError(e);
-    if (!photo) return setError(t("cd_err_photo"));
+    if (postingRef.current) return;
+    postingRef.current = true;
+    try {
+      const e = validateDetails();
+      if (e) return setError(e);
+      if (!photo) return setError(t("cd_err_photo"));
 
-    setError(null);
-    setPosting(true);
-    const supabase = createClient();
-    // Post the FINAL edited image: the rendered story card (photo + streak,
-    // session details, template and toggles the user set on the review screen),
-    // so the feed shows exactly what they edited, not the bare photo. Falls back
-    // to the plain composed photo if card rendering fails, so a post never dies.
-    const cardBlob = await generateCardBlob();
-    const blob = cardBlob ?? photo.blob;
-    const ext = cardBlob ? "png" : "jpg";
-    const contentType = cardBlob ? "image/png" : "image/jpeg";
-    const path = checkinPhotoPath(userId, `${crypto.randomUUID()}.${ext}`);
-    const { error: upErr } = await supabase.storage
-      .from(CHECKINS_BUCKET)
-      .upload(path, blob, { contentType, upsert: false });
-    if (upErr) {
-      setError(`Photo upload failed: ${upErr.message}`);
-      setPosting(false);
-      return;
-    }
+      setError(null);
+      setPosting(true);
+      const supabase = createClient();
+      // Post the FINAL edited image: the rendered story card (photo + streak,
+      // session details, template and toggles the user set on the review screen),
+      // so the feed shows exactly what they edited, not the bare photo. Falls back
+      // to the plain composed photo if card rendering fails, so a post never dies.
+      const cardBlob = await generateCardBlob("jpeg");
+      const blob = cardBlob ?? photo.blob;
+      const ext = "jpg";
+      const contentType = "image/jpeg";
+      const path = checkinPhotoPath(userId, `${crypto.randomUUID()}.${ext}`);
+      const { error: upErr } = await supabase.storage
+        .from(CHECKINS_BUCKET)
+        .upload(path, blob, { contentType, upsert: false });
+      if (upErr) {
+        console.error("checkin photo upload:", upErr);
+        setError(t("error_upload_failed"));
+        setPosting(false);
+        return;
+      }
 
-    const sportVal = details.sport === OTHER_KEY ? details.sportOther.trim() : details.sport;
-    const goalVal = details.goal === OTHER_KEY ? details.goalOther.trim() : details.goal;
-    const postId = crypto.randomUUID();
-    // "Just me" → a single personal-log row with no group (Batch 5 B2).
-    const targets: (string | null)[] = details.justMe
-      ? [null]
-      : Array.from(details.groups);
-    const rows = targets.map((group_id) => ({
-      group_id,
-      user_id: userId,
-      photo_url: path,
-      note: details.notes.trim() || null,
-      sport: sportVal,
-      environment: details.environment,
-      goal: goalVal,
-      post_id: postId,
-    }));
-    const { error: insErr } = await supabase.from("checkins").insert(rows);
-    if (insErr) {
-      setError(`${insErr.code ?? "ERR"}: ${insErr.message}`);
-      setPosting(false);
-      return;
+      const sportVal = details.sport === OTHER_KEY ? details.sportOther.trim() : details.sport;
+      const goalVal = details.goal === OTHER_KEY ? details.goalOther.trim() : details.goal;
+      const postId = crypto.randomUUID();
+      // "Just me" → a single personal-log row with no group (Batch 5 B2).
+      const targets: (string | null)[] = details.justMe
+        ? [null]
+        : Array.from(details.groups);
+      const rows = targets.map((group_id) => ({
+        group_id,
+        user_id: userId,
+        photo_url: path,
+        note: details.notes.trim() || null,
+        sport: sportVal,
+        environment: details.environment,
+        goal: goalVal,
+        post_id: postId,
+      }));
+      const { error: insErr } = await supabase.from("checkins").insert(rows);
+      if (insErr) {
+        console.error("checkin insert:", insErr);
+        setError(t("error_generic"));
+        setPosting(false);
+        return;
+      }
+      // Notify groupmates (one notification + push per row). Solo posts notify
+      // no one. postId lets the notification deep-link to the post.
+      if (!details.justMe) {
+        const targetIds = Array.from(details.groups);
+        emitPush({ event: "checkin", groupIds: targetIds, postId });
+        setActiveGroup(targetIds[0]);
+      }
+      router.push("/home");
+      router.refresh();
+    } finally {
+      postingRef.current = false;
     }
-    // Notify groupmates (one notification + push per row). Solo posts notify
-    // no one. postId lets the notification deep-link to the post.
-    if (!details.justMe) {
-      const targetIds = Array.from(details.groups);
-      emitPush({ event: "checkin", groupIds: targetIds, postId });
-      setActiveGroup(targetIds[0]);
-    }
-    router.push("/home");
-    router.refresh();
   }
 
   const stepName: Record<Step, string> = {
@@ -461,11 +477,7 @@ export function CheckinFlow({
         </>
       )}
 
-      {error && (
-        <p className="mt-5 rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
-          {error}
-        </p>
-      )}
+      <FormError className="mt-5">{error}</FormError>
 
       {/* Footer */}
       <div className="mt-8">

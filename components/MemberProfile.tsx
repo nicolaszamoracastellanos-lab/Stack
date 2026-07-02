@@ -18,6 +18,7 @@ import {
 } from "@/lib/streaks";
 import type { MemberProfileData } from "@/lib/member-profile";
 import type { TranslationKey } from "@/lib/i18n";
+import { useCountUp } from "@/lib/use-count-up";
 
 function Stat({
   value,
@@ -28,12 +29,14 @@ function Stat({
   label: string;
   accent?: boolean;
 }) {
+  // Same count-up motion as the home snapshot — the tiles feel alive on load.
+  const displayed = useCountUp(value);
   return (
     <div className="flex flex-col rounded-card border border-border bg-surface p-5">
       <span
         className={`font-mono text-h1 nums ${accent ? "text-volt" : "text-text"}`}
       >
-        {value}
+        {displayed}
       </span>
       <span className="mt-1 text-caption text-text-muted">{label}</span>
     </div>
@@ -238,7 +241,13 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
                 className="aspect-[9/16] overflow-hidden rounded-card bg-surface-2 ring-1 ring-border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
-                <img src={p.photoUrl} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={p.photoUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                />
               </div>
             ))}
           </div>
@@ -286,7 +295,7 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
             type="button"
             onClick={() => setLightbox(false)}
             aria-label={t("a11y_close")}
-            className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-pill bg-surface-2 text-text-muted hover:text-text"
+            className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-pill bg-surface-2 text-text-muted transition hover:text-text active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60"
           >
             ✕
           </button>
