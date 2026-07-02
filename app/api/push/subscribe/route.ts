@@ -38,6 +38,9 @@ export async function POST(req: Request) {
     },
     { onConflict: "endpoint" },
   );
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("push subscribe:", error);
+    return NextResponse.json({ error: "failed" }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

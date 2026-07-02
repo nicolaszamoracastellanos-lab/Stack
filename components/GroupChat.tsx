@@ -282,7 +282,11 @@ function Bubble({
         </div>
         <span className="mt-0.5 flex items-center gap-2 text-caption text-text-dim">
           {m._status === "sending" ? "…" : m._status === "failed" ? (
-            <button type="button" onClick={onRetry} className="text-danger underline-offset-2 hover:underline">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="rounded text-text-muted underline underline-offset-2 transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60"
+            >
               {failedLabel} · {retryLabel}
             </button>
           ) : (
@@ -295,11 +299,13 @@ function Bubble({
   return (
     <div className="flex items-start gap-2.5">
       <Link href={`/u/${m.user_id}`} className="mt-4 shrink-0">
+        {/* TODO i18n: no key exists yet for the departed-member fallback name. */}
         <Avatar name={who?.name ?? "Member"} src={who?.avatarUrl ?? null} size="sm" />
       </Link>
       <div className="min-w-0 max-w-[80%]">
         <div className="mb-0.5 flex items-center gap-2">
           <Link href={`/u/${m.user_id}`} className="truncate text-caption font-medium text-text">
+            {/* TODO i18n: no key exists yet for the departed-member fallback name. */}
             {who?.name ?? "Member"}
           </Link>
           {who?.tier && <TierBadge tierKey={who.tier} size="sm" />}

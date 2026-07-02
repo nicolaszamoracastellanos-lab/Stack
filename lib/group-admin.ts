@@ -2,7 +2,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-export type RemoveResult = { ok: boolean; error?: string };
+/**
+ * `error` is a translatable code, not display text — the UI maps it to
+ * bilingual copy. Raw DB detail stays in the server log.
+ */
+export type RemoveResult = {
+  ok: boolean;
+  error?: "unauthorized" | "not_owner" | "self" | "failed";
+};
 
 /**
  * Remove a member from a group (STACK_FIXES2 D). Owner-only, enforced
@@ -27,10 +34,10 @@ export async function removeMember(
     .select("owner_id, created_by")
     .eq("id", groupId)
     .maybeSingle();
-  if (!group) return { ok: false, error: "group not found" };
+  if (!group) return { ok: false, error: "failed" };
   const ownerId = group.owner_id ?? group.created_by;
-  if (ownerId !== user.id) return { ok: false, error: "only the owner can remove members" };
-  if (targetUserId === user.id) return { ok: false, error: "you cannot remove yourself" };
+  if (ownerId !== user.id) return { ok: false, error: "not_owner" };
+  if (targetUserId === user.id) return { ok: false, error: "self" };
 
   // .select() so an RLS-blocked (0-row) delete is detected, never silent.
   const { data, error } = await supabase
@@ -39,9 +46,13 @@ export async function removeMember(
     .eq("group_id", groupId)
     .eq("user_id", targetUserId)
     .select();
-  if (error) return { ok: false, error: `${error.code ?? "ERR"}: ${error.message}` };
+  if (error) {
+    console.error("removeMember:", error.code, error.message);
+    return { ok: false, error: "failed" };
+  }
   if (!data || data.length === 0) {
-    return { ok: false, error: "removal blocked (not the owner, or already gone)" };
+    console.error("removeMember: deleted 0 rows (RLS block?)", { groupId, targetUserId });
+    return { ok: false, error: "failed" };
   }
   return { ok: true };
 }

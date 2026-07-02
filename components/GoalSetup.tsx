@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
 import { tierForFrequency } from "@/lib/tiers";
@@ -29,15 +30,19 @@ export function GoalSetup({
   const router = useRouter();
   const [q, setQ] = useState<number>(Math.max(1, Math.min(7, suggested)));
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function commit(goal: number) {
     setBusy(true);
+    setError(null);
     const activation = nextWeekStartKey(new Date());
-    const { error } = await createClient()
+    const { error: saveError } = await createClient()
       .from("profiles")
       .update({ weekly_goal: goal, quota_active_from: activation })
       .eq("id", userId);
-    if (error) {
+    if (saveError) {
+      console.error("[goal setup] error:", saveError);
+      setError(t("error_generic"));
       setBusy(false);
       return;
     }
@@ -99,6 +104,7 @@ export function GoalSetup({
         </p>
 
         <div className="mt-8 flex flex-col gap-3">
+          <FormError>{error}</FormError>
           <Button
             variant="primary"
             size="lg"

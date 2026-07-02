@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { IconButton } from "@/components/IconButton";
+import { CountBadge } from "@/components/Badge";
 import { Leaderboard } from "@/components/Leaderboard";
 import { NudgeButton } from "@/components/NudgeButton";
 import { RemoveMemberButton } from "@/components/RemoveMemberButton";
@@ -113,9 +115,14 @@ export function GroupDetail({
       .select();
     setWorking(false);
     setConfirm(null);
-    if (error) return showError(`${error.code ?? "ERR"}: ${error.message}`);
-    if (!rows || rows.length === 0)
-      return showError('Leave removed 0 rows — RLS policy "users leave groups" is missing.');
+    if (error) {
+      console.error("group leave:", error);
+      return showError(t("action_failed"));
+    }
+    if (!rows || rows.length === 0) {
+      console.error('Leave removed 0 rows — RLS policy "users leave groups" is missing.');
+      return showError(t("action_failed"));
+    }
     if (isActive) clearActiveGroup();
     router.push("/groups");
     router.refresh();
@@ -130,9 +137,14 @@ export function GroupDetail({
       .select();
     setWorking(false);
     setConfirm(null);
-    if (error) return showError(`${error.code ?? "ERR"}: ${error.message}`);
-    if (!rows || rows.length === 0)
-      return showError('Delete removed 0 rows — RLS policy "creator deletes group" is missing (or you are not the creator).');
+    if (error) {
+      console.error("group delete:", error);
+      return showError(t("action_failed"));
+    }
+    if (!rows || rows.length === 0) {
+      console.error('Delete removed 0 rows — RLS policy "creator deletes group" is missing (or you are not the creator).');
+      return showError(t("action_failed"));
+    }
     if (isActive) clearActiveGroup();
     router.push("/groups");
     router.refresh();
@@ -150,7 +162,7 @@ export function GroupDetail({
         <button
           type="button"
           onClick={() => setToast(null)}
-          className="fixed inset-x-4 top-4 z-50 mx-auto max-w-md rounded-card border border-danger/40 bg-surface-2 px-4 py-3 text-left text-label text-danger shadow-lg"
+          className="fixed inset-x-4 top-4 z-50 mx-auto max-w-md rounded-card border border-border-strong bg-surface-2 px-4 py-3 text-left text-label text-text shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60"
         >
           {toast}
         </button>
@@ -158,16 +170,11 @@ export function GroupDetail({
 
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => router.push("/groups")}
-          aria-label={t("back")}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill text-text-muted hover:bg-surface-2 hover:text-text"
-        >
+        <IconButton onClick={() => router.push("/groups")} aria-label={t("back")}>
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
             <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </button>
+        </IconButton>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-h1">{data.group.name}</h1>
           {data.group.goal && (
@@ -199,11 +206,7 @@ export function GroupDetail({
             <span aria-hidden>💬</span>
             {t("chat_title")}
           </span>
-          {!chatOpen && chatUnread > 0 && (
-            <span className="flex min-w-[20px] items-center justify-center rounded-pill bg-danger px-1.5 text-caption font-bold text-white">
-              {chatUnread > 99 ? "99+" : chatUnread}
-            </span>
-          )}
+          {!chatOpen && <CountBadge count={chatUnread} />}
         </button>
         {chatOpen && (
           <div className="mt-3">
@@ -408,7 +411,7 @@ export function GroupDetail({
             <button
               type="button"
               onClick={() => setConfirm("leave")}
-              className="text-label text-text-muted hover:text-danger"
+              className="min-h-11 rounded-btn py-3 text-label text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60"
             >
               {t("groups_leave")}
             </button>
@@ -416,7 +419,7 @@ export function GroupDetail({
               <button
                 type="button"
                 onClick={() => setConfirm("delete")}
-                className="text-label text-danger hover:text-danger-dim"
+                className="min-h-11 rounded-btn py-3 text-label text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60"
               >
                 {t("groups_delete")}
               </button>

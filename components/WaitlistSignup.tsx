@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/Button";
 import { useLanguage } from "@/lib/language-context";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,17 +67,18 @@ export function WaitlistSignup() {
           placeholder={t("waitlist_placeholder")}
           className="min-w-0 flex-1 rounded-input border border-volt/40 bg-bg px-3 py-2 text-caption text-text placeholder:text-text-dim focus:border-volt focus:outline-none"
         />
-        <button
+        <Button
           type="submit"
+          size="sm"
           disabled={state === "sending"}
-          className="shrink-0 rounded-input bg-volt px-3 py-2 text-caption font-medium text-bg hover:bg-volt-dim disabled:opacity-60"
+          className="shrink-0 text-caption"
         >
           {state === "sending" ? t("waitlist_submitting") : t("waitlist_submit")}
-        </button>
+        </Button>
       </div>
       {state === "error" && (
-        <span className="text-danger">
-          {EMAIL_RE.test(email.trim()) ? t("waitlist_error") : t("waitlist_invalid")}
+        <span className="text-text-muted" role="alert">
+          ⚠️ {EMAIL_RE.test(email.trim()) ? t("waitlist_error") : t("waitlist_invalid")}
         </span>
       )}
     </form>

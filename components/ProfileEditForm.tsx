@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { Input } from "@/components/Input";
 import { ImageCropper } from "@/components/ImageCropper";
 import { Toggle } from "@/components/Toggle";
@@ -51,7 +52,7 @@ export function ProfileEditForm({
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  // Holds the REAL error string during this debugging pass — never generic.
+  // Always a translated string — raw error detail goes to the console only.
   const [error, setError] = useState<string | null>(null);
   // Object URL of the picked file while the cropper is open.
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -62,6 +63,12 @@ export function ProfileEditForm({
     const file = e.target.files?.[0];
     if (!file) return;
     setError(null);
+    // Guard before we even open the cropper: images only, max 8 MB.
+    if (!file.type.startsWith("image/") || file.size > 8 * 1024 * 1024) {
+      setError(t("error_upload_failed"));
+      e.target.value = "";
+      return;
+    }
     // Open the cropper instead of uploading the raw file directly.
     setCropSrc(URL.createObjectURL(file));
     // Allow re-picking the same file later.
@@ -83,7 +90,7 @@ export function ProfileEditForm({
       .upload(path, blob, { contentType: "image/jpeg", upsert: true });
     if (upErr) {
       console.error("[avatar upload] error:", upErr);
-      setError(`Avatar upload failed: ${upErr.message}`);
+      setError(t("error_upload_failed"));
       setUploading(false);
       return;
     }
@@ -133,7 +140,7 @@ export function ProfileEditForm({
 
     if (updErr) {
       console.error("[profile save] error:", updErr);
-      setError(`${updErr.code ?? "ERR"}: ${updErr.message}`);
+      setError(t("error_save_failed"));
       setSaving(false);
       return;
     }
@@ -334,11 +341,7 @@ export function ProfileEditForm({
           {t("tour_replay")}
         </button>
 
-        {error && (
-          <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
 
         <Button
           type="submit"

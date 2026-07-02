@@ -37,7 +37,8 @@ async function handle(req: Request) {
     .not("who_pays", "is", null)
     .limit(1000);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("pact cron groups:", error);
+    return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 
   let recorded = 0;

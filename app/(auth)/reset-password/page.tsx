@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/components/AuthShell";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { Input } from "@/components/Input";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -43,7 +44,10 @@ export default function ResetPasswordPage() {
     setLoading(true);
     const { error: updErr } = await supabase.auth.updateUser({ password: pw });
     setLoading(false);
-    if (updErr) return setError(updErr.message);
+    if (updErr) {
+      console.error("[reset-password] error:", updErr);
+      return setError(t("error_generic"));
+    }
     setDone(true);
     setTimeout(() => {
       router.replace("/home");
@@ -51,13 +55,22 @@ export default function ResetPasswordPage() {
     }, 1200);
   }
 
+  // Session probe still in flight — hold the form back until we know.
+  if (hasSession === null) {
+    return (
+      <AuthShell title={t("reset_title")} subtitle={t("reset_subtitle")}>
+        <p className="py-6 text-center text-label text-text-dim">
+          {t("loading")}
+        </p>
+      </AuthShell>
+    );
+  }
+
   // No recovery session: send them to request a new link.
   if (hasSession === false) {
     return (
       <AuthShell title={t("reset_title")} subtitle={t("reset_subtitle")}>
-        <p className="rounded-card border border-danger/40 bg-danger/10 px-4 py-3 text-body text-danger">
-          {t("reset_no_session")}
-        </p>
+        <FormError>{t("reset_no_session")}</FormError>
         <Link
           href="/forgot-password"
           className="mt-4 inline-block text-volt hover:text-volt-dim"
@@ -94,7 +107,7 @@ export default function ResetPasswordPage() {
             autoComplete="new-password"
             required
           />
-          {error && <p className="text-label text-danger">{error}</p>}
+          <FormError>{error}</FormError>
           <Button
             type="submit"
             variant="primary"

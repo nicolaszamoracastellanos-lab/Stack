@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import {
   CheckinDetailsStep,
@@ -163,6 +164,8 @@ export function CheckinFlow({
   }
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  // Double-submit guard — state alone lags a render behind fast double-taps.
+  const postingRef = useRef(false);
   const [cardBusy, setCardBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -308,63 +311,71 @@ export function CheckinFlow({
   }
 
   async function post() {
-    const e = validateDetails();
-    if (e) return setError(e);
-    if (!photo) return setError(t("cd_err_photo"));
+    if (postingRef.current) return;
+    postingRef.current = true;
+    try {
+      const e = validateDetails();
+      if (e) return setError(e);
+      if (!photo) return setError(t("cd_err_photo"));
 
-    setError(null);
-    setPosting(true);
-    const supabase = createClient();
-    // Post the FINAL edited image: the rendered story card (photo + streak,
-    // session details, template and toggles the user set on the review screen),
-    // so the feed shows exactly what they edited, not the bare photo. Falls back
-    // to the plain composed photo if card rendering fails, so a post never dies.
-    const cardBlob = await generateCardBlob();
-    const blob = cardBlob ?? photo.blob;
-    const ext = cardBlob ? "png" : "jpg";
-    const contentType = cardBlob ? "image/png" : "image/jpeg";
-    const path = checkinPhotoPath(userId, `${crypto.randomUUID()}.${ext}`);
-    const { error: upErr } = await supabase.storage
-      .from(CHECKINS_BUCKET)
-      .upload(path, blob, { contentType, upsert: false });
-    if (upErr) {
-      setError(`Photo upload failed: ${upErr.message}`);
-      setPosting(false);
-      return;
-    }
+      setError(null);
+      setPosting(true);
+      const supabase = createClient();
+      // Post the FINAL edited image: the rendered story card (photo + streak,
+      // session details, template and toggles the user set on the review screen),
+      // so the feed shows exactly what they edited, not the bare photo. Falls back
+      // to the plain composed photo if card rendering fails, so a post never dies.
+      const cardBlob = await generateCardBlob();
+      const blob = cardBlob ?? photo.blob;
+      const ext = cardBlob ? "png" : "jpg";
+      const contentType = cardBlob ? "image/png" : "image/jpeg";
+      const path = checkinPhotoPath(userId, `${crypto.randomUUID()}.${ext}`);
+      const { error: upErr } = await supabase.storage
+        .from(CHECKINS_BUCKET)
+        .upload(path, blob, { contentType, upsert: false });
+      if (upErr) {
+        console.error("checkin photo upload:", upErr);
+        setError(t("error_upload_failed"));
+        setPosting(false);
+        return;
+      }
 
-    const sportVal = details.sport === OTHER_KEY ? details.sportOther.trim() : details.sport;
-    const goalVal = details.goal === OTHER_KEY ? details.goalOther.trim() : details.goal;
-    const postId = crypto.randomUUID();
-    // "Just me" → a single personal-log row with no group (Batch 5 B2).
-    const targets: (string | null)[] = details.justMe
-      ? [null]
-      : Array.from(details.groups);
-    const rows = targets.map((group_id) => ({
-      group_id,
-      user_id: userId,
-      photo_url: path,
-      note: details.notes.trim() || null,
-      sport: sportVal,
-      environment: details.environment,
-      goal: goalVal,
-      post_id: postId,
-    }));
-    const { error: insErr } = await supabase.from("checkins").insert(rows);
-    if (insErr) {
-      setError(`${insErr.code ?? "ERR"}: ${insErr.message}`);
-      setPosting(false);
-      return;
+      const sportVal = details.sport === OTHER_KEY ? details.sportOther.trim() : details.sport;
+      const goalVal = details.goal === OTHER_KEY ? details.goalOther.trim() : details.goal;
+      const postId = crypto.randomUUID();
+      // "Just me" → a single personal-log row with no group (Batch 5 B2).
+      const targets: (string | null)[] = details.justMe
+        ? [null]
+        : Array.from(details.groups);
+      const rows = targets.map((group_id) => ({
+        group_id,
+        user_id: userId,
+        photo_url: path,
+        note: details.notes.trim() || null,
+        sport: sportVal,
+        environment: details.environment,
+        goal: goalVal,
+        post_id: postId,
+      }));
+      const { error: insErr } = await supabase.from("checkins").insert(rows);
+      if (insErr) {
+        console.error("checkin insert:", insErr);
+        setError(t("error_generic"));
+        setPosting(false);
+        return;
+      }
+      // Notify groupmates (one notification + push per row). Solo posts notify
+      // no one. postId lets the notification deep-link to the post.
+      if (!details.justMe) {
+        const targetIds = Array.from(details.groups);
+        emitPush({ event: "checkin", groupIds: targetIds, postId });
+        setActiveGroup(targetIds[0]);
+      }
+      router.push("/home");
+      router.refresh();
+    } finally {
+      postingRef.current = false;
     }
-    // Notify groupmates (one notification + push per row). Solo posts notify
-    // no one. postId lets the notification deep-link to the post.
-    if (!details.justMe) {
-      const targetIds = Array.from(details.groups);
-      emitPush({ event: "checkin", groupIds: targetIds, postId });
-      setActiveGroup(targetIds[0]);
-    }
-    router.push("/home");
-    router.refresh();
   }
 
   const stepName: Record<Step, string> = {
@@ -461,11 +472,7 @@ export function CheckinFlow({
         </>
       )}
 
-      {error && (
-        <p className="mt-5 rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">
-          {error}
-        </p>
-      )}
+      <FormError className="mt-5">{error}</FormError>
 
       {/* Footer */}
       <div className="mt-8">

@@ -68,7 +68,9 @@ export function Leaderboard({
           <Link href={`/u/${m.userId}`} className="flex min-w-0 flex-1 items-center gap-3">
             <span className="relative shrink-0">
               <Avatar name={m.name} src={m.avatarUrl} size="md" />
-              {!m.checkedInToday && (
+              {/* Red is reserved for a streak actually at risk — a member with
+                  no streak yet has nothing to lose, so show nothing. */}
+              {!m.checkedInToday && m.streak > 0 && (
                 <span
                   className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
                   title={t("groups_at_risk")}

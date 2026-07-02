@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
 import { Input } from "@/components/Input";
 import { Card } from "@/components/Card";
 import { useLanguage } from "@/lib/language-context";
@@ -171,7 +172,7 @@ export default function NewGroupPage() {
           maxLength={80}
         />
 
-        {error && <p className="text-label text-danger">{t(error)}</p>}
+        <FormError>{error && t(error)}</FormError>
 
         <Button
           type="submit"

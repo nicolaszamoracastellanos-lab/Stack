@@ -7,7 +7,9 @@ import type { PactAlert as PactAlertData } from "@/lib/group-detail";
  * The loud, top-of-group accountability banner for a staked pact (the whole
  * point of the app). Everyone who opens the group sees it:
  *
- *  - 🚨 BROKE: members who missed a completed week and owe the stake.
+ *  - 💸 BROKE: members who missed a completed week and owe the stake. Volt,
+ *    not red — red is reserved for the at-risk streak; BrokenPactCard already
+ *    roasts this same event in warm volt.
  *  - ⚠️ BEHIND: members who still have zero workouts this week.
  *
  * Pairs with the team-wide push/notification fired when the break is recorded.
@@ -20,21 +22,15 @@ export function PactAlert({ alert }: { alert: PactAlertData }) {
   const youBehind = alert.behind.some((m) => m.isYou);
 
   return (
-    <div
-      className={`rounded-card border p-5 ${
-        hasBroke
-          ? "border-danger/50 bg-danger/10"
-          : "border-volt/40 bg-volt/10"
-      }`}
-    >
+    <div className="rounded-card border border-volt/40 bg-volt/10 p-5">
       <div className="flex items-start gap-3">
         <span aria-hidden className="text-2xl leading-none">
-          {hasBroke ? "🚨" : "⚠️"}
+          {hasBroke ? "💸" : "⚠️"}
         </span>
         <div className="min-w-0 flex-1">
           <p
             className={`text-label font-bold uppercase tracking-wide ${
-              hasBroke ? "text-danger" : "text-volt"
+              hasBroke ? "text-text" : "text-volt"
             }`}
           >
             {hasBroke ? t("pact_alert_broke_title") : t("pact_alert_behind_title")}

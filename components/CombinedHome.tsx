@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
+import { Dot } from "@/components/Badge";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { Snapshot } from "@/components/Snapshot";
 import { PostFeed, type PostFeedItem } from "@/components/PostFeed";
@@ -252,9 +253,7 @@ function GroupMini({
       <Link href={`/groups/${g.id}`} className="flex items-center gap-2">
         <Avatar name={g.name} size="sm" />
         <span className="truncate text-label font-medium text-text">{g.name}</span>
-        {g.chatUnread > 0 && (
-          <span className="ml-auto h-2 w-2 shrink-0 rounded-pill bg-danger" aria-hidden />
-        )}
+        {g.chatUnread > 0 && <Dot className="ml-auto shrink-0" />}
       </Link>
       <p className="text-caption text-text-dim">
         {t("group_card_today", { n: g.checkedInToday })}
@@ -306,9 +305,7 @@ function GroupRow({
         <div className="min-w-0">
           <p className="flex items-center gap-2 truncate text-body font-medium text-text">
             {g.name}
-            {g.chatUnread > 0 && (
-              <span className="h-2 w-2 shrink-0 rounded-pill bg-danger" aria-hidden />
-            )}
+            {g.chatUnread > 0 && <Dot className="shrink-0" />}
           </p>
           <p className="text-caption text-text-dim">
             {t("group_card_today", { n: g.checkedInToday })}
@@ -322,7 +319,7 @@ function GroupRow({
         <button
           type="button"
           onClick={onUnpin}
-          className="shrink-0 rounded-pill border border-volt/40 px-2.5 py-1 text-caption font-medium text-volt"
+          className="shrink-0 rounded-pill border border-volt/40 px-2.5 py-1 text-caption font-medium text-volt transition duration-150 hover:bg-volt/10 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         >
           {t("home_unpin")}
         </button>

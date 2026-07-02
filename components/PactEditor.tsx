@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
+import { FormError } from "@/components/FormError";
+import { IconButton } from "@/components/IconButton";
 import { Input } from "@/components/Input";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
@@ -170,14 +172,16 @@ export function PactEditor({
         status: "pending",
       });
       if (pErr) {
-        setError(`${pErr.code ?? "ERR"}: ${pErr.message}`);
+        console.error("pact proposal insert:", pErr);
+        setError(t("error_save_failed"));
         setSaving(false);
         return;
       }
     } else {
       const { error: upErr } = await supabase.from("groups").update(payload).eq("id", group.id);
       if (upErr) {
-        setError(`${upErr.code ?? "ERR"}: ${upErr.message}`);
+        console.error("pact save:", upErr);
+        setError(t("error_save_failed"));
         setSaving(false);
         return;
       }
@@ -200,16 +204,11 @@ export function PactEditor({
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
       <header className="mb-7 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => router.push(`/groups/${group.id}`)}
-          aria-label={t("back")}
-          className="flex h-9 w-9 items-center justify-center rounded-pill text-text-muted hover:bg-surface-2 hover:text-text"
-        >
+        <IconButton onClick={() => router.push(`/groups/${group.id}`)} aria-label={t("back")}>
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
             <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </button>
+        </IconButton>
         <h1 className="text-h1">{isEdit ? t("pact_edit_title") : t("pact_setup_title")}</h1>
       </header>
 
@@ -339,9 +338,7 @@ export function PactEditor({
           )}
         </Section>
 
-        {error && (
-          <p className="rounded-input border border-danger/40 bg-danger/10 px-3 py-2 text-label text-danger">{error}</p>
-        )}
+        <FormError>{error}</FormError>
 
         <Button variant="primary" size="lg" fullWidth onClick={save} disabled={saving}>
           {saving ? t("loading") : t("pact_save")}

@@ -69,7 +69,8 @@ export async function POST(req: Request) {
     .from("profiles")
     .select("id, display_name, language, welcome_email_sent_at");
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("send-welcome profiles:", error);
+    return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 
   const pending = (profiles ?? []).filter((p) => !p.welcome_email_sent_at);
@@ -82,7 +83,8 @@ export async function POST(req: Request) {
       { page, perPage: 1000 },
     );
     if (listErr) {
-      return NextResponse.json({ error: listErr.message }, { status: 500 });
+      console.error("send-welcome listUsers:", listErr);
+      return NextResponse.json({ error: "failed" }, { status: 500 });
     }
     for (const u of pageData.users) {
       if (u.email) emailById.set(u.id, u.email);
