@@ -16,7 +16,7 @@ const geistSans = GeistSans;
 const geistMono = GeistMono;
 
 export const metadata: Metadata = {
-  title: "Stack — Show up. Every day.",
+  title: "Stack · Show up. Every day.",
   description:
     "A private accountability app for small crews. Check in with a photo, build the streak, never break it alone.",
   // PWA manifest (name, icons, standalone display, dark launch colors).

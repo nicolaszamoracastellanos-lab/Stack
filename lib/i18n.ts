@@ -30,7 +30,7 @@ export const translations = {
     waitlist_placeholder: "you@email.com",
     waitlist_submit: "Notify me",
     waitlist_submitting: "Joining…",
-    waitlist_success: "You're in. Check your inbox — welcome to the Stack.",
+    waitlist_success: "You're in. Check your inbox. Welcome to the Stack.",
     waitlist_error: "Couldn't sign you up. Try again.",
     waitlist_invalid: "Enter a valid email.",
 
@@ -41,7 +41,7 @@ export const translations = {
     penalty_intro_lead:
       "Put something real on the line. Give your challenge teeth so nobody wants to be the one who breaks it.",
     penalty_point1_title: "Set the stake",
-    penalty_point1_body: "Money, a favor, or your own custom dare — whatever stings just enough.",
+    penalty_point1_body: "Money, a favor, or your own custom dare: whatever stings just enough.",
     penalty_point2_title: "Choose who pays",
     penalty_point2_body:
       "Only the one who breaks the streak, anyone who misses the weekly target, or last place each cycle.",
@@ -51,7 +51,7 @@ export const translations = {
     penalty_intro_later: "Maybe later",
     penalty_nudge_title: "Now on Stack: add a penalty",
     penalty_nudge_body:
-      "Your challenge has no stake yet. Set a penalty for whoever loses the streak or the challenge — money, a favor, or a custom dare.",
+      "Your challenge has no stake yet. Set a penalty for whoever loses the streak or the challenge: money, a favor, or a custom dare.",
     penalty_nudge_cta: "Add a penalty",
     penalty_nudge_dismiss: "Dismiss",
 
@@ -132,7 +132,7 @@ export const translations = {
     pact_setup_title: "Set up the pact",
     pact_edit_title: "Edit the pact",
     pact_identity_label: "Identity",
-    pact_identity_hint: "Give your crew a why. Optional — skip it for a casual group.",
+    pact_identity_hint: "Give your crew a why. Optional: skip it for a casual group.",
     pact_intention_label: "Intention / why",
     pact_intention_ph: "Get shredded for the June wedding",
     pact_motivation_label: "Motivation",
@@ -143,7 +143,7 @@ export const translations = {
     pact_meaning_ph: "What this group means to you (optional)",
     pact_rules_label: "Rules",
     pact_workouts_label: "Workouts per week",
-    pact_workouts_hint: "Rest days are the remainder — 5/week means 2 rest days.",
+    pact_workouts_hint: "Rest days are the remainder: 5/week means 2 rest days.",
     pact_disciplines_label: "Allowed disciplines",
     pact_disciplines_hint: "Only these count toward the pact.",
     pact_all_disciplines: "All disciplines",
@@ -160,7 +160,7 @@ export const translations = {
     pact_stake_money_ph: "$20",
     pact_stake_favor_ph: "buys dinner",
     pact_stake_custom_ph: "wears a chicken suit to the gym",
-    pact_money_note: "Honor system — Stack tracks it, you settle it yourselves.",
+    pact_money_note: "Honor system: Stack tracks it, you settle it yourselves.",
     pact_whopays_label: "Who pays",
     pact_whopays_breaker: "Only the breaker",
     pact_whopays_breaker_desc: "Only the member who misses the weekly target pays. The gentlest.",
@@ -184,7 +184,7 @@ export const translations = {
     pact_last_place_pays: "Last place pays",
     pact_ends: "Ends {date}",
     pact_broke_title: "Pact broken",
-    pact_broke_you: "You broke the pact this week. Time to pay up — own it. 😅",
+    pact_broke_you: "You broke the pact this week. Time to pay up. Own it. 😅",
     pact_owes: "Owes {stake}",
     pact_see_owe: "See what you owe",
     ledger_label: "The tab",
@@ -195,7 +195,7 @@ export const translations = {
     // Pact alert — loud, top-of-group standing for a pact with a stake
     pact_alert_broke_title: "The pact was broken",
     pact_alert_broke_one: "{name} broke the pact and owes {stake}.",
-    pact_alert_broke_you: "You broke the pact — you owe {stake}.",
+    pact_alert_broke_you: "You broke the pact. You owe {stake}.",
     pact_alert_behind_title: "Falling behind",
     pact_alert_behind_one: "{name} hasn't stacked a workout this week.",
     pact_alert_behind_you: "You haven't stacked a workout this week.",
@@ -207,7 +207,7 @@ export const translations = {
     proposal_waiting: "Waiting on {names}",
     proposal_approve: "Approve",
     proposal_reject: "Reject",
-    proposal_you_approved: "You approved — waiting on the rest.",
+    proposal_you_approved: "You approved. Waiting on the rest.",
     // Nudge
     nudge_cta: "Nudge",
     nudge_sent: "Nudged",
@@ -282,7 +282,7 @@ export const translations = {
     onboarding_submit: "Enter Stack",
     error_username_taken: "That username is taken.",
     error_username_invalid:
-      "Use 3–20 letters, numbers or underscores.",
+      "Use 3 to 20 letters, numbers or underscores.",
 
     // Multi-step onboarding
     ob_step: "Step {n} of {total}",
@@ -304,14 +304,14 @@ export const translations = {
     ob_focus_title: "This month's focus",
     ob_focus_sub: "What are you chasing right now?",
     ob_bio_title: "One line about you",
-    ob_bio_sub: "Optional — make it count.",
+    ob_bio_sub: "Optional. Make it count.",
 
     // Welcome story (first-run, after signup, before profile setup)
     welcome_skip: "Skip",
     welcome_continue: "Continue",
     ws2_title: "Getting in shape alone is hard. With your people, it sticks.",
     ws2_sub:
-      "Stack isn't another solo tracker. It's a small circle that holds each other accountable — showing up becomes unavoidable when it's in front of the people who matter to you.",
+      "Stack isn't another solo tracker. It's a small circle that holds each other accountable. Showing up becomes unavoidable when it's in front of the people who matter to you.",
     ws3_title: "We're building the place small crews get strong together.",
     ws3_sub:
       "A private, no-excuses space for you and your friends, your brothers, your training partners, your coach and their clients. Real accountability, not a public highlight reel.",
@@ -328,7 +328,7 @@ export const translations = {
     tour_finish: "Take your first photo",
     tour_replay: "Take the tour again",
     tour1_title: "Welcome to Home",
-    tour1_body: "Your group, your streak, your feed — all in one place.",
+    tour1_body: "Your group, your streak, your feed, all in one place.",
     tour2_title: "Check in",
     tour2_body:
       "Tap here after any workout, take a photo, and it posts to your group. This is the one thing you do every day.",
@@ -337,7 +337,7 @@ export const translations = {
       "This ring shows how many of your days you've hit this week. Fill it up.",
     tour4_title: "Your streaks",
     tour4_body:
-      "Your day streak is consecutive days you showed up. The group streak only survives if everyone shows up — one miss breaks it for all of you.",
+      "Your day streak is consecutive days you showed up. The group streak only survives if everyone shows up. One miss breaks it for all of you.",
     tour5_title: "The feed",
     tour5_body:
       "When anyone checks in, it shows up here. React, comment, cheer them on.",
@@ -349,7 +349,7 @@ export const translations = {
       "Create or join groups here. Tap any group for its stats, members, chat, and weekly recap.",
     tour8_title: "Profile & The Stack",
     tour8_body:
-      "Your profile shows your streaks, your totals, and The Stack — your full check-in history. Tap anyone's name to see theirs.",
+      "Your profile shows your streaks, your totals, and The Stack, your full check-in history. Tap anyone's name to see theirs.",
     tour_install_title: "Install Stack as an app",
     tour_install_body:
       "Add Stack to your home screen for the full-screen app experience. On iPhone, use Safari: open Profile → “Install as an app”, then Share → Add to Home Screen.",
@@ -378,7 +378,7 @@ export const translations = {
     checkin_button: "Check in",
     checkin_done: "You showed up today",
     rest_day_cta: "Mark today a rest day",
-    rest_day_done: "Rest day — streak protected 😌",
+    rest_day_done: "Rest day. Streak protected 😌",
     feed_empty: "No check-ins yet today. Be the one who starts.",
     feed_title: "Today's feed",
     feed_comment_placeholder: "Add a comment…",
@@ -412,31 +412,31 @@ export const translations = {
     goal_per_week: "{n}× / week",
     goal_rest_hint_one: "1 banked rest day a week. Miss more and your streak is at risk.",
     goal_rest_hint: "{n} banked rest days a week. Miss more and your streak is at risk.",
-    goal_rest_hint_none: "Every day. No banked rest — a single miss puts your streak at risk.",
+    goal_rest_hint_none: "Every day. No banked rest: a single miss puts your streak at risk.",
     goal_save: "Set my goal",
     goal_skip: "Not now",
     goal_intro_title: "Streaks, leveled up",
     goal_intro_body:
       "Your streak is built on a weekly goal. Hit it and your streak grows; your tier colour shows how hard you go.",
-    goal_grace_note: "Your current streak is safe — new rules start next Monday.",
+    goal_grace_note: "Your current streak is safe. New rules start next Monday.",
     rest_prompt_q: "You didn't log {days}. Were those your rest days?",
     rest_prompt_yes: "Yes, rest days",
     rest_prompt_no: "No, I'll log",
     tierguide_link: "How tiers & streaks work",
     tierguide_title: "Tiers & streaks",
     tierguide_intro:
-      "Your streak counts every day you keep your weekly goal. Two people can share a streak length — the tier colour shows how hard each is going.",
+      "Your streak counts every day you keep your weekly goal. Two people can share a streak length. The tier colour shows how hard each is going.",
     tierguide_tiers_title: "The tiers",
     tierguide_tiers_body: "Earned by how many days a week you train:",
     tierguide_streak_title: "When your streak breaks",
     tierguide_streak_body:
-      "It breaks only when hitting your weekly goal becomes impossible — when the days left in the week are fewer than the workouts you still need. Not on a rest day. Not on a single skip with room to spare.",
+      "It breaks only when hitting your weekly goal becomes impossible: when the days left in the week are fewer than the workouts you still need. Not on a rest day. Not on a single skip with room to spare.",
     tierguide_red_title: "The red alert",
     tierguide_red_body:
-      "Red means at-risk: you've used every rest day this week and must train each remaining day to keep your streak. Red is only ever this — no tier uses it.",
+      "Red means at-risk: you've used every rest day this week and must train each remaining day to keep your streak. Red is only ever this. No tier uses it.",
     tierguide_rest_title: "Do rest days break my streak?",
     tierguide_rest_body:
-      "No. Preferred rest days are personal cues — they never change the streak math. Only your weekly goal does.",
+      "No. Preferred rest days are personal cues. They never change the streak math. Only your weekly goal does.",
     tierguide_climb_title: "Climbing & dropping",
     tierguide_climb_body:
       "Your confirmed tier moves on a monthly cadence (a full month's average), so one bad week never drops it. Train more for a month to climb; one light month to step down.",
@@ -502,7 +502,7 @@ export const translations = {
     cd_select_all: "Select all",
     cd_clear_all: "Clear",
     cd_take_photo: "Take photo",
-    cd_photo_hint: "Opens your camera — full quality, framed for stories.",
+    cd_photo_hint: "Opens your camera: full quality, framed for stories.",
     cd_err_photo: "Add a photo to continue.",
     cd_step_details: "Details",
     cd_step_photo: "Photo",
@@ -527,7 +527,7 @@ export const translations = {
     card_save: "Save to photos",
     card_share_btn: "Share",
     card_generating: "Generating…",
-    card_saved: "Saved to your photos — now post it to your Instagram story 📲",
+    card_saved: "Saved to your photos. Now post it to your Instagram story 📲",
     card_hint: "Save or share the card, then post it to your story yourself.",
     card_share_text: "My check-in on Stack",
     card_export_failed: "Couldn't make the card. Try again.",
@@ -581,7 +581,7 @@ export const translations = {
     // Privacy
     settings_goal_label: "Weekly goal",
     settings_rest_label: "Preferred rest days",
-    settings_rest_hint: "Personal cues only — they never change your streak math.",
+    settings_rest_hint: "Personal cues only. They never change your streak math.",
     notif_link: "Notifications",
     notif_title: "Notifications",
     notif_master_label: "Push notifications",
@@ -590,7 +590,7 @@ export const translations = {
     notif_blocked: "Notifications are blocked in your browser settings.",
     notif_unsupported: "This browser doesn't support push notifications.",
     notif_ios_install:
-      "On iPhone, add Stack to your Home Screen first — then notifications unlock.",
+      "On iPhone, add Stack to your Home Screen first. Then notifications unlock.",
     notif_ios_install_cta: "How to install",
     notif_types_label: "What to notify me about",
     notif_quiet_label: "Quiet hours",
@@ -642,7 +642,7 @@ export const translations = {
     notif_desc_tier_projection: "Your tier is trending this week",
     notif_desc_at_risk: "You are about to lose your streak",
     notif_desc_self_nudge: "Late in the day. Still time to keep your streak",
-    notif_desc_pact_broken: "{name} broke the pact — owes {stake}",
+    notif_desc_pact_broken: "{name} broke the pact, owes {stake}",
     push_prompt_title: "Stay in the loop",
     push_prompt_body: "Get nudges and streak alerts so you never lose it.",
     push_prompt_enable: "Turn on notifications",
@@ -650,13 +650,13 @@ export const translations = {
     privacy_label: "Privacy",
     privacy_show_stats: "Show my stats to group members",
     privacy_explainer:
-      "When off, your current streak, longest streak and total check-ins are hidden from others on your profile and the leaderboard. Your name, photo, and whether you checked in today stay visible — your group can always see if you showed up.",
+      "When off, your current streak, longest streak and total check-ins are hidden from others on your profile and the leaderboard. Your name, photo, and whether you checked in today stay visible. Your group can always see if you showed up.",
 
     // Install / Add to Home Screen guide
     install_cta: "Install as an app",
     install_title: "Add Stack to your iPhone",
     install_subtitle:
-      "Turn Stack into an app on your Home Screen — no App Store needed. It opens full-screen, just like a real app.",
+      "Turn Stack into an app on your Home Screen, no App Store needed. It opens full-screen, just like a real app.",
     install_beta_note:
       "Stack is in early beta, so this is the best way to use it every day.",
     install_safari_title: "Open this in Safari first",
@@ -674,11 +674,11 @@ export const translations = {
       "It's the square with an arrow pointing up, in the bar at the bottom.",
     install_step3_title: "Tap “Add to Home Screen”",
     install_step3_body:
-      "Scroll down the menu until you see it — next to a box with a + inside. Tap it.",
+      "Scroll down the menu until you see it, next to a box with a + inside. Tap it.",
     install_step4_title: "Tap “Add”",
     install_step4_body:
       "You'll see the Stack icon and name. Tap Add in the top-right corner.",
-    install_step5_title: "Done — open Stack from your Home Screen",
+    install_step5_title: "Done. Open Stack from your Home Screen",
     install_step5_body:
       "The Stack icon is now on your Home Screen. Tap it to open Stack full-screen, like an app.",
     install_step_label: "Step {n}",
@@ -700,10 +700,10 @@ export const translations = {
     // Landing
     landing_tagline: "Preséntate. Todos los días.",
     landing_supporting:
-      "Suma entrenamientos, pon algo en juego, hazlo interesante y no seas el que se rinde.",
+      "Stackea entrenamientos, pon algo en juego, hazlo interesante y no seas el que se rinde.",
     landing_supporting2:
       "Donde tú y tu círculo cercano construyen constancia, disciplina y se acercan juntos a sus metas.",
-    landing_cta_signup: "Empieza a sumar",
+    landing_cta_signup: "Empieza a stackear",
     landing_cta_login: "Iniciar sesión",
     landing_credit: "Creado por el equipo de Stack.",
     landing_appstore: "Pronto en iOS y Android.",
@@ -711,9 +711,9 @@ export const translations = {
     // Waitlist / updates signup
     waitlist_link: "Sé el primero en enterarte de nuestras novedades",
     waitlist_placeholder: "tu@correo.com",
-    waitlist_submit: "Avísenme",
+    waitlist_submit: "Avísame",
     waitlist_submitting: "Uniéndote…",
-    waitlist_success: "Listo. Revisa tu correo — bienvenido a Stack.",
+    waitlist_success: "Listo. Revisa tu correo. Bienvenido a Stack.",
     waitlist_error: "No pudimos registrarte. Inténtalo de nuevo.",
     waitlist_invalid: "Ingresa un correo válido.",
 
@@ -723,7 +723,7 @@ export const translations = {
     penalty_intro_lead:
       "Pon algo real en juego. Dale dientes a tu reto para que nadie quiera ser el que lo rompa.",
     penalty_point1_title: "Define la apuesta",
-    penalty_point1_body: "Dinero, un favor o tu propio reto a la medida — lo que duela lo justo.",
+    penalty_point1_body: "Dinero, un favor o tu propio reto a la medida: lo que duela lo justo.",
     penalty_point2_title: "Elige quién paga",
     penalty_point2_body:
       "Solo el que rompe la racha, cualquiera que falle la meta semanal, o el último lugar de cada ciclo.",
@@ -733,7 +733,7 @@ export const translations = {
     penalty_intro_later: "Quizás después",
     penalty_nudge_title: "Nuevo en Stack: pon un castigo",
     penalty_nudge_body:
-      "Tu reto todavía no tiene apuesta. Ponle un castigo al que pierda la racha o el reto — dinero, un favor o un reto a la medida.",
+      "Tu reto todavía no tiene apuesta. Ponle un castigo al que pierda la racha o el reto: dinero, un favor o un reto a la medida.",
     penalty_nudge_cta: "Poner un castigo",
     penalty_nudge_dismiss: "Cerrar",
 
@@ -814,7 +814,7 @@ export const translations = {
     pact_setup_title: "Arma el pacto",
     pact_edit_title: "Editar el pacto",
     pact_identity_label: "Identidad",
-    pact_identity_hint: "Dale un porqué a tu grupo. Opcional — sáltalo si es algo casual.",
+    pact_identity_hint: "Dale un porqué a tu grupo. Opcional: sáltalo si es algo casual.",
     pact_intention_label: "Intención / porqué",
     pact_intention_ph: "Ponernos en forma para la boda de junio",
     pact_motivation_label: "Motivación",
@@ -825,7 +825,7 @@ export const translations = {
     pact_meaning_ph: "Lo que este grupo significa para ti (opcional)",
     pact_rules_label: "Reglas",
     pact_workouts_label: "Entrenamientos por semana",
-    pact_workouts_hint: "Los días de descanso son el resto — 5/semana = 2 de descanso.",
+    pact_workouts_hint: "Los días de descanso son el resto: 5/semana = 2 de descanso.",
     pact_disciplines_label: "Disciplinas permitidas",
     pact_disciplines_hint: "Solo estas cuentan para el pacto.",
     pact_all_disciplines: "Todas las disciplinas",
@@ -842,7 +842,7 @@ export const translations = {
     pact_stake_money_ph: "$20",
     pact_stake_favor_ph: "paga la cena",
     pact_stake_custom_ph: "va al gym disfrazado de pollo",
-    pact_money_note: "A confianza — Stack lo registra, ustedes lo arreglan.",
+    pact_money_note: "A confianza: Stack lo registra, ustedes lo arreglan.",
     pact_whopays_label: "Quién paga",
     pact_whopays_breaker: "Solo quien rompe",
     pact_whopays_breaker_desc: "Solo paga quien no llega a la meta semanal. El más suave.",
@@ -866,7 +866,7 @@ export const translations = {
     pact_last_place_pays: "Paga el último lugar",
     pact_ends: "Termina {date}",
     pact_broke_title: "Pacto roto",
-    pact_broke_you: "Rompiste el pacto esta semana. Toca pagar — asúmelo. 😅",
+    pact_broke_you: "Rompiste el pacto esta semana. Toca pagar. Asúmelo. 😅",
     pact_owes: "Debe {stake}",
     pact_see_owe: "Ver lo que debes",
     ledger_label: "La cuenta",
@@ -877,21 +877,21 @@ export const translations = {
     // Pact alert
     pact_alert_broke_title: "El pacto se rompió",
     pact_alert_broke_one: "{name} rompió el pacto y debe {stake}.",
-    pact_alert_broke_you: "Rompiste el pacto — debes {stake}.",
+    pact_alert_broke_you: "Rompiste el pacto. Debes {stake}.",
     pact_alert_behind_title: "Quedándose atrás",
-    pact_alert_behind_one: "{name} no ha sumado ningún entrenamiento esta semana.",
-    pact_alert_behind_you: "No has sumado ningún entrenamiento esta semana.",
-    pact_alert_behind_many: "{names} no han sumado ningún entrenamiento esta semana.",
+    pact_alert_behind_one: "{name} no ha stackeado ningún entrenamiento esta semana.",
+    pact_alert_behind_you: "No has stackeado ningún entrenamiento esta semana.",
+    pact_alert_behind_many: "{names} no han stackeado ningún entrenamiento esta semana.",
     pact_alert_target: "Meta: {n}×/semana · apuesta {stake}",
     proposal_label: "Cambio de reglas propuesto",
     proposal_by: "{name} propone un nuevo pacto:",
     proposal_status: "{approved} de {total} aprobaron",
-    proposal_waiting: "Falta {names}",
+    proposal_waiting: "Esperando a {names}",
     proposal_approve: "Aprobar",
     proposal_reject: "Rechazar",
-    proposal_you_approved: "Aprobaste — falta el resto.",
+    proposal_you_approved: "Aprobaste. Falta el resto.",
     // Nudge
-    nudge_cta: "Empújalo",
+    nudge_cta: "Empujón",
     nudge_sent: "Enviado",
     nudge_banner: "{who} te dio un empujón 👀 Toca para registrar.",
     nudge_dismiss: "Descartar",
@@ -913,9 +913,9 @@ export const translations = {
     milestone_sub: "Estás encendido. Mantenla viva.",
 
     // Sign up
-    signup_title: "Empieza a sumar",
+    signup_title: "Empieza a stackear",
     signup_subtitle: "Crea tu cuenta. Toma un segundo.",
-    signup_submit: "Empieza a sumar",
+    signup_submit: "Empieza a stackear",
     signup_have_account: "¿Ya tienes cuenta?",
     signup_login_link: "Inicia sesión",
     error_email_taken: "Ese correo ya está en uso.",
@@ -986,14 +986,14 @@ export const translations = {
     ob_focus_title: "Tu enfoque este mes",
     ob_focus_sub: "¿Qué estás persiguiendo ahora?",
     ob_bio_title: "Una línea sobre ti",
-    ob_bio_sub: "Opcional — que valga la pena.",
+    ob_bio_sub: "Opcional. Que valga la pena.",
 
     // Welcome story (primera vez, tras registrarse, antes de configurar el perfil)
     welcome_skip: "Saltar",
     welcome_continue: "Continuar",
     ws2_title: "Ponerte en forma solo es difícil. Con tu gente, se vuelve constante.",
     ws2_sub:
-      "Stack no es otro tracker para uno solo. Es un círculo pequeño que se hace responsable en grupo — presentarte se vuelve inevitable cuando está frente a la gente que te importa.",
+      "Stack no es otro tracker para uno solo. Es un círculo pequeño que se hace responsable en grupo. Presentarte se vuelve inevitable cuando está frente a la gente que te importa.",
     ws3_title:
       "Estamos construyendo el lugar donde los grupos pequeños se ponen fuertes juntos.",
     ws3_sub:
@@ -1011,7 +1011,7 @@ export const translations = {
     tour_finish: "Toma tu primera foto",
     tour_replay: "Ver el tour de nuevo",
     tour1_title: "Bienvenido a tu inicio",
-    tour1_body: "Tu grupo, tu racha y tu feed — todo en un solo lugar.",
+    tour1_body: "Tu grupo, tu racha y tu feed, todo en un solo lugar.",
     tour2_title: "Registra",
     tour2_body:
       "Toca aquí después de entrenar, toma una foto y se publica en tu grupo. Esto es lo único que haces cada día.",
@@ -1020,19 +1020,19 @@ export const translations = {
       "Este anillo muestra cuántos de tus días cumpliste esta semana. Llénalo.",
     tour4_title: "Tus rachas",
     tour4_body:
-      "Tu racha son los días seguidos que te presentaste. La racha del grupo solo sobrevive si todos se presentan — una falta la rompe para todos.",
+      "Tu racha son los días seguidos que te presentaste. La racha del grupo solo sobrevive si todos se presentan. Una falta la rompe para todos.",
     tour5_title: "El feed",
     tour5_body:
       "Cuando alguien registra, aparece aquí. Reacciona, comenta y anímalos.",
     tour6_title: "En riesgo y empujones",
     tour6_body:
-      "Dentro de un grupo, un punto rojo significa que alguien no se ha registrado hoy. Toca Empújalo para darle un empujón amable.",
+      "Dentro de un grupo, un punto rojo significa que alguien no se ha registrado hoy. Toca Empujón para recordárselo con buena onda.",
     tour7_title: "Grupos",
     tour7_body:
       "Crea o únete a grupos aquí. Toca cualquier grupo para ver sus estadísticas, miembros, chat y resumen semanal.",
     tour8_title: "Perfil y La Pila",
     tour8_body:
-      "Tu perfil muestra tus rachas, tus totales y La Pila — tu historial completo de registros. Toca el nombre de cualquiera para ver el suyo.",
+      "Tu perfil muestra tus rachas, tus totales y La Pila, tu historial completo de registros. Toca el nombre de cualquiera para ver el suyo.",
     tour_install_title: "Instala Stack como app",
     tour_install_body:
       "Agrega Stack a tu pantalla de inicio para la experiencia de app en pantalla completa. En iPhone, usa Safari: abre Perfil → “Instalar como app”, luego Compartir → Agregar a inicio.",
@@ -1061,7 +1061,7 @@ export const translations = {
     checkin_button: "Registrar",
     checkin_done: "Hoy te presentaste",
     rest_day_cta: "Marcar hoy como día de descanso",
-    rest_day_done: "Día de descanso — racha protegida 😌",
+    rest_day_done: "Día de descanso. Racha protegida 😌",
     feed_empty: "Nadie ha registrado hoy. Sé quien empieza.",
     feed_title: "Hoy en el grupo",
     feed_comment_placeholder: "Agrega un comentario…",
@@ -1095,31 +1095,31 @@ export const translations = {
     goal_per_week: "{n}× / semana",
     goal_rest_hint_one: "1 día de descanso por semana. Falla más y tu racha está en riesgo.",
     goal_rest_hint: "{n} días de descanso por semana. Falla más y tu racha está en riesgo.",
-    goal_rest_hint_none: "Todos los días. Sin descanso — una sola falla pone tu racha en riesgo.",
+    goal_rest_hint_none: "Todos los días. Sin descanso: una sola falla pone tu racha en riesgo.",
     goal_save: "Fijar mi meta",
     goal_skip: "Ahora no",
     goal_intro_title: "Rachas, a otro nivel",
     goal_intro_body:
       "Tu racha se construye sobre una meta semanal. Cúmplela y tu racha crece; el color de tu nivel muestra qué tan fuerte vas.",
-    goal_grace_note: "Tu racha actual está a salvo — las nuevas reglas empiezan el próximo lunes.",
+    goal_grace_note: "Tu racha actual está a salvo. Las nuevas reglas empiezan el próximo lunes.",
     rest_prompt_q: "No registraste {days}. ¿Eran tus días de descanso?",
     rest_prompt_yes: "Sí, descanso",
     rest_prompt_no: "No, voy a registrar",
     tierguide_link: "Cómo funcionan niveles y rachas",
     tierguide_title: "Niveles y rachas",
     tierguide_intro:
-      "Tu racha cuenta cada día que cumples tu meta semanal. Dos personas pueden tener la misma racha — el color del nivel muestra qué tan fuerte va cada quien.",
+      "Tu racha cuenta cada día que cumples tu meta semanal. Dos personas pueden tener la misma racha. El color del nivel muestra qué tan fuerte va cada quien.",
     tierguide_tiers_title: "Los niveles",
     tierguide_tiers_body: "Se ganan según cuántos días por semana entrenas:",
     tierguide_streak_title: "Cuándo se rompe tu racha",
     tierguide_streak_body:
-      "Se rompe solo cuando alcanzar tu meta semanal se vuelve imposible — cuando los días que quedan en la semana son menos que los entrenamientos que aún necesitas. No en un día de descanso. No por una sola falla con margen.",
+      "Se rompe solo cuando alcanzar tu meta semanal se vuelve imposible: cuando los días que quedan en la semana son menos que los entrenamientos que aún necesitas. No en un día de descanso. No por una sola falla con margen.",
     tierguide_red_title: "La alerta roja",
     tierguide_red_body:
-      "Rojo significa en riesgo: usaste todos tus días de descanso de la semana y debes entrenar cada día restante para conservar tu racha. El rojo es solo esto — ningún nivel lo usa.",
+      "Rojo significa en riesgo: usaste todos tus días de descanso de la semana y debes entrenar cada día restante para conservar tu racha. El rojo es solo esto. Ningún nivel lo usa.",
     tierguide_rest_title: "¿Los días de descanso rompen mi racha?",
     tierguide_rest_body:
-      "No. Los días de descanso preferidos son señales personales — nunca cambian el cálculo de la racha. Solo tu meta semanal lo hace.",
+      "No. Los días de descanso preferidos son señales personales. Nunca cambian el cálculo de la racha. Solo tu meta semanal lo hace.",
     tierguide_climb_title: "Subir y bajar",
     tierguide_climb_body:
       "Tu nivel confirmado se mueve cada mes (el promedio de un mes completo), así una sola mala semana nunca lo baja. Entrena más un mes para subir; un mes flojo para bajar.",
@@ -1144,7 +1144,7 @@ export const translations = {
 
     // Join group
     join_title: "Te invitaron",
-    join_subtitle: "Únete al grupo y empieza a sumar con ellos.",
+    join_subtitle: "Únete al grupo y empieza a stackear con ellos.",
     join_button: "Unirme a este grupo",
     join_invalid_code: "Este enlace de invitación no es válido o expiró.",
     join_login_required: "Inicia sesión o regístrate para unirte.",
@@ -1160,9 +1160,9 @@ export const translations = {
     checkin_mirror_label: "Reflejar foto",
     checkin_mirror_hint: "Para selfies que se ven al revés. Apagado mantiene la orientación real.",
     checkin_note_placeholder: "¿Cómo te fue? (opcional)",
-    checkin_submit: "Sumar",
+    checkin_submit: "Stackear",
     checkin_starting_camera: "Encendiendo la cámara…",
-    checkin_uploading: "Sumando…",
+    checkin_uploading: "Stackeando…",
     checkin_permission_denied: "Acceso a la cámara denegado",
     checkin_permission_help:
       "Stack necesita tu cámara para capturar la prueba en el momento. Actívala en los ajustes de tu navegador y recarga.",
@@ -1184,9 +1184,9 @@ export const translations = {
     cd_notes_placeholder: "Jugué de mediocampista hoy, metí dos goles.",
     cd_share: "Guardar / compartir",
     cd_select_all: "Seleccionar todos",
-    cd_clear_all: "Quitar",
+    cd_clear_all: "Limpiar",
     cd_take_photo: "Toma la foto",
-    cd_photo_hint: "Abre tu cámara — máxima calidad, formato historia.",
+    cd_photo_hint: "Abre tu cámara: máxima calidad, formato historia.",
     cd_err_photo: "Agrega una foto para continuar.",
     cd_step_details: "Detalles",
     cd_step_photo: "Foto",
@@ -1197,7 +1197,7 @@ export const translations = {
     // Story card
     card_template_label: "Plantilla",
     card_show_label: "Mostrar",
-    card_tpl_minimal: "Minimal",
+    card_tpl_minimal: "Minimalista",
     card_tpl_bold: "Llamativa",
     card_tpl_stat: "Con datos",
     card_tpl_photo: "Foto",
@@ -1211,7 +1211,7 @@ export const translations = {
     card_save: "Guardar en fotos",
     card_share_btn: "Compartir",
     card_generating: "Generando…",
-    card_saved: "Guardada en tus fotos — ahora súbela a tu historia de Instagram 📲",
+    card_saved: "Guardada en tus fotos. Ahora súbela a tu historia de Instagram 📲",
     card_hint: "Guarda o comparte la tarjeta y luego súbela a tu historia.",
     card_share_text: "Mi registro en Stack",
     card_export_failed: "No se pudo crear la tarjeta. Inténtalo de nuevo.",
@@ -1265,7 +1265,7 @@ export const translations = {
     // Privacy
     settings_goal_label: "Meta semanal",
     settings_rest_label: "Días de descanso preferidos",
-    settings_rest_hint: "Solo señales personales — nunca cambian el cálculo de tu racha.",
+    settings_rest_hint: "Solo señales personales. Nunca cambian el cálculo de tu racha.",
     notif_link: "Notificaciones",
     notif_title: "Notificaciones",
     notif_master_label: "Notificaciones push",
@@ -1274,7 +1274,7 @@ export const translations = {
     notif_blocked: "Las notificaciones están bloqueadas en la configuración de tu navegador.",
     notif_unsupported: "Este navegador no admite notificaciones push.",
     notif_ios_install:
-      "En iPhone, primero agrega Stack a tu pantalla de inicio — ahí se activan las notificaciones.",
+      "En iPhone, primero agrega Stack a tu pantalla de inicio. Ahí se activan las notificaciones.",
     notif_ios_install_cta: "Cómo instalar",
     notif_types_label: "Sobre qué notificarme",
     notif_quiet_label: "Horas de silencio",
@@ -1326,7 +1326,7 @@ export const translations = {
     notif_desc_tier_projection: "Tu nivel se está moviendo esta semana",
     notif_desc_at_risk: "Estás a punto de perder tu racha",
     notif_desc_self_nudge: "Ya es tarde. Aún hay tiempo para mantener tu racha",
-    notif_desc_pact_broken: "{name} rompió el pacto — debe {stake}",
+    notif_desc_pact_broken: "{name} rompió el pacto, debe {stake}",
     push_prompt_title: "Mantente al tanto",
     push_prompt_body: "Recibe empujones y alertas de racha para no perderla nunca.",
     push_prompt_enable: "Activar notificaciones",
@@ -1334,13 +1334,13 @@ export const translations = {
     privacy_label: "Privacidad",
     privacy_show_stats: "Mostrar mis estadísticas a los miembros del grupo",
     privacy_explainer:
-      "Cuando está apagado, tu racha actual, tu racha más larga y tus registros totales se ocultan para los demás en tu perfil y en la tabla de posiciones. Tu nombre, tu foto y si te presentaste hoy siguen visibles — tu grupo siempre puede ver si apareciste.",
+      "Cuando está apagado, tu racha actual, tu racha más larga y tus registros totales se ocultan para los demás en tu perfil y en la tabla de posiciones. Tu nombre, tu foto y si te presentaste hoy siguen visibles. Tu grupo siempre puede ver si apareciste.",
 
     // Install / Add to Home Screen guide
     install_cta: "Instalar como app",
     install_title: "Agrega Stack a tu iPhone",
     install_subtitle:
-      "Convierte Stack en una app en tu pantalla de inicio — sin App Store. Se abre en pantalla completa, como una app de verdad.",
+      "Convierte Stack en una app en tu pantalla de inicio, sin App Store. Se abre en pantalla completa, como una app de verdad.",
     install_beta_note:
       "Stack está en beta temprana, así que esta es la mejor forma de usarlo todos los días.",
     install_safari_title: "Primero abre esto en Safari",
@@ -1358,7 +1358,7 @@ export const translations = {
       "Es el cuadrado con una flecha hacia arriba, en la barra de abajo.",
     install_step3_title: "Toca “Agregar a inicio”",
     install_step3_body:
-      "Desliza el menú hacia abajo hasta verlo — junto a un cuadro con un + adentro. Tócalo.",
+      "Desliza el menú hacia abajo hasta verlo, junto a un cuadro con un + adentro. Tócalo.",
     install_step4_title: "Toca “Agregar”",
     install_step4_body:
       "Verás el ícono y el nombre de Stack. Toca Agregar en la esquina superior derecha.",
