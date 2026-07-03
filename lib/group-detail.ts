@@ -192,52 +192,77 @@ export async function getGroupDetail(
   // this group's check-ins. A streak belongs to the person, not the group, so it
   // must not reset to 0 in a newly-joined group. The at-risk dot and the weekly
   // consistency ring stay GROUP-scoped (participation in this group).
-  const members: LeaderEntry[] = await Promise.all(
-    rows.map(async (row) => {
-      const uid = (row as { user_id: string }).user_id;
-      const profile = (row as unknown as { profile: ProfileLite }).profile;
-      const groupDaySet = daySetOf(uid);
-      const isYou = uid === userId;
-      const showStats = isYou || profile?.show_stats !== false;
+  //
+  // The batch RPCs (migration 20260702120000) fetch every visible member's
+  // inputs in TWO round-trips total, replacing the old 2-per-member pattern.
+  // Both are SECURITY DEFINER with the same privacy floor as the single-user
+  // versions, so a hidden member still returns no rows to other viewers.
+  const isVisible = (row: unknown): boolean => {
+    const uid = (row as { user_id: string }).user_id;
+    const profile = (row as { profile: ProfileLite }).profile;
+    return uid === userId || profile?.show_stats !== false;
+  };
+  const statUids = rows
+    .filter(isVisible)
+    .map((row) => (row as { user_id: string }).user_id);
+  const globalDatesByUid = new Map<string, string[]>();
+  const restDaysByUid = new Map<string, string[]>();
+  if (statUids.length > 0) {
+    const [datesRes, restRes] = await Promise.all([
+      supabase.rpc("member_checkin_dates_batch", { _user_ids: statUids }),
+      supabase.rpc("member_rest_days_batch", { _user_ids: statUids }),
+    ]);
+    for (const r of (datesRes.data ?? []) as {
+      user_id: string;
+      created_at: string;
+    }[]) {
+      const arr = globalDatesByUid.get(r.user_id);
+      if (arr) arr.push(r.created_at);
+      else globalDatesByUid.set(r.user_id, [r.created_at]);
+    }
+    for (const r of (restRes.data ?? []) as {
+      user_id: string;
+      day: string;
+    }[]) {
+      const arr = restDaysByUid.get(r.user_id);
+      if (arr) arr.push(r.day);
+      else restDaysByUid.set(r.user_id, [r.day]);
+    }
+  }
 
-      let streak = 0;
-      if (showStats) {
-        const [datesRes, restRes] = await Promise.all([
-          supabase.rpc("member_checkin_dates", { _user_id: uid }),
-          supabase.rpc("member_rest_days", { _user_id: uid }),
-        ]);
-        const globalDates = Array.isArray(datesRes.data)
-          ? (datesRes.data as { created_at: string }[]).map((r) => r.created_at)
-          : [];
-        const restDays = Array.isArray(restRes.data)
-          ? (restRes.data as { day: string }[]).map((r) => r.day)
-          : [];
-        streak = computeQuotaStreak(globalDates, {
+  const members: LeaderEntry[] = rows.map((row) => {
+    const uid = (row as { user_id: string }).user_id;
+    const profile = (row as unknown as { profile: ProfileLite }).profile;
+    const groupDaySet = daySetOf(uid);
+    const isYou = uid === userId;
+    const showStats = isYou || profile?.show_stats !== false;
+
+    const streak = showStats
+      ? computeQuotaStreak(globalDatesByUid.get(uid) ?? [], {
           weeklyGoal: profile?.weekly_goal ?? null,
           quotaActiveFromKey: profile?.quota_active_from ?? null,
-          restDayKeys: restDays,
+          restDayKeys: restDaysByUid.get(uid) ?? [],
           tz: profile?.timezone ?? null,
           now,
-        }).count;
-      }
-      const tier = (showStats
-        ? profile?.tier_confirmed ?? profile?.tier_provisional ?? null
-        : null) as TierKey | null;
+        }).count
+      : 0;
+    const tier = (showStats
+      ? profile?.tier_confirmed ?? profile?.tier_provisional ?? null
+      : null) as TierKey | null;
 
-      return {
-        userId: uid,
-        name: nameOf(profile),
-        avatarUrl: profile?.avatar_url ?? null,
-        streak,
-        checkedInToday: groupDaySet.has(todayKeyByUid.get(uid)!),
-        daysThisWeek: showStats ? daysIn(uid, weekSetByUid.get(uid)) : 0,
-        isYou,
-        showStats,
-        tier,
-        weeklyGoal: profile?.weekly_goal ?? null,
-      };
-    }),
-  );
+    return {
+      userId: uid,
+      name: nameOf(profile),
+      avatarUrl: profile?.avatar_url ?? null,
+      streak,
+      checkedInToday: groupDaySet.has(todayKeyByUid.get(uid)!),
+      daysThisWeek: showStats ? daysIn(uid, weekSetByUid.get(uid)) : 0,
+      isYou,
+      showStats,
+      tier,
+      weeklyGoal: profile?.weekly_goal ?? null,
+    };
+  });
   members.sort((a, b) =>
     a.showStats !== b.showStats
       ? a.showStats

@@ -73,7 +73,7 @@ export function Leaderboard({
               {!m.checkedInToday && m.streak > 0 && (
                 <span
                   className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
-                  title={t("groups_at_risk")}
+                  title={t("leaderboard_at_risk")}
                 />
               )}
             </span>

@@ -359,7 +359,8 @@ export const translations = {
     checkin_delete: "Delete post",
     checkin_delete_confirm: "Delete this check-in? This can't be undone.",
     home_consistency: "consistency this week",
-    leaderboard_days: "{n} of last 7 days",
+    leaderboard_days: "{n} days this week",
+    leaderboard_at_risk: "Streak at risk today",
     action_failed: "Couldn't do that. Please try again.",
 
     // Streak v2 + tiers (Batch 5 C)
@@ -1013,7 +1014,8 @@ export const translations = {
     checkin_delete: "Eliminar publicación",
     checkin_delete_confirm: "¿Eliminar este registro? No se puede deshacer.",
     home_consistency: "constancia esta semana",
-    leaderboard_days: "{n} de los últimos 7 días",
+    leaderboard_days: "{n} días esta semana",
+    leaderboard_at_risk: "Racha en riesgo hoy",
     action_failed: "No se pudo. Inténtalo de nuevo.",
 
     // Streak v2 + tiers (Batch 5 C)
