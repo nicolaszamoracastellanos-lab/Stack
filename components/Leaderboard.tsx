@@ -57,74 +57,89 @@ export function Leaderboard({
   const { t } = useLanguage();
   return (
     <ul className="stagger flex flex-col gap-2">
-      {members.map((m, i) => (
-        <li
-          key={m.userId}
-          className={
-            m.isYou
-              ? "depth flex items-center gap-3 rounded-card border border-volt/40 px-3 py-3"
-              : "flex items-center gap-3 rounded-card px-3 py-3"
-          }
-        >
-          {/* Rank as a display numeral — the podium should feel like one. */}
-          <span
+      {members.map((m, i) => {
+        const actions = trailing?.(m) ?? null;
+        return (
+          <li
+            key={m.userId}
             className={
-              "w-8 shrink-0 text-center font-mono nums leading-none " +
-              (i === 0 && m.showStats
-                ? "text-h1 font-extrabold text-text"
-                : "text-h2 font-bold text-text-dim")
+              m.isYou
+                ? "depth rounded-card border border-volt/40 px-3 py-3"
+                : "rounded-card px-3 py-3"
             }
           >
-            {m.showStats ? i + 1 : "·"}
-          </span>
-          <Link href={`/u/${m.userId}`} className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="relative shrink-0">
-              <Avatar name={m.name} src={m.avatarUrl} size="md" />
-              {/* Red is reserved for a streak actually at risk — a member with
-                  no streak yet has nothing to lose, so show nothing. */}
-              {!m.checkedInToday && m.streak > 0 && (
-                <span
-                  className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
-                  title={t("leaderboard_at_risk")}
-                />
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-body font-medium text-text">
-                <span className="truncate">{m.name}</span>
-                {m.isYou && (
-                  <span className="shrink-0 text-caption text-text-dim">
-                    ({t("groups_you_tag")})
-                  </span>
-                )}
-              </p>
-              {/* Tier badge next to the name (STACK_FIXES2 B) — colour + name
-                  disambiguates equal streak lengths. */}
-              {m.tier && (
-                <div className="mt-1">
-                  <TierBadge tierKey={m.tier} size="sm" />
-                </div>
-              )}
-              <p className="text-caption text-text-dim">
-                {m.showStats
-                  ? t("leaderboard_days", { n: m.daysThisWeek })
-                  : t("stats_hidden")}
-              </p>
-            </div>
-          </Link>
-          {m.showStats ? (
-            <>
-              <MiniRing value={m.daysThisWeek / 7} />
-              <span className="min-w-[2rem] text-right font-mono text-stat nums leading-none text-volt">
-                {m.streak}
+            {/* Main axis: rank, identity, ring + streak. Actions live on their
+                own line below so a 390px screen never squeezes the name out. */}
+            <div className="flex items-center gap-3">
+              <span
+                className={
+                  "w-7 shrink-0 text-center font-mono nums leading-none " +
+                  (i === 0 && m.showStats
+                    ? "text-h1 font-extrabold text-text"
+                    : "text-h2 font-bold text-text-dim")
+                }
+              >
+                {m.showStats ? i + 1 : "·"}
               </span>
-            </>
-          ) : (
-            <LockIcon />
-          )}
-          {trailing?.(m)}
-        </li>
-      ))}
+              <Link
+                href={`/u/${m.userId}`}
+                className="flex min-w-0 flex-1 items-center gap-3"
+              >
+                <span className="relative shrink-0">
+                  <Avatar name={m.name} src={m.avatarUrl} size="md" />
+                  {/* Red is reserved for a streak actually at risk — a member
+                      with no streak yet has nothing to lose, so show nothing. */}
+                  {!m.checkedInToday && m.streak > 0 && (
+                    <span
+                      className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-pill border-2 border-surface bg-danger"
+                      title={t("leaderboard_at_risk")}
+                    />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 text-body font-medium text-text">
+                    <span className="truncate">{m.name}</span>
+                    {m.isYou && (
+                      <span className="shrink-0 text-caption text-text-dim">
+                        ({t("groups_you_tag")})
+                      </span>
+                    )}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    {/* Tier colour + name disambiguates equal streaks. */}
+                    {m.tier && <TierBadge tierKey={m.tier} size="sm" />}
+                    <span className="whitespace-nowrap text-caption text-text-dim">
+                      {m.showStats
+                        ? t(
+                            m.daysThisWeek === 1
+                              ? "leaderboard_day"
+                              : "leaderboard_days",
+                            { n: m.daysThisWeek },
+                          )
+                        : t("stats_hidden")}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+              <div className="flex shrink-0 items-center gap-2">
+                {m.showStats ? (
+                  <>
+                    <MiniRing value={m.daysThisWeek / 7} />
+                    <span className="min-w-[1.75rem] text-right font-mono text-h2 nums leading-none text-volt">
+                      {m.streak}
+                    </span>
+                  </>
+                ) : (
+                  <LockIcon />
+                )}
+              </div>
+            </div>
+            {actions && (
+              <div className="mt-2 flex justify-end pl-10">{actions}</div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
