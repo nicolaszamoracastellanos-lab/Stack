@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SegmentedControl } from "@/components/SegmentedControl";
 import { useLanguage } from "@/lib/language-context";
 import { localDateKey } from "@/lib/streaks";
 import { getWeekStart } from "@/lib/week";
@@ -26,10 +27,12 @@ type Cell = {
 // Discrete GitHub-style intensity from a day's check-in count. Rest days and
 // missed days are handled separately (distinct shape, not just hue) so state is
 // never conveyed by color alone — important for color-blind users.
+// 5-step ramp: pure volt is reserved for the max (4+ check-ins in a day).
 function levelClass(count: number): string {
-  if (count >= 3) return "bg-volt";
-  if (count === 2) return "bg-volt/60";
-  if (count === 1) return "bg-volt/30";
+  if (count >= 4) return "bg-volt";
+  if (count === 3) return "bg-volt/70";
+  if (count === 2) return "bg-volt/45";
+  if (count === 1) return "bg-volt/20";
   return "bg-surface-2";
 }
 
@@ -49,6 +52,9 @@ export function Heatmap({
 }) {
   const { t, lang } = useLanguage();
   const [range, setRange] = useState<Range>("3m");
+  // Tap-to-inspect: the selected day's detail renders as a line under the grid
+  // (title= tooltips are hover-only, useless on touch).
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -100,28 +106,26 @@ export function Heatmap({
   const cellSize = range === "3m" ? "h-3.5 w-3.5" : "h-3 w-3";
   const isEmpty = !Object.values(counts).some((n) => n > 0);
 
+  const selectedCell = selectedKey
+    ? weeks.flat().find((c) => c.key === selectedKey && !c.future)
+    : undefined;
+
   return (
     <div>
       {/* Range toggle */}
       <div className="mb-4 flex justify-end">
-        <div className="inline-flex rounded-pill border border-border p-0.5">
-          {(["3m", "1y"] as Range[]).map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRange(r)}
-              aria-pressed={range === r}
-              className={cn(
-                "rounded-pill px-3 py-1.5 text-caption font-medium transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60",
-                range === r
-                  ? "bg-surface-2 text-text"
-                  : "text-text-dim hover:text-text",
-              )}
-            >
-              {r === "3m" ? "3M" : "1Y"}
-            </button>
-          ))}
+        <div className="w-36">
+          <SegmentedControl<Range>
+            options={[
+              { value: "3m", label: "3M" },
+              { value: "1y", label: "1Y" },
+            ]}
+            value={range}
+            onChange={(r) => {
+              setRange(r);
+              setSelectedKey(null);
+            }}
+          />
         </div>
       </div>
 
@@ -171,16 +175,27 @@ export function Heatmap({
               ))}
             </div>
 
-            {/* Week columns */}
+            {/* Week columns — cells fade in as a fast diagonal wave (capped so
+                the whole sweep lands well under 600ms even on the 1Y grid). */}
             {weeks.map((week, i) => (
               <div key={i} className="flex flex-col gap-1">
-                {week.map((c) => (
+                {week.map((c, d) => (
                   <div
                     key={c.key}
                     title={c.future ? undefined : tooltip(c)}
+                    onClick={
+                      c.future
+                        ? undefined
+                        : () =>
+                            setSelectedKey((k) => (k === c.key ? null : c.key))
+                    }
+                    style={{
+                      animationDelay: `${Math.min(i * 12 + d * 8, 550)}ms`,
+                    }}
                     className={cn(
-                      "rounded-[3px]",
+                      "cell-rise rounded-[3px]",
                       cellSize,
+                      !c.future && "cursor-pointer",
                       c.future
                         ? "bg-transparent"
                         : c.rest
@@ -195,6 +210,13 @@ export function Heatmap({
         </div>
       </div>
 
+      {/* Tapped-day detail — the touch equivalent of the hover tooltip. */}
+      {selectedCell && (
+        <p className="mt-2 text-micro text-text-muted nums" aria-live="polite">
+          {tooltip(selectedCell)}
+        </p>
+      )}
+
       {/* Empty state: a blank grid needs a reason to fill it. */}
       {isEmpty && (
         <p className="mt-3 rounded-input border border-volt/30 bg-volt/10 px-3 py-2 text-label text-text">
@@ -208,8 +230,9 @@ export function Heatmap({
         <span className="ml-auto flex items-center gap-1.5">
           <span>{t("heatmap_less")}</span>
           <span className="h-3 w-3 rounded-[3px] bg-surface-2" />
-          <span className="h-3 w-3 rounded-[3px] bg-volt/30" />
-          <span className="h-3 w-3 rounded-[3px] bg-volt/60" />
+          <span className="h-3 w-3 rounded-[3px] bg-volt/20" />
+          <span className="h-3 w-3 rounded-[3px] bg-volt/45" />
+          <span className="h-3 w-3 rounded-[3px] bg-volt/70" />
           <span className="h-3 w-3 rounded-[3px] bg-volt" />
           <span>{t("heatmap_more")}</span>
         </span>

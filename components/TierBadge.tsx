@@ -53,24 +53,23 @@ export function TierBadge({
 
   const dot = size === "sm" ? "h-2.5 w-2.5" : "h-3 w-3";
   return (
+    // Refined pill: the tier color lives in a small glowing dot; the pill
+    // itself stays quiet (hairline border, raised surface, muted text).
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 font-medium",
+        "depth inline-flex items-center gap-2 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-text-muted",
         size === "sm" ? "text-caption" : "text-label",
-        provisional && "opacity-70",
+        provisional && "opacity-75",
         className,
       )}
-      style={{
-        borderColor: provisional ? "#3A3A40" /* border-strong token */ : tier.hex,
-        backgroundColor: `${tier.hex}1f`, // ~12% alpha
-        color: tier.hex,
-      }}
     >
       <span
         className={cn("shrink-0 rounded-pill", dot)}
         style={{
           backgroundColor: tier.hex,
-          boxShadow: tier.outline ? `0 0 0 1px ${tier.outline}` : undefined,
+          boxShadow: tier.outline
+            ? `0 0 0 1px ${tier.outline}, 0 0 8px ${tier.hex}66`
+            : `0 0 8px ${tier.hex}66`,
         }}
       />
       {t(NAME_KEY[tier.key])}

@@ -27,11 +27,14 @@ const FONT_SIZE: Record<"sm" | "md" | "lg", string> = {
 export function Wordmark({
   size = "md",
   showPeriod = true,
+  pulsePeriod = false,
   className,
   style,
 }: {
   size?: "sm" | "md" | "lg";
   showPeriod?: boolean;
+  /** One subtle glow-pulse of the volt period after mount (landing hero). */
+  pulsePeriod?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -50,8 +53,15 @@ export function Wordmark({
       {showPeriod && (
         <span
           aria-hidden
-          className="ml-[0.04em] inline-block rounded-[18%] bg-volt"
-          style={{ width: "0.16em", height: "0.16em" }}
+          className={cn(
+            "ml-[0.04em] inline-block rounded-[18%] bg-volt",
+            pulsePeriod && "period-pulse",
+          )}
+          style={{
+            width: "0.16em",
+            height: "0.16em",
+            ...(pulsePeriod ? { animationDelay: "1000ms" } : {}),
+          }}
         />
       )}
     </span>

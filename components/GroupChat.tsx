@@ -200,7 +200,7 @@ export function GroupChat({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="flex max-h-[28rem] min-h-[12rem] flex-col gap-1 overflow-y-auto rounded-card border border-border bg-surface p-4"
+        className="flex max-h-[28rem] min-h-[12rem] flex-col gap-1 overflow-y-auto depth rounded-card border border-border p-4"
       >
         {hasMore && (
           <button

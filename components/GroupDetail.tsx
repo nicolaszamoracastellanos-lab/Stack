@@ -34,7 +34,7 @@ function StatCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-card border border-border bg-surface p-4">
+    <div className="depth rounded-card border border-border p-4">
       <p className="text-caption text-text-muted">{label}</p>
       <div className="mt-1">{children}</div>
     </div>
@@ -200,7 +200,7 @@ export function GroupDetail({
         <button
           type="button"
           onClick={() => setChatOpen((v) => !v)}
-          className="flex w-full items-center justify-between rounded-card border border-border bg-surface px-4 py-3 hover:border-border-strong"
+          className="flex w-full items-center justify-between depth rounded-card border border-border px-4 py-3 hover:border-border-strong"
         >
           <span className="flex items-center gap-2 text-body font-medium text-text">
             <span aria-hidden>💬</span>
@@ -304,7 +304,7 @@ export function GroupDetail({
         <h2 className="mb-2 text-caption font-medium uppercase tracking-wide text-text-dim">
           {t("gd_breakdown")}
         </h2>
-        <div className="rounded-card border border-border bg-surface px-5 py-1">
+        <div className="depth rounded-card border border-border px-5 py-1">
           <Leaderboard
             members={data.members}
             trailing={(m) =>

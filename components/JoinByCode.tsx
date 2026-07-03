@@ -42,7 +42,8 @@ export function JoinByCode() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-2">
       <div className="flex items-start gap-2">
-        <div className="flex-1">
+        {/* Focused: Input's own volt hairline plus a soft volt glow here. */}
+        <div className="flex-1 rounded-input transition-shadow duration-150 focus-within:shadow-[0_0_28px_rgba(198,248,6,0.12)]">
           <Input
             placeholder={t("join_code_placeholder")}
             value={value}
@@ -56,7 +57,13 @@ export function JoinByCode() {
             error={error ? t("join_code_invalid") : undefined}
           />
         </div>
-        <Button type="submit" variant="secondary" size="md" className="h-11 shrink-0">
+        <Button
+          type="submit"
+          variant="secondary"
+          size="md"
+          className="h-11 shrink-0"
+          disabled={extractCode(value) === null}
+        >
           {t("join_code_submit")}
         </Button>
       </div>

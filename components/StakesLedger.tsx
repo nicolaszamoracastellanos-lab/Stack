@@ -85,7 +85,7 @@ export function StakesLedger({
           <p className="mb-2 text-caption font-medium uppercase tracking-wide text-text-dim">
             {t("ledger_settled")}
           </p>
-          <ul className="rounded-card border border-border bg-surface px-4 py-1">
+          <ul className="depth rounded-card border border-border px-4 py-1">
             {settled.map((d) => (
               <li
                 key={d.id}

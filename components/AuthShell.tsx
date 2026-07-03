@@ -37,10 +37,15 @@ export function AuthShell({
       </header>
 
       <div className="flex flex-1 items-center justify-center px-6 py-10">
-        <div className="w-full max-w-sm">
-          <h1 className="text-h1">{title}</h1>
+        <div className="stagger w-full max-w-sm">
+          <h1
+            className="tracking-[-0.03em] text-text"
+            style={{ fontSize: "clamp(2.25rem, 9vw, 3rem)", fontWeight: 900, lineHeight: 1.05 }}
+          >
+            {title}
+          </h1>
           {subtitle && (
-            <p className="mt-2 text-body text-text-muted">{subtitle}</p>
+            <p className="mt-3 text-body text-text-muted">{subtitle}</p>
           )}
           <div className="mt-8">{children}</div>
           {footer && (

@@ -185,7 +185,7 @@ export function PostFeed({
   if (items.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="stagger flex flex-col gap-4">
       {items.map((c) => {
         const data: FeedItemData = {
           id: c.id,

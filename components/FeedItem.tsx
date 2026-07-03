@@ -120,7 +120,7 @@ export function FeedItem({
   return (
     <article
       className={cn(
-        "overflow-hidden rounded-card border border-border bg-surface",
+        "depth overflow-hidden rounded-card border border-border",
         isNew && "animate-slide-fade-in",
       )}
     >
@@ -180,7 +180,8 @@ export function FeedItem({
         </div>
       )}
 
-      <div className="relative aspect-[9/16] w-full bg-surface-2">
+      {/* Photo with an inner top hairline so it reads set-into the card. */}
+      <div className="relative aspect-[9/16] w-full bg-surface-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
         <img src={item.photoUrl} alt="" className="h-full w-full object-cover" />
         <SharePhotoButton src={item.photoUrl} className="absolute bottom-3 right-3" />

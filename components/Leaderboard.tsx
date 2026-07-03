@@ -56,14 +56,26 @@ export function Leaderboard({
 }) {
   const { t } = useLanguage();
   return (
-    <ul className="flex flex-col">
+    <ul className="stagger flex flex-col gap-2">
       {members.map((m, i) => (
         <li
           key={m.userId}
-          className="flex items-center gap-3 border-t border-border py-3 first:border-t-0 first:pt-0"
+          className={
+            m.isYou
+              ? "depth flex items-center gap-3 rounded-card border border-volt/40 px-3 py-3"
+              : "flex items-center gap-3 rounded-card px-3 py-3"
+          }
         >
-          <span className="w-4 shrink-0 text-center font-mono text-caption text-text-dim">
-            {m.showStats ? i + 1 : "—"}
+          {/* Rank as a display numeral — the podium should feel like one. */}
+          <span
+            className={
+              "w-8 shrink-0 text-center font-mono nums leading-none " +
+              (i === 0 && m.showStats
+                ? "text-h1 font-extrabold text-text"
+                : "text-h2 font-bold text-text-dim")
+            }
+          >
+            {m.showStats ? i + 1 : "·"}
           </span>
           <Link href={`/u/${m.userId}`} className="flex min-w-0 flex-1 items-center gap-3">
             <span className="relative shrink-0">
@@ -103,7 +115,7 @@ export function Leaderboard({
           {m.showStats ? (
             <>
               <MiniRing value={m.daysThisWeek / 7} />
-              <span className="w-6 text-right font-mono text-h2 nums leading-none text-volt">
+              <span className="min-w-[2rem] text-right font-mono text-stat nums leading-none text-volt">
                 {m.streak}
               </span>
             </>

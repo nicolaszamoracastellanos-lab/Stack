@@ -254,7 +254,7 @@ function GroupMini({
   t: ReturnType<typeof useLanguage>["t"];
 }) {
   return (
-    <div className="flex min-w-[10rem] flex-col gap-2 rounded-card border border-border bg-surface p-4">
+    <div className="depth flex min-w-[10rem] flex-col gap-2 rounded-card border border-border p-4">
       <Link href={`/groups/${g.id}`} className="flex items-center gap-2">
         <Avatar name={g.name} size="sm" />
         <span className="truncate text-label font-medium text-text">{g.name}</span>
@@ -304,7 +304,7 @@ function GroupRow({
   t: ReturnType<typeof useLanguage>["t"];
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-card border border-border bg-surface p-4">
+    <div className="depth flex items-center gap-3 rounded-card border border-border p-4">
       <Link href={`/groups/${g.id}`} className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar name={g.name} size="md" />
         <div className="min-w-0">

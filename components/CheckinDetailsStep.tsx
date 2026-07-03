@@ -44,13 +44,22 @@ function Chip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "flex items-center gap-1.5 rounded-pill border px-3 py-1.5 text-label transition-colors duration-150",
+        "depth flex min-h-11 items-center rounded-pill border px-3.5 py-1.5 text-label transition-colors duration-150",
         active
-          ? "border-volt bg-volt/15 text-volt"
-          : "border-border bg-surface text-text-muted hover:border-border-strong hover:text-text",
+          ? "border-volt text-volt"
+          : "border-border text-text-muted hover:border-border-strong hover:text-text",
       )}
     >
-      {children}
+      {/* Pop the content, not the button: keeps the chip's own animation slot
+          free for the sport grid's stagger entrance. */}
+      <span
+        className={cn(
+          "flex items-center gap-1.5",
+          active && "animate-[chip-pop_150ms_ease-out]",
+        )}
+      >
+        {children}
+      </span>
     </button>
   );
 }
@@ -136,15 +145,16 @@ export function CheckinDetailsStep({
                   onClick={() => toggleGroup(g.id)}
                   aria-pressed={on}
                   className={cn(
-                    "flex items-center gap-2 rounded-pill border py-1.5 pl-1.5 pr-3 transition-colors duration-150",
-                    on
-                      ? "border-volt bg-volt/15"
-                      : "border-border bg-surface hover:border-border-strong",
+                    "depth flex min-h-11 items-center rounded-pill border py-1.5 pl-1.5 pr-3 transition-colors duration-150",
+                    on ? "border-volt" : "border-border hover:border-border-strong",
+                    on && "animate-[chip-pop_150ms_ease-out]",
                   )}
                 >
-                  <Avatar name={g.name} size="sm" />
-                  <span className={cn("text-label", on ? "text-volt" : "text-text-muted")}>
-                    {g.name}
+                  <span className="flex items-center gap-2">
+                    <Avatar name={g.name} size="sm" />
+                    <span className={cn("text-label", on ? "text-volt" : "text-text-muted")}>
+                      {g.name}
+                    </span>
                   </span>
                 </button>
               );
@@ -155,10 +165,10 @@ export function CheckinDetailsStep({
               onClick={selectJustMe}
               aria-pressed={value.justMe}
               className={cn(
-                "flex items-center gap-2 rounded-pill border py-1.5 pl-3 pr-3 transition-colors duration-150",
+                "depth flex min-h-11 items-center gap-2 rounded-pill border py-1.5 pl-3 pr-3 transition-colors duration-150",
                 value.justMe
-                  ? "border-volt bg-volt/15"
-                  : "border-border bg-surface hover:border-border-strong",
+                  ? "border-volt animate-[chip-pop_150ms_ease-out]"
+                  : "border-border hover:border-border-strong",
               )}
             >
               <span aria-hidden>🔒</span>
@@ -182,9 +192,17 @@ export function CheckinDetailsStep({
           value={value.sportQuery}
           onChange={(e) => set({ sportQuery: e.target.value })}
           placeholder={t("cd_search_sport")}
-          className={cn(inputCls, "mb-3")}
+          className={cn(
+            inputCls,
+            // Volt hairline (from inputCls) plus a soft glow while focused.
+            "mb-3 focus:shadow-[0_0_32px_rgba(198,248,6,0.14)]",
+          )}
         />
-        <div className="flex max-h-64 flex-wrap gap-2 overflow-y-auto">
+        {/* Keyed by the query so each filter pass re-cascades the results. */}
+        <div
+          key={value.sportQuery.trim().toLowerCase()}
+          className="stagger flex max-h-64 flex-wrap gap-2 overflow-y-auto"
+        >
           {filteredSports.map((o: Option) => (
             <Chip key={o.key} active={value.sport === o.key} onClick={() => set({ sport: o.key })}>
               <span aria-hidden>{o.icon}</span>
