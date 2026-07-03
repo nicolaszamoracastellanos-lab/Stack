@@ -53,9 +53,11 @@ const config: Config = {
       // Type scale from the spec. Each entry carries its own line-height,
       // tracking and weight so a single utility class sets the whole style.
       fontSize: {
-        display: ["64px", { lineHeight: "1", letterSpacing: "-0.03em", fontWeight: "700" }],
-        // Hero stat — the ring percent, streak count. Between h1 and display.
-        stat: ["44px", { lineHeight: "1", letterSpacing: "-0.02em", fontWeight: "700" }],
+        // The screaming end of the scale — hero numerals (ring %, streak).
+        "display-xl": ["84px", { lineHeight: "0.95", letterSpacing: "-0.035em", fontWeight: "900" }],
+        display: ["64px", { lineHeight: "1", letterSpacing: "-0.03em", fontWeight: "800" }],
+        // Hero stat — secondary big numbers (stat tiles, recap).
+        stat: ["44px", { lineHeight: "1", letterSpacing: "-0.02em", fontWeight: "800" }],
         h1: ["32px", { lineHeight: "1.15", letterSpacing: "-0.02em", fontWeight: "700" }],
         h2: ["24px", { lineHeight: "1.25", letterSpacing: "-0.01em", fontWeight: "600" }],
         body: ["16px", { lineHeight: "1.6", fontWeight: "400" }],

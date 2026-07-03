@@ -70,7 +70,7 @@ export function Snapshot({
   const tierKey = (ctx.confirmedTier ?? ctx.provisionalTier) ?? null;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="stagger flex flex-col gap-6">
       {ctx.needsGoal && <GoalSetup userId={userId} suggested={suggestedGoal} />}
 
       {streak.state === "at-risk" && <AtRiskAlert />}
@@ -88,14 +88,15 @@ export function Snapshot({
           label={t("home_consistency")}
           sublabel={`${consistency.days}/${goalDenom}`}
         />
-        <div className="mt-6 w-full rounded-card border border-border bg-surface p-5">
+        {/* The streak card: number at display scale, everything else quiet. */}
+        <div className="depth mt-8 flex w-full items-center justify-between rounded-card border border-border p-5">
           <StreakBadge
             count={displayedStreak}
             label={t("streak_label")}
             state={streak.state}
-            size="md"
+            size="display"
           />
-          <Link href="/tiers" className="mt-3 inline-block">
+          <Link href="/tiers" className="shrink-0">
             <TierBadge tierKey={tierKey} provisional={!ctx.confirmedTier} size="sm" />
           </Link>
         </div>
@@ -111,7 +112,12 @@ export function Snapshot({
         </div>
       ) : (
         <Link href="/checkin" className="w-full">
-          <Button variant="primary" size="lg" fullWidth>
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            className="glow-volt-soft"
+          >
             {t("checkin_button")}
           </Button>
         </Link>

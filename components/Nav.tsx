@@ -121,13 +121,14 @@ export function Nav() {
     <nav
       className={cn(
         // A plain flex child of the app shell — NOT position:fixed (Fix #1), so
-        // it can't drift on iOS momentum scroll. Solid so content never bleeds
-        // through; safe-area pad for the iOS home indicator.
-        "shrink-0 bg-surface",
+        // it can't drift on iOS momentum scroll. Translucent glass over the
+        // content with a white hairline top edge; safe-area pad for the iOS
+        // home indicator.
+        "relative z-40 shrink-0 bg-surface/75 backdrop-blur-xl",
         // Mobile: bottom bar.
-        "border-t border-border px-3 pb-[env(safe-area-inset-bottom)]",
+        "border-t border-white/[0.06] px-3 pb-[env(safe-area-inset-bottom)]",
         // Desktop: left side rail.
-        "lg:w-20 lg:flex-col lg:border-r lg:border-t-0 lg:px-0 lg:py-6",
+        "lg:w-20 lg:flex-col lg:border-r lg:border-border lg:border-t-0 lg:px-0 lg:py-6",
         "flex items-center justify-between lg:justify-start lg:gap-8",
       )}
     >
@@ -145,13 +146,16 @@ export function Nav() {
           if (item.primary) {
             return (
               <li key={item.href}>
+                {/* The camera floats above the bar with the screen's one glow:
+                    the primary action reads as physically raised. */}
                 <Link
                   href={item.href}
                   aria-label={t(item.key)}
                   data-tour={item.tour}
                   className={cn(
-                    "flex h-14 w-14 items-center justify-center rounded-pill bg-volt text-bg",
-                    "transition-colors duration-150 hover:bg-volt-dim",
+                    "flex h-14 w-14 -translate-y-3 items-center justify-center rounded-pill bg-volt text-bg lg:translate-y-0",
+                    "glow-volt ring-4 ring-bg/80",
+                    "transition duration-150 hover:bg-volt-dim active:scale-95",
                   )}
                 >
                   {item.icon(active)}
@@ -165,14 +169,23 @@ export function Nav() {
                 href={item.href}
                 data-tour={item.tour}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 transition-colors duration-150",
-                  active ? "text-volt" : "text-text-dim hover:text-text",
+                  "relative flex flex-col items-center gap-1 py-2.5 transition-colors duration-150",
+                  active ? "text-text" : "text-text-dim hover:text-text",
                 )}
               >
                 {item.icon(active)}
                 <span className="text-micro leading-none lg:hidden">
                   {t(item.key)}
                 </span>
+                {/* Active tab: a small volt dot under the label, not a full
+                    recolor — the glow budget belongs to the camera. */}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute -bottom-0.5 h-1 w-1 rounded-pill bg-volt transition-opacity duration-150",
+                    active ? "opacity-100" : "opacity-0",
+                  )}
+                />
               </Link>
             </li>
           );

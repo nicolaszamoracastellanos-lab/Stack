@@ -1,15 +1,16 @@
 import { cn } from "@/lib/utils";
 
 type CardProps = React.HTMLAttributes<HTMLDivElement> & {
-  /** Use the slightly elevated surface for modals / active states. */
+  /** Use the higher elevation for modals / active states. */
   elevated?: boolean;
   /** Drop the default padding for media-edge layouts (e.g. feed photos). */
   flush?: boolean;
 };
 
 /**
- * Surface container with a hairline border and 12px radius. In this dark UI
- * borders define structure — we lean on them instead of shadows.
+ * Surface container with real depth: a vertical surface gradient, a 1px inner
+ * top hairline (light from above) and a soft shadow. Borders still define
+ * structure; the gradient and hairline make the card read as physical.
  */
 export function Card({
   elevated,
@@ -21,7 +22,7 @@ export function Card({
     <div
       className={cn(
         "rounded-card border border-border",
-        elevated ? "bg-surface-2" : "bg-surface",
+        elevated ? "depth-raised" : "depth",
         !flush && "p-4",
         className,
       )}

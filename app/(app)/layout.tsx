@@ -38,7 +38,10 @@ export default async function AppLayout({
       <TimezoneSync userId={userId} current={profile?.timezone ?? null} />
       <SessionPushSync />
       <Nav />
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+      {/* On phones the pane extends under the translucent nav (negative
+          bottom margin) so content genuinely scrolls behind the glass; the
+          inner bottom padding keeps the last item reachable above the bar. */}
+      <div className="-mb-[72px] min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-[88px] lg:mb-0 lg:pb-0">
         {children}
       </div>
     </div>

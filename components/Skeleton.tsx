@@ -8,7 +8,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={cn("animate-pulse rounded-card bg-surface-2", className)}
+      className={cn("shimmer rounded-card bg-surface-2", className)}
     />
   );
 }
@@ -19,7 +19,7 @@ export function SkeletonCard({ className }: { className?: string }) {
     <div
       aria-hidden
       className={cn(
-        "animate-pulse rounded-card border border-border bg-surface p-4",
+        "shimmer rounded-card border border-border bg-surface p-4",
         className,
       )}
     >
