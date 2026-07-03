@@ -85,6 +85,14 @@ export function CheckinFlow({
     order === "photo" ? ["photo", "details", "review"] : ["details", "photo", "review"];
   const step = sequence[stepIdx];
 
+  // Momentum: steps slide in from the direction of travel. Previous index is
+  // tracked in a ref so Back slides content in from the left instead.
+  const prevStepIdxRef = useRef(stepIdx);
+  const stepDir = stepIdx < prevStepIdxRef.current ? "back" : "forward";
+  useEffect(() => {
+    prevStepIdxRef.current = stepIdx;
+  }, [stepIdx]);
+
   const [details, setDetails] = useState<CheckinDetails>(() => {
     // Prefill from the last check-in. A stored value that isn't a known option
     // key is the user's free text — re-seed it through the "other" slot.
@@ -402,22 +410,26 @@ export function CheckinFlow({
             {t("back")}
           </Link>
         )}
-        <h1 className="text-h2">{t("checkin_title")}</h1>
+        <h1 className="text-h1 font-extrabold tracking-[-0.03em]">
+          {t("checkin_title")}
+        </h1>
         <span className="font-mono text-caption text-text-dim nums">
           {stepIdx + 1}/{sequence.length}
         </span>
       </header>
 
-      {/* Step rail */}
+      {/* Step rail — the fill sweeps in (scaleX, origin-left) as steps advance. */}
       <div className="mb-6 flex items-center gap-2">
         {sequence.map((s, i) => (
           <div key={s} className="flex flex-1 items-center gap-2">
-            <span
-              className={cn(
-                "h-1.5 flex-1 rounded-pill transition-colors",
-                i <= stepIdx ? "bg-volt" : "bg-surface-2",
-              )}
-            />
+            <span className="relative h-1.5 flex-1 overflow-hidden rounded-pill bg-surface-2">
+              <span
+                className={cn(
+                  "absolute inset-0 origin-left rounded-pill bg-volt transition-transform duration-300 ease-out",
+                  i <= stepIdx ? "scale-x-100" : "scale-x-0",
+                )}
+              />
+            </span>
           </div>
         ))}
       </div>
@@ -436,28 +448,32 @@ export function CheckinFlow({
         </div>
       )}
 
-      {/* Active step */}
-      {step !== "review" && (
-        <p className="mb-4 text-caption font-medium uppercase tracking-wide text-text-dim">
-          {stepName[step]}
-        </p>
-      )}
+      {/* Active step — keyed by step name so each phase slides in from the
+          direction of travel (momentum). */}
+      <div
+        key={step}
+        className={
+          stepDir === "back"
+            ? "animate-[step-in-back_250ms_ease-out]"
+            : "animate-[step-in_250ms_ease-out]"
+        }
+      >
+        {step !== "review" && <p className="eyebrow mb-4">{stepName[step]}</p>}
 
-      {step === "details" && (
-        <CheckinDetailsStep groups={groups} value={details} onChange={setDetails} />
-      )}
+        {step === "details" && (
+          <CheckinDetailsStep groups={groups} value={details} onChange={setDetails} />
+        )}
 
-      {step === "photo" && (
-        <CheckinPhotoStep
-          photoUrl={photo?.url ?? null}
-          onCapture={handlePhoto}
-          mirror={mirror}
-          onToggleMirror={toggleMirror}
-        />
-      )}
+        {step === "photo" && (
+          <CheckinPhotoStep
+            photoUrl={photo?.url ?? null}
+            onCapture={handlePhoto}
+            mirror={mirror}
+            onToggleMirror={toggleMirror}
+          />
+        )}
 
-      {step === "review" && photo && (
-        <>
+        {step === "review" && photo && (
           <CheckinCardStep
             data={cardData}
             template={template}
@@ -466,15 +482,19 @@ export function CheckinFlow({
             onToggles={setToggles}
             milestone={milestone}
           />
-          {/* Dedicated off-screen full-size node captured for export — kept out
-              of the scaled preview so transforms can't interfere. */}
-          <div
-            aria-hidden
-            style={{ position: "fixed", left: "-99999px", top: 0, pointerEvents: "none" }}
-          >
-            <StoryCard ref={cardRef} template={template} data={cardData} toggles={toggles} />
-          </div>
-        </>
+        )}
+      </div>
+
+      {/* Dedicated off-screen full-size node captured for export — kept out of
+          the scaled preview AND outside the animated step container, so no
+          ancestor transform can hijack its fixed positioning. */}
+      {step === "review" && photo && (
+        <div
+          aria-hidden
+          style={{ position: "fixed", left: "-99999px", top: 0, pointerEvents: "none" }}
+        >
+          <StoryCard ref={cardRef} template={template} data={cardData} toggles={toggles} />
+        </div>
       )}
 
       <FormError className="mt-5">{error}</FormError>
@@ -510,7 +530,18 @@ export function CheckinFlow({
             ) : (
               <p className="text-center text-caption text-text-dim">{t("card_hint")}</p>
             )}
-            <Button variant="primary" size="lg" fullWidth onClick={post} disabled={posting}>
+            {/* The streak moment: what posting earns you, springing into place. */}
+            <p className="nums animate-[streak-pop_500ms_ease-out_both] text-center text-h2 text-volt">
+              <span aria-hidden>🔥</span> {streakAfter}
+            </p>
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={post}
+              disabled={posting}
+              className="glow-volt"
+            >
               {posting ? t("checkin_uploading") : t("checkin_submit")}
             </Button>
           </div>

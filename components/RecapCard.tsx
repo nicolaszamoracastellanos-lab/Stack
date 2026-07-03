@@ -12,11 +12,28 @@ import type { GroupDetailData } from "@/lib/group-detail";
  * week" (7/7) highlight. // PHASE 3: per-user weekly commitments + a persisted
  * Sunday-generated recap with its own shareable image export.
  */
-function RecapStat({ value, label }: { value: string; label: string }) {
+function RecapStat({
+  value,
+  label,
+  hero = false,
+}: {
+  value: string;
+  label: string;
+  /** The week's ONE volt headline number. Everything else stays quiet. */
+  hero?: boolean;
+}) {
   return (
     <div className="rounded-card bg-bg/40 p-4">
-      <p className="font-mono text-h1 nums leading-none text-volt">{value}</p>
-      <p className="mt-1.5 text-caption text-text-muted">{label}</p>
+      <p
+        className={
+          hero
+            ? "font-mono text-stat nums leading-none text-volt"
+            : "font-mono text-stat nums leading-none text-text"
+        }
+      >
+        {value}
+      </p>
+      <p className="eyebrow mt-2">{label}</p>
     </div>
   );
 }
@@ -43,17 +60,28 @@ export function RecapCard({ data }: { data: GroupDetailData }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-card border border-volt/30 bg-gradient-to-br from-volt/10 to-surface p-5">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-h2 text-text">{t("recap_title")}</h2>
-        <span className="text-caption text-text-muted">{t("recap_subtitle")}</span>
+    // Editorial: deep dark full-bleed layout, oversized numerals, the
+    // consistency percentage as the week's single volt headline.
+    <section className="depth-raised relative overflow-hidden rounded-card border border-border p-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-pill bg-volt/[0.07] blur-[60px]"
+      />
+      <div className="relative flex items-baseline justify-between">
+        <h2 className="eyebrow">{t("recap_title")}</h2>
+        <span className="text-caption text-text-dim">{t("recap_subtitle")}</span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <RecapStat value={`${data.consistencyPct}%`} label={t("gd_consistency")} />
+      <p className="relative mt-4 font-mono text-display-xl nums leading-none text-volt">
+        {data.consistencyPct}
+        <span className="text-h1 text-text-muted">%</span>
+      </p>
+      <p className="eyebrow mt-2">{t("gd_consistency")}</p>
+
+      <div className="relative mt-6 grid grid-cols-3 gap-3">
         <RecapStat value={String(week.total)} label={t("recap_checkins")} />
         <RecapStat
-          value={`🔥 ${data.collectiveStreak}`}
+          value={`🔥${data.collectiveStreak}`}
           label={t("gd_collective_streak")}
         />
         <RecapStat

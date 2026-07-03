@@ -26,7 +26,8 @@ function initials(name: string): string {
 // Deterministic hue from the name so a person keeps the same avatar color.
 // Saturation/lightness are tuned once for the dark theme; the hue is the only
 // thing that varies, so colors stay cohesive rather than hardcoded per-user.
-function hueFromName(name: string): number {
+// Exported so surfaces can echo the avatar's color (e.g. a card glow).
+export function avatarHue(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = (hash << 5) - hash + name.charCodeAt(i);
@@ -53,16 +54,19 @@ export function Avatar({ name, src, size = "md", className }: AvatarProps) {
     );
   }
 
-  const hue = hueFromName(name || "?");
+  const hue = avatarHue(name || "?");
   return (
     <div
       aria-hidden
       className={cn(
-        "flex items-center justify-center rounded-pill font-semibold text-bg",
+        "flex items-center justify-center rounded-pill font-semibold text-bg ring-1 ring-white/10",
         sizes[size],
         className,
       )}
-      style={{ backgroundColor: `hsl(${hue} 55% 60%)` }}
+      style={{
+        // Lit from above: lighter top fading to the base tone.
+        backgroundImage: `linear-gradient(180deg, hsl(${hue} 58% 68%) 0%, hsl(${hue} 55% 58%) 100%)`,
+      }}
     >
       {initials(name)}
     </div>

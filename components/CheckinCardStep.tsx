@@ -51,20 +51,24 @@ export function CheckinCardStep({
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Live preview (scaled down from the true 1080x1920 node). */}
-      <div
-        className="overflow-hidden rounded-card ring-1 ring-border"
-        style={{ width: PREVIEW_W, height: (PREVIEW_W * 16) / 9 }}
-      >
+      {/* Live preview (scaled down from the true 1080x1920 node). Assembles
+          into place on arrival; a one-time volt bloom fades out behind it. */}
+      <div className="relative">
+        <div aria-hidden className="bloom-volt absolute -inset-12" />
         <div
-          style={{
-            transform: `scale(${PREVIEW_W / 1080})`,
-            transformOrigin: "top left",
-            width: 1080,
-            height: 1920,
-          }}
+          className="relative animate-[card-in_300ms_ease-out] overflow-hidden rounded-card ring-1 ring-border"
+          style={{ width: PREVIEW_W, height: (PREVIEW_W * 16) / 9 }}
         >
-          <StoryCard template={template} data={data} toggles={toggles} />
+          <div
+            style={{
+              transform: `scale(${PREVIEW_W / 1080})`,
+              transformOrigin: "top left",
+              width: 1080,
+              height: 1920,
+            }}
+          >
+            <StoryCard template={template} data={data} toggles={toggles} />
+          </div>
         </div>
       </div>
 

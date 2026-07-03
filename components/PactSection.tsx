@@ -110,7 +110,7 @@ function About({ group }: { group: Group }) {
       <p className="mb-2 text-caption font-medium uppercase tracking-wide text-text-dim">
         {t("pact_about_label")}
       </p>
-      <div className="rounded-card border border-border bg-surface px-5 py-1">
+      <div className="depth rounded-card border border-border px-5 py-1">
         {rows.map((r) => (
           <div
             key={r.label}
