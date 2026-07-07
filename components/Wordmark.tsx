@@ -43,7 +43,9 @@ export function Wordmark({
   return (
     <span
       className={cn(
-        "inline-flex items-baseline font-extrabold leading-none tracking-[-0.02em] text-text",
+        // v3: the live wordmark is Archivo Expanded Black, uppercase — chrome
+        // is loud. (Wordmark IMAGE assets stay Geist; only live text migrates.)
+        "type-display inline-flex items-baseline leading-none text-text",
         className,
       )}
       // FONT_SIZE first so a caller's style.fontSize (splash/hero) wins.

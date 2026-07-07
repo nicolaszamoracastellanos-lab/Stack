@@ -47,8 +47,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        // v3: Archivo everywhere. `mono` stays as an alias so existing numeral
+        // call sites keep working — real tabular behavior comes from `.nums`
+        // (font-variant-numeric), not a monospace face.
+        sans: ["var(--font-archivo)", "system-ui", "sans-serif"],
+        mono: ["var(--font-archivo)", "system-ui", "sans-serif"],
       },
       // Type scale from the spec. Each entry carries its own line-height,
       // tracking and weight so a single utility class sets the whole style.
@@ -67,9 +70,11 @@ const config: Config = {
         micro: ["11px", { lineHeight: "1.2", fontWeight: "500" }],
       },
       borderRadius: {
-        card: "12px",
-        input: "10px",
-        btn: "10px",
+        // v3 prototype values: cards 22, CTAs 18. One change re-skins every
+        // rounded surface in the app.
+        card: "22px",
+        input: "14px",
+        btn: "18px",
         pill: "9999px",
       },
       transitionDuration: {

@@ -15,30 +15,35 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-btn font-medium " +
+  "inline-flex items-center justify-center gap-2 rounded-btn " +
   "transition duration-150 select-none disabled:opacity-40 " +
-  "disabled:pointer-events-none active:scale-[0.98] " +
+  "disabled:pointer-events-none active:scale-[0.97] " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 " +
   "focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
 
+// v3 recipes, verbatim from the prototype: the volt CTA is uppercase 800 with
+// a permanent outer glow (it IS the screen's one glowing element); secondary
+// is the ghost recipe — transparent, strong hairline, uppercase 700.
 const variants: Record<Variant, string> = {
-  // Primary action — the soul color. Black text on volt for max contrast.
-  primary: "bg-volt text-bg hover:bg-volt-dim active:bg-volt-dim",
-  // Quiet, structural. Hairline border that strengthens on hover.
+  primary:
+    "bg-volt text-bg font-extrabold uppercase tracking-[0.01em] " +
+    "hover:bg-volt-dim active:bg-volt-dim",
   secondary:
-    "bg-transparent text-text border border-border-strong hover:bg-surface-2 active:bg-surface-2",
+    "bg-transparent text-text font-bold uppercase tracking-[0.02em] " +
+    "border border-border-strong hover:bg-surface-2 active:bg-surface-2",
   // Destructive, but neutral: red belongs to the streak alone. The raised
   // surface + strong border + copy carry the weight of "this costs you".
   danger:
-    "bg-surface-2 text-text border border-border-strong hover:border-text-dim active:bg-surface",
+    "bg-surface-2 text-text font-medium border border-border-strong hover:border-text-dim active:bg-surface",
   // Lowest emphasis — text only.
-  ghost: "bg-transparent text-text-muted hover:text-text hover:bg-surface-2 active:bg-surface-2",
+  ghost:
+    "bg-transparent text-text-muted font-medium hover:text-text hover:bg-surface-2 active:bg-surface-2",
 };
 
 const sizes: Record<Size, string> = {
   sm: "h-9 px-3 text-label",
   md: "h-11 px-4 text-label",
-  lg: "h-14 px-6 text-body",
+  lg: "h-14 px-6 text-[16px]",
 };
 
 /**
@@ -61,6 +66,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           base,
           variants[variant],
           sizes[size],
+          // The glow ships with the big volt CTA only — small primaries (chat
+          // send, inline actions) stay quiet so each screen keeps one glow.
+          variant === "primary" && size === "lg" && "glow-volt",
           fullWidth && "w-full",
           pill && "rounded-pill",
           className,
