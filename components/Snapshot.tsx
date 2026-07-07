@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/Button";
 import { ConsistencyRing } from "@/components/ConsistencyRing";
-import { StreakBadge } from "@/components/StreakBadge";
 import { TierBadge } from "@/components/TierBadge";
 import { AtRiskAlert } from "@/components/AtRiskAlert";
 import { GoalSetup } from "@/components/GoalSetup";
@@ -88,17 +87,26 @@ export function Snapshot({
           label={t("home_consistency")}
           sublabel={`${consistency.days}/${goalDenom}`}
         />
-        {/* The streak card: number at display scale, everything else quiet. */}
-        <div className="depth mt-8 flex w-full items-center justify-between rounded-card border border-border p-5">
-          <StreakBadge
-            count={displayedStreak}
-            label={t("streak_label")}
-            state={streak.state}
-            size="display"
-          />
-          <Link href="/tiers" className="shrink-0">
-            <TierBadge tierKey={tierKey} provisional={!ctx.confirmedTier} size="sm" />
-          </Link>
+        {/* Streak card, prototype §Home: 64px extruded numeral on the left,
+            then a quiet column — DAY STREAK + the tier pill. */}
+        <div className="depth mt-[18px] flex w-full items-center gap-[18px] rounded-card border border-border px-[22px] py-5">
+          <span
+            className={
+              "type-numeral text-[64px] leading-[0.95] " +
+              (streak.state === "broken" ? "text-danger" : "streak-extrude")
+            }
+            style={{ fontStretch: "120%" }}
+          >
+            {displayedStreak}
+          </span>
+          <div className="flex min-w-0 flex-col items-start gap-2">
+            <span className="text-[15px] font-extrabold uppercase tracking-[0.06em] text-text">
+              {t("streak_label")}
+            </span>
+            <Link href="/tiers" className="shrink-0">
+              <TierBadge tierKey={tierKey} provisional={!ctx.confirmedTier} size="sm" />
+            </Link>
+          </div>
         </div>
       </section>
 

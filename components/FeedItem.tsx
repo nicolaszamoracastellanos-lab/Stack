@@ -129,7 +129,7 @@ export function FeedItem({
           <Avatar name={item.name} src={item.avatarUrl} size="md" />
           <span className="flex min-w-0 flex-col gap-1">
             <span className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-body font-medium text-text">{item.name}</span>
+              <span className="truncate text-[14px] font-extrabold text-text">{item.name}</span>
               {/* Poster tier badge (STACK_FIXES2 B). */}
               {item.tier && <TierBadge tierKey={item.tier} size="sm" />}
             </span>
@@ -180,11 +180,14 @@ export function FeedItem({
         </div>
       )}
 
-      {/* Photo with an inner top hairline so it reads set-into the card. */}
-      <div className="relative aspect-[9/16] w-full bg-surface-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-        {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
-        <img src={item.photoUrl} alt="" className="h-full w-full object-cover" />
-        <SharePhotoButton src={item.photoUrl} className="absolute bottom-3 right-3" />
+      {/* Photo inset into the card (prototype feed-photo: 14px radius, white
+          hairline). Full 9:16 kept — the posted story card IS the content. */}
+      <div className="px-4">
+        <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[14px] border border-white/5 bg-surface-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- signed storage urls */}
+          <img src={item.photoUrl} alt="" className="h-full w-full object-cover" />
+          <SharePhotoButton src={item.photoUrl} className="absolute bottom-3 right-3" />
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 p-4">

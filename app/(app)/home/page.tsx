@@ -51,10 +51,9 @@ export default async function HomePage() {
   const ctx = await loadStreakContext(supabase, userId, profile, personalDates, restDays, now);
 
   const TopBar = (
-    <div className="mb-8 flex items-center justify-between">
-      <BrandBar />
+    <BrandBar className="mb-8">
       <NotificationBell userId={userId} initialUnread={unread ?? 0} />
-    </div>
+    </BrandBar>
   );
 
   // Solo: snapshot + invite path (no fabricated feed content).

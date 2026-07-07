@@ -153,9 +153,11 @@ export function Nav() {
                   aria-label={t(item.key)}
                   data-tour={item.tour}
                   className={cn(
-                    "flex h-14 w-14 -translate-y-3 items-center justify-center rounded-pill bg-volt text-bg lg:translate-y-0",
-                    "glow-volt ring-4 ring-bg/80",
-                    "transition duration-150 hover:bg-volt-dim active:scale-95",
+                    // Prototype nav-cam: 62px raised volt disc, 6px bg ring +
+                    // 36px volt halo, press scale.
+                    "flex h-[62px] w-[62px] -translate-y-4 items-center justify-center rounded-pill bg-volt text-bg lg:translate-y-0",
+                    "shadow-[0_0_0_6px_#0A0A0B,0_0_36px_rgba(198,248,6,0.5)]",
+                    "transition duration-150 hover:bg-volt-dim active:scale-[0.94]",
                   )}
                 >
                   {item.icon(active)}
@@ -174,7 +176,7 @@ export function Nav() {
                 )}
               >
                 {item.icon(active)}
-                <span className="text-micro leading-none lg:hidden">
+                <span className="text-[10px] font-bold uppercase leading-none tracking-[0.08em] lg:hidden">
                   {t(item.key)}
                 </span>
                 {/* Active tab: a small volt dot under the label, not a full
