@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { getUserAndProfile } from "@/lib/auth";
 import { getActiveGroup } from "@/lib/groups";
 import { createClient } from "@/lib/supabase/server";
-import { computeQuotaStreak } from "@/lib/streak-quota";
+import { computeQuotaStreak, workoutDaySet } from "@/lib/streak-quota";
+import { dayKey, weekDayKeys } from "@/lib/week";
 import { CheckinFlow } from "@/components/CheckinFlow";
 
 export default async function CheckinPage() {
@@ -41,6 +42,22 @@ export default async function CheckinPage() {
   // If today isn't logged yet, this post extends the streak by one.
   const streakAfter = current.workedToday ? current.count : current.count + 1;
 
+  // Celebration stats (v3 §3.3), all "as of after this post": days hit this
+  // week / weekly goal, the consistency %, and total workout days ever.
+  const tz = profile?.timezone ?? null;
+  const daySet = workoutDaySet(personalDates, tz);
+  const todayKey = dayKey(now, tz);
+  const weekDaysBefore = weekDayKeys(todayKey).filter((k) => daySet.has(k)).length;
+  const weekDaysAfter = current.workedToday ? weekDaysBefore : weekDaysBefore + 1;
+  const goalDenom = profile?.weekly_goal && profile.weekly_goal > 0 ? profile.weekly_goal : 7;
+  const totalDaysAfter = daySet.size + (current.workedToday ? 0 : 1);
+  const celebration = {
+    streakBefore: current.workedToday ? streakAfter : current.count,
+    weekLabel: `${Math.min(weekDaysAfter, goalDenom)}/${goalDenom}`,
+    consistencyPct: Math.min(100, Math.round((weekDaysAfter / goalDenom) * 100)),
+    totalDays: totalDaysAfter,
+  };
+
   // Default destination = the group(s) the last post went to, else "Just me".
   // The last post's multi-group rows are already in lastRes (same post_id) —
   // no second query needed.
@@ -75,6 +92,7 @@ export default async function CheckinPage() {
       initialDestination={initialDestination}
       initialOrder={order}
       streakAfter={streakAfter}
+      celebration={celebration}
       initialTemplate={initialTemplate}
       initialSelfieMirror={profile?.selfie_mirror_default ?? false}
       lastDetails={

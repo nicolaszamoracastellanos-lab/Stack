@@ -241,6 +241,35 @@
     }
   }
 
+  /* v3 celebration (§3.3): the STACKED. slam and the summary-card rise,
+     springs copied from the prototype. */
+  .cel-slam {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: slam-in 450ms cubic-bezier(0.2, 1.4, 0.3, 1) forwards;
+  }
+  @keyframes slam-in {
+    60% {
+      opacity: 1;
+      transform: scale(1.06);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  .cel-card-up {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+    animation: card-up 500ms cubic-bezier(0.2, 1.1, 0.3, 1) 350ms forwards;
+  }
+  @keyframes card-up {
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   /* v3 landing: the 3D mark's volt period pulses once after the tagline
      sequence (~1.5s in). box-shadow only — never a filter inside preserve-3d. */
   .sq-pulse-once {
@@ -357,6 +386,8 @@
   .word-rise,
   .word-slam,
   .in-rise,
+  .cel-slam,
+  .cel-card-up,
   .cell-rise {
     opacity: 1;
     transform: none;
