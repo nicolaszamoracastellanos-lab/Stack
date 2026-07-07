@@ -107,7 +107,11 @@ export function CheckinCelebration({
           "radial-gradient(100% 55% at 50% 0%, rgba(198,248,6,.09), transparent 60%)",
       }}
     >
-      <div ref={particlesRef} aria-hidden className="absolute inset-0 z-[5] overflow-hidden" />
+      <div
+        ref={particlesRef}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[5] overflow-hidden"
+      />
 
       <h1 className="cel-slam type-display text-[52px] leading-none tracking-[-0.03em]">
         {t("celebrate_title")}
