@@ -23,7 +23,9 @@ export function AuthShell({
   const { t } = useLanguage();
 
   return (
-    <main className="relative flex min-h-dvh flex-col">
+    // overflow-hidden: the ambience blob is wider than a phone; without this
+    // it added 14px of horizontal scroll on every auth screen.
+    <main className="relative flex min-h-dvh flex-col overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 left-1/2 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-volt/[0.07] blur-[120px]"
@@ -39,8 +41,8 @@ export function AuthShell({
       <div className="flex flex-1 items-center justify-center px-6 py-10">
         <div className="stagger w-full max-w-sm">
           <h1
-            className="tracking-[-0.03em] text-text"
-            style={{ fontSize: "clamp(2.25rem, 9vw, 3rem)", fontWeight: 900, lineHeight: 1.05 }}
+            className="type-display text-text"
+            style={{ fontSize: "clamp(2rem, 8vw, 2.5rem)", lineHeight: 1.05 }}
           >
             {title}
           </h1>

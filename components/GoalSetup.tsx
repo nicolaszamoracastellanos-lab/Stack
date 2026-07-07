@@ -66,7 +66,7 @@ export function GoalSetup({
           <p className="mt-1 text-label text-text-muted">{t("goal_intro_body")}</p>
         </div>
 
-        <h1 className="mt-8 text-h1">{t("goal_title")}</h1>
+        <h1 className="type-display mt-8 text-[26px] leading-tight">{t("goal_title")}</h1>
         <p className="mt-2 text-body text-text-muted">{t("goal_sub")}</p>
 
         <div className="mt-6 grid grid-cols-7 gap-2">

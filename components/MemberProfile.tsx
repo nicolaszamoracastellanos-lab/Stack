@@ -37,7 +37,9 @@ function Stat({
         accent ? "glow-volt-soft" : ""
       }`}
     >
-      <span className={`text-stat nums ${accent ? "text-volt" : "text-text"}`}>
+      <span
+        className={`type-numeral text-[44px] leading-none ${accent ? "text-volt" : "text-text"}`}
+      >
         {displayed}
       </span>
       <span className="eyebrow mt-2">{label}</span>
@@ -160,7 +162,10 @@ export function MemberProfile({ data }: { data: MemberProfileData }) {
             />
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-h1">{name}</p>
+            {/* Display weight only — names are user content, never uppercased. */}
+            <p className="truncate text-[24px] font-black leading-tight" style={{ fontStretch: "110%" }}>
+              {name}
+            </p>
             <p className="truncate text-label text-text-dim">@{profile.username}</p>
           </div>
           {isOwner && (

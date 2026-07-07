@@ -62,7 +62,7 @@ export function PenaltyPopup({ groupId }: { groupId: string }) {
         <p className="text-caption font-medium uppercase tracking-wide text-volt">
           {t("penalty_intro_eyebrow")}
         </p>
-        <h2 className="mt-1 text-balance text-h1">{t("penalty_intro_title")}</h2>
+        <h2 className="type-display mt-1 text-balance text-[26px] leading-tight">{t("penalty_intro_title")}</h2>
         <p className="mt-2 text-balance text-body text-text-muted">
           {t("penalty_intro_lead")}
         </p>

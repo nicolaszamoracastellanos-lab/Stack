@@ -47,7 +47,10 @@ function GroupRow({ item, active }: { item: DashboardGroup; active: boolean }) {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-body font-medium text-text">{g.name}</p>
+          {/* Display WEIGHT only — user content never gets uppercased. */}
+          <p className="truncate text-body font-black text-text" style={{ fontStretch: "110%" }}>
+            {g.name}
+          </p>
           {active && (
             <span className="shrink-0 rounded-pill bg-volt/15 px-2 py-0.5 text-caption font-medium text-volt">
               {t("groups_active_badge")}
@@ -89,7 +92,7 @@ export function GroupsDashboard({
 
       <header className="mb-6">
         <p className="eyebrow mb-1.5">{t("nav_groups")}</p>
-        <h1 className="text-h1">{t("groups_title")}</h1>
+        <h1 className="type-display text-[28px] leading-none">{t("groups_title")}</h1>
       </header>
 
       {groups.length === 0 ? (

@@ -26,7 +26,7 @@ export function ErrorScreen({
     <main className="mx-auto flex min-h-[80dvh] w-full max-w-xl flex-col items-center justify-center gap-6 px-6 text-center">
       <Wordmark />
       <div className="flex flex-col gap-2">
-        <h1 className="text-h1">{title}</h1>
+        <h1 className="type-display text-[26px] leading-tight">{title}</h1>
         <p className="text-body text-text-muted">{body}</p>
       </div>
       <div className="flex gap-3">

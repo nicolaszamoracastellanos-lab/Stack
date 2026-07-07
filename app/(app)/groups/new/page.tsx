@@ -109,7 +109,7 @@ export default function NewGroupPage() {
     return (
       <main className="mx-auto w-full max-w-xl px-6 py-10">
         <PenaltyPopup groupId={created.id} />
-        <h1 className="text-h1">{t("invite_title")}</h1>
+        <h1 className="type-display text-[26px] leading-tight">{t("invite_title")}</h1>
         <p className="mt-2 text-body text-text-muted">{t("invite_subtitle")}</p>
 
         <Card elevated className="mt-8">
@@ -126,7 +126,7 @@ export default function NewGroupPage() {
           <p className="mt-5 text-label text-text-muted">
             {t("invite_code_label")}
           </p>
-          <p className="mt-1 font-mono text-display tracking-[0.2em] text-volt">
+          <p className="type-numeral mt-1 text-display tracking-[0.2em] text-volt">
             {created.code}
           </p>
         </Card>
@@ -150,7 +150,7 @@ export default function NewGroupPage() {
   // ---- Create form ----
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-10">
-      <h1 className="text-h1">{t("creategroup_title")}</h1>
+      <h1 className="type-display text-[26px] leading-tight">{t("creategroup_title")}</h1>
       <p className="mt-2 text-body text-text-muted">
         {t("creategroup_subtitle")}
       </p>

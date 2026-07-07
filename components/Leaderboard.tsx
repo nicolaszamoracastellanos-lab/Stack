@@ -71,12 +71,13 @@ export function Leaderboard({
             {/* Main axis: rank, identity, ring + streak. Actions live on their
                 own line below so a 390px screen never squeezes the name out. */}
             <div className="flex items-center gap-3">
+              {/* Oversized rank numeral (v3 §4) — #1 gets full presence. */}
               <span
                 className={
-                  "w-7 shrink-0 text-center font-mono nums leading-none " +
+                  "w-9 shrink-0 text-center type-numeral leading-none " +
                   (i === 0 && m.showStats
-                    ? "text-h1 font-extrabold text-text"
-                    : "text-h2 font-bold text-text-dim")
+                    ? "text-[32px] text-text"
+                    : "text-[24px] text-text-dim")
                 }
               >
                 {m.showStats ? i + 1 : "·"}
@@ -125,7 +126,7 @@ export function Leaderboard({
                 {m.showStats ? (
                   <>
                     <MiniRing value={m.daysThisWeek / 7} />
-                    <span className="min-w-[1.75rem] text-right font-mono text-h2 nums leading-none text-volt">
+                    <span className="min-w-[1.75rem] text-right type-numeral text-h2 leading-none text-volt">
                       {m.streak}
                     </span>
                   </>

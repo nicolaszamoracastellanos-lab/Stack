@@ -456,7 +456,7 @@ export function CheckinFlow({
             {t("back")}
           </Link>
         )}
-        <h1 className="text-h1 font-extrabold tracking-[-0.03em]">
+        <h1 className="type-display text-[24px] leading-none">
           {t("checkin_title")}
         </h1>
         <span className="font-mono text-caption text-text-dim nums">

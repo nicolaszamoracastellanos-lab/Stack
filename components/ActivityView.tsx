@@ -41,7 +41,7 @@ export function ActivityView({ items }: { items: ActivityItem[] }) {
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-8">
       <BrandBar />
-      <h1 className="text-h1">{t("activity_title")}</h1>
+      <h1 className="type-display text-[28px] leading-none">{t("activity_title")}</h1>
 
       <div className="mt-6">
         <SegmentedControl options={options} value={window} onChange={setWindow} />

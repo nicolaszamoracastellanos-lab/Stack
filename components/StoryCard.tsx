@@ -179,7 +179,7 @@ export const StoryCard = forwardRef<
               </div>
             )}
             {toggles.sportEnv && (
-              <div style={{ fontSize: 176, fontWeight: 900, lineHeight: 0.95, letterSpacing: "-0.035em", textShadow: SHADOW }}>
+              <div style={{ fontSize: 176, fontWeight: 900, fontStretch: "125%", lineHeight: 0.95, letterSpacing: "-0.035em", textShadow: SHADOW }}>
                 {data.sportLabel}
               </div>
             )}
@@ -204,7 +204,7 @@ export const StoryCard = forwardRef<
           <div style={{ position: "absolute", left: 64, right: 64, bottom: 170, display: "flex", flexDirection: "column", gap: 26 }}>
             {showStreak && (
               <div style={{ display: "flex", alignItems: "baseline", gap: 18 }}>
-                <span style={{ fontSize: 210, fontWeight: 900, color: VOLT, lineHeight: 0.9, textShadow: SHADOW }}>
+                <span style={{ fontSize: 210, fontWeight: 900, fontStretch: "118%", fontVariantNumeric: "tabular-nums", color: VOLT, lineHeight: 0.9, textShadow: SHADOW }}>
                   {data.streak}
                 </span>
                 <span style={{ fontSize: 40, fontWeight: 600, color: "rgba(255,255,255,0.85)", textShadow: SHADOW }}>
@@ -259,7 +259,7 @@ export const StoryCard = forwardRef<
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: 380, fontWeight: 900, color: VOLT, lineHeight: 0.85, textShadow: SHADOW }}>
+            <div style={{ fontSize: 380, fontWeight: 900, fontStretch: "118%", fontVariantNumeric: "tabular-nums", color: VOLT, lineHeight: 0.85, textShadow: SHADOW }}>
               {data.streak}
             </div>
             <div style={{ fontSize: 64, fontWeight: 700, marginTop: 24, textShadow: SHADOW }}>
