@@ -46,7 +46,9 @@ export function WaitlistSignup() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="self-start text-volt underline-offset-4 hover:underline"
+        // Quiet by design: the landing's volt budget belongs to the CTA and
+        // the tagline accent. This is footer chrome.
+        className="text-caption font-medium text-text-dim underline-offset-4 hover:text-text-muted hover:underline"
       >
         {t("waitlist_link")}
       </button>

@@ -3,96 +3,102 @@
 import Link from "next/link";
 import { Button } from "@/components/Button";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { Wordmark } from "@/components/Wordmark";
+import { Mark3D } from "@/components/Mark3D";
 import { WaitlistSignup } from "@/components/WaitlistSignup";
 import { useLanguage } from "@/lib/language-context";
 
+/**
+ * Landing, ported from stack_v3_prototype.html §3.1. No wordmark in the top
+ * corner — the 3D mark is the only logo. Tagline slams in word by word at
+ * 130ms intervals; the second sentence carries the volt accent with a soft
+ * text glow. CTAs and footer exactly as prototyped.
+ */
 export default function LandingPage() {
   const { t, lang } = useLanguage();
-  const taglineWords = t("landing_tagline").split(" ");
+
+  // "Show up. Every day." — first sentence white, second sentence volt.
+  // Splitting on sentence boundaries keeps the accent rule working in Spanish
+  // ("Preséntate. Todos los días.") without hardcoding word counts.
+  const tagline = t("landing_tagline");
+  const firstLen = tagline.indexOf(".") + 1;
+  const words = tagline.split(" ").map((w, i, arr) => ({
+    w,
+    accent: arr.slice(0, i + 1).join(" ").length > firstLen,
+  }));
 
   return (
-    <main className="relative flex min-h-dvh flex-col overflow-hidden">
-      {/* Off-center radial volt ambience behind the hero. Energy, not decor. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-40 -top-40 h-[28rem] w-[28rem] rounded-pill bg-volt/10 blur-[120px]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-[-15%] top-[30%] h-[24rem] w-[24rem] rounded-pill bg-volt/[0.06] blur-[100px]"
-      />
-
-      <header className="flex items-center justify-between px-6 py-6 sm:px-10">
-        <Wordmark size="md" />
+    <main
+      className="relative flex min-h-dvh flex-col overflow-hidden px-[26px] pb-10 pt-16"
+      style={{
+        background:
+          "radial-gradient(120% 60% at 70% 8%, rgba(198,248,6,.07), transparent 60%), #0A0A0B",
+      }}
+    >
+      <div className="absolute right-5 top-5 z-10">
         <LanguageToggle />
-      </header>
-
-      <div className="flex flex-1 items-center px-6 sm:px-10">
-        <div className="mx-auto w-full max-w-2xl py-16">
-          <h1>
-            <Wordmark
-              size="lg"
-              pulsePeriod
-              style={{ fontSize: "clamp(3rem, 12vw, 6rem)" }}
-            />
-          </h1>
-
-          {/* The tagline as a moment: enormous, weight 900, entering word by
-              word. Keyed by language so the sequence replays on toggle. */}
-          <p
-            key={lang}
-            className="mt-8 text-balance font-sans leading-[1.02] tracking-[-0.03em] text-text"
-            style={{ fontSize: "clamp(3rem, 10vw, 4.25rem)", fontWeight: 900 }}
-          >
-            {taglineWords.map((word, i) => (
-              <span
-                key={`${word}-${i}`}
-                className="word-rise mr-[0.28em] last:mr-0"
-                style={{ animationDelay: `${i * 120}ms` }}
-              >
-                {word}
-              </span>
-            ))}
-          </p>
-
-          <div
-            className="word-rise mt-8"
-            style={{ animationDelay: `${taglineWords.length * 120 + 100}ms`, display: "block" }}
-          >
-            <p className="max-w-xl text-balance text-body text-text-muted">
-              {t("landing_supporting")}
-            </p>
-            <p className="mt-3 max-w-xl text-balance text-body text-text-muted">
-              {t("landing_supporting2")}
-            </p>
-
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link href="/signup" className="sm:w-auto">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  className="glow-volt sm:w-56"
-                >
-                  {t("landing_cta_signup")}
-                </Button>
-              </Link>
-              <Link href="/login" className="sm:w-auto">
-                <Button variant="secondary" size="lg" fullWidth className="sm:w-44">
-                  {t("landing_cta_login")}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <footer className="flex flex-col gap-3 px-6 py-6 text-caption text-text-dim sm:px-10">
-        <span className="text-volt">{t("landing_appstore")}</span>
-        <WaitlistSignup />
-        <span>{t("landing_credit")}</span>
-      </footer>
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+        {/* 3D hero — the entrance fade lives HERE (the wrapper), never on the
+            preserve-3d element itself (filters/opacity flatten the 3D). */}
+        <div className="in-rise" style={{ animationDelay: ".15s" }}>
+          <Mark3D />
+        </div>
+
+        {/* Tagline: 32px single-line display, word-staggered. Keyed by lang so
+            the sequence replays on toggle. */}
+        <h1
+          key={lang}
+          className="type-display mt-1.5 text-[32px] leading-[1.05]"
+          style={{ letterSpacing: "-0.02em" }}
+        >
+          {words.map(({ w, accent }, i) => (
+            <span
+              key={`${w}-${i}`}
+              className="word-slam mr-[0.26em] inline-block last:mr-0"
+              style={{
+                animationDelay: `${0.25 + i * 0.13}s`,
+                ...(accent
+                  ? { color: "#C6F806", textShadow: "0 0 40px rgba(198,248,6,.35)" }
+                  : {}),
+              }}
+            >
+              {w}
+            </span>
+          ))}
+        </h1>
+
+        <p
+          className="in-rise mt-[18px] max-w-[32ch] text-[15px] font-medium leading-[1.55] text-text-muted"
+          style={{ animationDelay: ".9s" }}
+        >
+          {t("landing_supporting")}
+        </p>
+
+        <div
+          className="in-rise mt-auto flex flex-col gap-3 pt-7"
+          style={{ animationDelay: "1.05s" }}
+        >
+          <Link href="/signup" className="w-full">
+            <Button variant="primary" size="lg" fullWidth>
+              {t("landing_cta_signup")}
+            </Button>
+          </Link>
+          <Link href="/login" className="w-full">
+            <Button variant="secondary" size="lg" fullWidth>
+              {t("landing_cta_login")}
+            </Button>
+          </Link>
+        </div>
+
+        <footer
+          className="in-rise mt-[22px] flex flex-col items-center gap-3 text-center"
+          style={{ animationDelay: "1.2s" }}
+        >
+          <WaitlistSignup />
+          <span className="eyebrow">{t("landing_credit")}</span>
+        </footer>
+      </div>
     </main>
   );
 }

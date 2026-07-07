@@ -221,6 +221,39 @@
     animation: rise-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
+  /* v3 landing: single-element entrance (the prototype's `.in`). */
+  .in-rise {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: rise-in 380ms ease-out forwards;
+  }
+
+  /* v3 landing: tagline word slam (the prototype's `wordIn`). */
+  .word-slam {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: word-in 500ms cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  }
+  @keyframes word-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* v3 landing: the 3D mark's volt period pulses once after the tagline
+     sequence (~1.5s in). box-shadow only — never a filter inside preserve-3d. */
+  .sq-pulse-once {
+    animation: sq-pulse 700ms ease-in-out 1.5s 1;
+  }
+  @keyframes sq-pulse {
+    50% {
+      box-shadow:
+        0 0 26px rgba(198, 248, 6, 0.65),
+        0 0 60px rgba(198, 248, 6, 0.9);
+    }
+  }
+
   /* One subtle pulse for the wordmark's volt period after the words land. */
   @keyframes period-pulse {
     0%, 100% { transform: scale(1); filter: none; }
@@ -322,6 +355,8 @@
   }
   .stagger > *,
   .word-rise,
+  .word-slam,
+  .in-rise,
   .cell-rise {
     opacity: 1;
     transform: none;

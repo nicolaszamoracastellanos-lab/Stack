@@ -112,7 +112,7 @@ export const StoryCard = forwardRef<
         height: 1920,
         overflow: "hidden",
         background: "#0A0A0B",
-        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+        fontFamily: "var(--font-archivo), system-ui, sans-serif",
         color: "#fff",
       }}
     >
