@@ -48,29 +48,34 @@ export function StreakBadge({
   const color = colorByState[state];
   const isDisplay = size === "display";
 
-  return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <Flame
-        className={cn(color, isDisplay ? "h-12 w-12" : "h-5 w-5")}
-      />
-      <div className="flex flex-col leading-none">
+  if (isDisplay) {
+    // v3 streak card numeral: 64px Archivo expanded black, volt with the
+    // layered extrusion stamp (danger flips to flat red — the extrusion ramp
+    // is volt-only). No flame at this scale; the number IS the icon.
+    return (
+      <div className={cn("flex items-center gap-[18px]", className)}>
         <span
           className={cn(
-            "font-mono nums tabular-nums",
-            color,
-            isDisplay ? "text-display" : "text-h2",
+            "type-numeral text-[64px] leading-[0.95] tracking-[-0.03em]",
+            state === "broken" ? "text-danger" : "streak-extrude",
           )}
+          style={{ fontStretch: "120%" }}
         >
           {count}
         </span>
-        <span
-          className={cn(
-            "text-text-muted",
-            isDisplay ? "text-label mt-1" : "text-caption",
-          )}
-        >
+        <span className="text-[15px] font-extrabold uppercase tracking-[0.06em] text-text">
           {label}
         </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("flex items-center gap-3", className)}>
+      <Flame className={cn(color, "h-5 w-5")} />
+      <div className="flex flex-col leading-none">
+        <span className={cn("nums type-numeral text-h2", color)}>{count}</span>
+        <span className="text-caption text-text-muted">{label}</span>
       </div>
     </div>
   );

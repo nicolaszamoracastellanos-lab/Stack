@@ -176,7 +176,7 @@ export function GroupDetail({
           </svg>
         </IconButton>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-h1">{data.group.name}</h1>
+          <h1 className="truncate text-h1 font-black" style={{ fontStretch: "110%" }}>{data.group.name}</h1>
           {data.group.goal && (
             <p className="truncate text-label text-text-muted">{data.group.goal}</p>
           )}
@@ -259,7 +259,7 @@ export function GroupDetail({
         <div className="mt-3 flex items-center gap-4 rounded-card border border-volt/30 bg-volt/5 p-5">
           <span aria-hidden className="text-3xl">🔥</span>
           <div>
-            <p className="font-mono text-display nums leading-none text-volt">
+            <p className="type-numeral text-display leading-none text-volt">
               {data.collectiveStreak}
             </p>
             <p className="mt-1 text-label text-text-muted">
@@ -274,10 +274,10 @@ export function GroupDetail({
 
         <div className="mt-3 grid grid-cols-2 gap-3">
           <StatCard label={t("gd_total_checkins")}>
-            <span className="font-mono text-h1 nums text-text">{win.total}</span>
+            <span className="type-numeral text-h1 text-text">{win.total}</span>
           </StatCard>
           <StatCard label={t("gd_consistency")}>
-            <span className="font-mono text-h1 nums text-text">
+            <span className="type-numeral text-h1 text-text">
               {data.consistencyPct}%
             </span>
           </StatCard>

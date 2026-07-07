@@ -227,7 +227,7 @@ export function OnboardingFlow({
             {t("ob_step", { n: step + 1, total: TOTAL })}
           </p>
 
-          <h1 className="mt-6 text-h1">{t(META[key].title)}</h1>
+          <h1 className="type-display mt-6 text-[26px] leading-tight">{t(META[key].title)}</h1>
           <p className="mt-2 text-body text-text-muted">{t(META[key].sub)}</p>
 
           {/* Step input */}

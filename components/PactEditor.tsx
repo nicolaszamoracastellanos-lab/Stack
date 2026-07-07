@@ -209,7 +209,7 @@ export function PactEditor({
             <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </IconButton>
-        <h1 className="text-h1">{isEdit ? t("pact_edit_title") : t("pact_setup_title")}</h1>
+        <h1 className="type-display text-[26px] leading-tight">{isEdit ? t("pact_edit_title") : t("pact_setup_title")}</h1>
       </header>
 
       <div className="flex flex-col gap-9">

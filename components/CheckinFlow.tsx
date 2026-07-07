@@ -12,6 +12,7 @@ import {
 } from "@/components/CheckinDetailsStep";
 import { CheckinPhotoStep } from "@/components/CheckinPhotoStep";
 import { CheckinCardStep } from "@/components/CheckinCardStep";
+import { CheckinCelebration } from "@/components/CheckinCelebration";
 import { StoryCard, type StoryCardData } from "@/components/StoryCard";
 import { useLanguage } from "@/lib/language-context";
 import { createClient } from "@/lib/supabase/client";
@@ -52,6 +53,7 @@ export function CheckinFlow({
   initialTemplate,
   initialSelfieMirror,
   lastDetails,
+  celebration,
 }: {
   userId: string;
   groups: Group[];
@@ -67,6 +69,13 @@ export function CheckinFlow({
    * flow is confirm-taps, not re-entry. Stored free-text maps back to the
    * "other" option. */
   lastDetails?: { sport: string; environment: string; goal: string } | null;
+  /** Stats for the celebration screen (v3 §3.3), precomputed server-side. */
+  celebration: {
+    streakBefore: number;
+    weekLabel: string;
+    consistencyPct: number;
+    totalDays: number;
+  };
 }) {
   const { t, lang } = useLanguage();
   const router = useRouter();
@@ -171,6 +180,8 @@ export function CheckinFlow({
   }
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  // v3 §3.3: after a successful post the flow ends on the celebration screen.
+  const [celebrating, setCelebrating] = useState(false);
   // Double-submit guard — state alone lags a render behind fast double-taps.
   const postingRef = useRef(false);
   const [cardBusy, setCardBusy] = useState(false);
@@ -384,8 +395,9 @@ export function CheckinFlow({
         emitPush({ event: "checkin", groupIds: targetIds, postId });
         setActiveGroup(targetIds[0]);
       }
-      router.push("/home");
-      router.refresh();
+      // The celebration is the final step (v3 §3.3) — Done navigates home.
+      setPosting(false);
+      setCelebrating(true);
     } finally {
       postingRef.current = false;
     }
@@ -396,6 +408,40 @@ export function CheckinFlow({
     photo: t("cd_step_photo"),
     review: t("cd_step_review"),
   };
+
+  if (celebrating) {
+    const postedNames = details.justMe
+      ? []
+      : groups.filter((g) => details.groups.has(g.id)).map((g) => g.name);
+    return (
+      <main className="mx-auto min-h-full w-full max-w-xl">
+        <CheckinCelebration
+          streakBefore={celebration.streakBefore}
+          streakAfter={streakAfter}
+          groupNames={postedNames}
+          weekLabel={celebration.weekLabel}
+          consistencyPct={celebration.consistencyPct}
+          totalDays={celebration.totalDays}
+          onShare={() => exportCard("share")}
+          shareBusy={cardBusy}
+          onDone={() => {
+            router.push("/home");
+            router.refresh();
+          }}
+        />
+        {/* Off-screen full-size story card stays mounted so Share works from
+            the celebration too. */}
+        {photo && (
+          <div
+            aria-hidden
+            style={{ position: "fixed", left: "-99999px", top: 0, pointerEvents: "none" }}
+          >
+            <StoryCard ref={cardRef} template={template} data={cardData} toggles={toggles} />
+          </div>
+        )}
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto w-full max-w-xl px-6 py-6">
@@ -410,7 +456,7 @@ export function CheckinFlow({
             {t("back")}
           </Link>
         )}
-        <h1 className="text-h1 font-extrabold tracking-[-0.03em]">
+        <h1 className="type-display text-[24px] leading-none">
           {t("checkin_title")}
         </h1>
         <span className="font-mono text-caption text-text-dim nums">

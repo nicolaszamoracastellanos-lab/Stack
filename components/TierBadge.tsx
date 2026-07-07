@@ -57,7 +57,8 @@ export function TierBadge({
     // itself stays quiet (hairline border, raised surface, muted text).
     <span
       className={cn(
-        "depth inline-flex items-center gap-2 rounded-pill border border-border-strong px-3 py-1.5 font-medium text-text-muted",
+        // v3 tier-pill recipe: hairline border, whisper of surface, glowing dot.
+        "inline-flex items-center gap-2 rounded-pill border border-border-strong bg-white/[0.02] px-3 py-1.5 font-bold text-text-muted",
         size === "sm" ? "text-caption" : "text-label",
         provisional && "opacity-75",
         className,

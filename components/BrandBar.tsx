@@ -9,13 +9,23 @@ import { Wordmark } from "@/components/Wordmark";
  * on the right. Keeps the logo present throughout the app, not just on the
  * auth/landing screens, and keeps that lockup identical across tabs.
  */
-export function BrandBar({ className }: { className?: string }) {
+export function BrandBar({
+  className,
+  children,
+}: {
+  className?: string;
+  /** Extra right-side controls (e.g. the notification bell on Home). */
+  children?: React.ReactNode;
+}) {
   return (
     <div
       className={`flex items-center justify-between ${className ?? "mb-7"}`}
     >
       <Wordmark size="sm" />
-      <LanguageToggle />
+      <div className="flex items-center gap-2.5">
+        <LanguageToggle />
+        {children}
+      </div>
     </div>
   );
 }

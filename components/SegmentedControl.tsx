@@ -36,7 +36,7 @@ export function SegmentedControl<T extends string>({
           stop exactly. */}
       <span
         aria-hidden
-        className="absolute bottom-1 top-1 rounded-pill bg-volt transition-transform duration-200 ease-out"
+        className="absolute bottom-1 top-1 rounded-pill bg-volt transition-transform duration-[250ms] ease-[cubic-bezier(0.3,0.9,0.3,1)]"
         style={{
           width: `calc((100% - 0.5rem) / ${options.length})`,
           left: "0.25rem",
@@ -53,7 +53,7 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "relative min-h-11 flex-1 rounded-pill px-3 py-2 text-label font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60",
+              "relative min-h-11 flex-1 rounded-pill px-3 py-2 text-[13px] font-extrabold uppercase tracking-[0.03em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60",
               active ? "text-bg" : "text-text-muted hover:text-text",
             )}
           >

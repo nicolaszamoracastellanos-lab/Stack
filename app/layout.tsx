@@ -1,19 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/language-context";
 import { Splash } from "@/components/Splash";
 
-// Geist for UI text, Geist Mono for numbers / streaks / timestamps.
-//
-// NOTE on the spec: it asked for `next/font/google`, but Geist was only added
-// to next/font/google in Next 15. On Next 14 the canonical way to use Geist is
-// Vercel's official `geist` package, which itself loads the fonts via next/font
-// (local) and exposes the same CSS-variable pattern. Same typeface, same
-// mechanism, just the supported import path for this Next version.
-const geistSans = GeistSans;
-const geistMono = GeistMono;
+// v3: one variable typeface for everything. Archivo carries four roles via
+// axes — Display (wdth 125 / wght 900 / uppercase), Numeral (wdth 115–120 /
+// tabular), Body (wght 500–600) and Micro-label (wght 700 tracking .2em+).
+// The `wdth` axis MUST be loaded or `font-stretch` silently renders normal
+// width and the whole display language collapses. Geist is retired for UI;
+// wordmark image assets (Geist-based) stay untouched.
+const archivo = Archivo({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Stack · Show up. Every day.",
@@ -56,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={archivo.variable}>
       <body className="min-h-dvh bg-bg text-text">
         <LanguageProvider>
           <Splash />

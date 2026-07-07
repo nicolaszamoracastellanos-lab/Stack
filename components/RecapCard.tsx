@@ -27,8 +27,8 @@ function RecapStat({
       <p
         className={
           hero
-            ? "font-mono text-stat nums leading-none text-volt"
-            : "font-mono text-stat nums leading-none text-text"
+            ? "type-numeral text-stat leading-none text-volt"
+            : "type-numeral text-stat leading-none text-text"
         }
       >
         {value}
@@ -72,7 +72,7 @@ export function RecapCard({ data }: { data: GroupDetailData }) {
         <span className="text-caption text-text-dim">{t("recap_subtitle")}</span>
       </div>
 
-      <p className="relative mt-4 font-mono text-display-xl nums leading-none text-volt">
+      <p className="relative mt-4 type-numeral text-display-xl leading-none text-volt">
         {data.consistencyPct}
         <span className="text-h1 text-text-muted">%</span>
       </p>

@@ -74,7 +74,7 @@ export function InstallGuide() {
       </div>
 
       {/* Hero */}
-      <h1 className="text-balance text-h1">{t("install_title")}</h1>
+      <h1 className="type-display text-balance text-[26px] leading-tight">{t("install_title")}</h1>
       <p className="mt-3 text-balance text-body text-text-muted">
         {t("install_subtitle")}
       </p>

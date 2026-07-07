@@ -89,7 +89,7 @@ export function NotificationCenter({
         <Link href="/home" className="text-label text-text-muted hover:text-text">
           {t("notifc_back")}
         </Link>
-        <h1 className="text-h2">{t("notifc_title")}</h1>
+        <h1 className="type-display text-[24px] leading-none">{t("notifc_title")}</h1>
       </header>
 
       {rows.length === 0 ? (

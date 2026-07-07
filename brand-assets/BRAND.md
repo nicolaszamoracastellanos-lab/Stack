@@ -10,8 +10,24 @@ from the app's source-of-truth SVGs via `scripts/brand-kit.mjs`.
 ## The mark
 
 The app icon is a **"summit stack"**: three rounded bars climbing to a **volt
-peak** on a near-black rounded square. The wordmark is **Stack** (Geist, weight
-800) followed by a small **volt square**.
+peak** on a near-black rounded square. The wordmark is **Stack** followed by a
+small **volt square**.
+
+## Type (v3, Jul 2026)
+
+**Geist is retired for UI.** The UI face is **Archivo** (Google variable font,
+wght 100–900, wdth 62–125), loaded with the `wdth` axis via `next/font/google`:
+
+- **Display** — Archivo *Expanded Black* (`font-stretch:125%`, 900, UPPERCASE,
+  tracking −0.02 to −0.04em): taglines, screen titles, section slams, live
+  wordmark text. Never applied to user-generated content.
+- **Numeral** — `font-stretch:115–120%`, 900, `tabular-nums`, tight: streaks,
+  percentages, counts, stats.
+- **Body** — normal width, 500–600.
+- **Micro-label** — 700, 10–11px, UPPERCASE, letter-spacing 0.2em+, text-dim.
+
+The existing wordmark **image assets** (`wordmark/`, `public/wordmark*.png|svg`,
+Geist-based) are unchanged — only live-text usage migrated.
 
 ## Colors
 

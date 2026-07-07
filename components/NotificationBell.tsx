@@ -61,7 +61,7 @@ export function NotificationBell({
   return (
     <Link
       href="/notifications"
-      className="relative inline-flex h-11 w-11 items-center justify-center rounded-pill text-text-muted transition duration-150 hover:bg-surface hover:text-text active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-[12px] border border-border bg-surface text-text-muted transition duration-150 hover:text-text active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-volt/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
       aria-label="Activity"
     >
       <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>

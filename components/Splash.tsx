@@ -29,6 +29,18 @@ export function Splash() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
+    // Once per SESSION, not per full-document load: a hard reload or an
+    // auth-flow redirect mid-session shouldn't replay the launch beat. A PWA
+    // cold start is a fresh session, so the real launch still gets it.
+    try {
+      if (window.sessionStorage.getItem("stack.splashed")) {
+        setDone(true);
+        return;
+      }
+      window.sessionStorage.setItem("stack.splashed", "1");
+    } catch {
+      /* storage unavailable — just play it */
+    }
     // Trigger the entrance on the next frame so the transition runs from the
     // initial hidden state.
     const enterRaf = requestAnimationFrame(() => setEntered(true));
