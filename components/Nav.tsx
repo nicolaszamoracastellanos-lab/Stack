@@ -171,7 +171,7 @@ export function Nav() {
                 href={item.href}
                 data-tour={item.tour}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 py-2.5 transition-colors duration-150",
+                  "relative flex min-w-11 flex-col items-center gap-1 px-1.5 py-2.5 transition-colors duration-150",
                   active ? "text-text" : "text-text-dim hover:text-text",
                 )}
               >

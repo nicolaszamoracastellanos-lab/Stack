@@ -232,7 +232,9 @@ export function FeedItem({
                 aria-pressed={mine}
                 title={agg?.who.join(", ")}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 text-label transition-colors duration-150",
+                  // relative + before:-inset-2 grows the tap target to ~44pt
+                  // without inflating the visual chip.
+                  "relative inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 text-label transition-colors duration-150 before:absolute before:-inset-2 before:content-['']",
                   mine
                     ? "border-volt/40 bg-volt/10 text-volt"
                     : "border-border text-text-muted hover:border-border-strong hover:text-text",
@@ -291,7 +293,7 @@ export function FeedItem({
           <button
             type="submit"
             disabled={!draft.trim()}
-            className="shrink-0 rounded-btn px-3 py-2 text-label font-medium text-volt disabled:opacity-40"
+            className="min-h-11 shrink-0 rounded-btn px-3 py-2 text-label font-medium text-volt disabled:opacity-40"
           >
             {t("feed_comment_send")}
           </button>

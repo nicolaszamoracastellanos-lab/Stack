@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/language-context";
 function Section({ title, body }: { title: string; body: string }) {
   return (
     <section className="rounded-card border border-border bg-surface p-5">
-      <h2 className="text-h2">{title}</h2>
+      <h2 className="type-display text-[20px] leading-tight">{title}</h2>
       <p className="mt-2 text-body text-text-muted">{body}</p>
     </section>
   );
@@ -28,7 +28,7 @@ export function TierGuide() {
         <Link href="/profile" className="text-label text-text-muted hover:text-text">
           {t("back")}
         </Link>
-        <h1 className="text-h2">{t("tierguide_title")}</h1>
+        <h1 className="type-display text-[24px] leading-none">{t("tierguide_title")}</h1>
         <span className="w-10" />
       </header>
 
@@ -36,7 +36,7 @@ export function TierGuide() {
 
       {/* The tiers table */}
       <section className="mt-6 rounded-card border border-border bg-surface p-5">
-        <h2 className="text-h2">{t("tierguide_tiers_title")}</h2>
+        <h2 className="type-display text-[20px] leading-tight">{t("tierguide_tiers_title")}</h2>
         <p className="mt-1 text-label text-text-muted">
           {t("tierguide_tiers_body")}
         </p>
