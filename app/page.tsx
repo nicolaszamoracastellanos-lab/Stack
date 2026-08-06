@@ -39,6 +39,18 @@ export default function LandingPage() {
       </div>
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+        {/* "App coming soon" pill — hairline chip with a pulsing volt dot. Sits
+            above the 3D mark so it reads before the hero without touching it. */}
+        <div className="in-rise" style={{ animationDelay: ".1s" }}>
+          <span className="inline-flex items-center gap-2 self-start rounded-full border border-border bg-surface px-3.5 py-1.5">
+            <span
+              className="h-1.5 w-1.5 animate-pulse rounded-full"
+              style={{ background: "#C6F806" }}
+            />
+            <span className="eyebrow">{t("landing_coming_soon")}</span>
+          </span>
+        </div>
+
         {/* 3D hero — the entrance fade lives HERE (the wrapper), never on the
             preserve-3d element itself (filters/opacity flatten the 3D). */}
         <div className="in-rise" style={{ animationDelay: ".15s" }}>

@@ -24,6 +24,7 @@ export const translations = {
     landing_cta_login: "Log in",
     landing_credit: "Created by the Stack team.",
     landing_appstore: "Soon on iOS and Android.",
+    landing_coming_soon: "App coming soon",
 
     // Waitlist / updates signup (landing footer)
     waitlist_link: "Be the first one to know about our updates",
@@ -690,6 +691,7 @@ export const translations = {
     landing_cta_login: "Iniciar sesión",
     landing_credit: "Creado por el equipo de Stack.",
     landing_appstore: "Pronto en iOS y Android.",
+    landing_coming_soon: "La app llega pronto",
 
     // Waitlist / updates signup
     waitlist_link: "Sé el primero en enterarte de nuestras novedades",
